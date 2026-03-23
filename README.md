@@ -16,13 +16,12 @@ Invoke via `/pricefx-integration:<skill-name>`:
 | `generate-integration-test` | Generate Spock integration tests for routes |
 | `new-integration-wizard` | Interactive step-by-step wizard for defining new integrations |
 | `list-pricefx-tables` | Quick metadata lookup for PX, CX, DS tables using the bundled pfx CLI |
-| `validate-integration` | Validate all routes, mappers, and filters against project rules |
 
 ### Agents
 
 | Agent | Description |
 |-------|-------------|
-| `review-integration` | Full project review — checks connections, naming, performance, cross-file consistency, and recommends improvements |
+| `review-integration` | Full project review — validates routes, mappers, filters, checks connections, naming, performance, cross-file consistency, and recommends improvements |
 
 ### Bundled Tools
 
@@ -80,7 +79,7 @@ pricefx-integration/
 │   ├── generate-integration-test/
 │   ├── list-pricefx-tables/
 │   ├── new-integration-wizard/
-│   └── validate-integration/
+│   └── list-pricefx-tables/
 ├── docs/
 │   ├── components.md
 │   ├── configuration.md

@@ -146,5 +146,5 @@ Configuration:
 - **NEVER ask interactive questions** — all information must come from the requirement doc
 - If critical information is missing from the requirement, list what's missing and stop
 - Follow ALL rules from generate-import-integration and generate-export-integration skills
-- Validate generated files against validate-integration rules before finishing
+- Validate generated files against review-integration agent rules before finishing
 - If the requirement references fields that don't exist in metadata, warn and skip those fields
