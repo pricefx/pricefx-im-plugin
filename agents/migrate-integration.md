@@ -43,7 +43,7 @@ Ask: **Proceed with all migrations, or select specific ones?**
 
 ## Migration: split+tokenize+loaddata → loaddataFile
 
-**Detect:** Import routes that use `<split>` with `<tokenize>` and `pfx-api:loaddata` for CSV file imports, **except DS/DMDS imports** (`objectType=DMDS`). DS imports require split+tokenize+loaddata because they need `direct2ds` and a flush step — do NOT migrate these.
+**Detect:** Import routes that use `<split>` with `<tokenize>` and `pfx-api:loaddata` for CSV file imports, **except DS/DMDS imports** (`objectType=DMDS`). DS imports require split+tokenize+loaddata because they need a flush step — do NOT migrate these.
 
 **Legacy pattern:**
 ```xml
