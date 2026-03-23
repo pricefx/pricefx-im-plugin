@@ -8,86 +8,27 @@ Agents run autonomously in an isolated context. Invoke via `@pricefx-integration
 
 ### review-integration
 
-Full code review of an Integration Manager project. Reads every route, mapper, filter, and config file and checks against IM best practices. Catches issues that can cause production failures or performance problems.
-
-**What it checks:**
-- Connection naming (single PriceFxConnection should be named `pricefx`, redundant `connection=pricefx` params)
-- Default SFTP connection misuse (`pfx-sftp` with `default-sftp-connection` should use `file` component instead)
-- Route/mapper/filter ID naming (must match filename)
-- Cross-file consistency (filter `resultFields` in sync with mapper fields)
-- Import method (flags legacy split+tokenize+loaddata, recommends `loaddataFile`)
-- Orphan detection (mappers/filters not referenced by any route)
-- PX/CX extension name presence in mappers and filters
-- Key field correctness (`sku` for products, `customerId` for customers)
-- Metadata cross-reference via pfx CLI (fields exist, types match converters)
-
-**Output:** Structured report grouped by Critical Issues, Recommendations, and Best Practice Violations.
+Performs a comprehensive quality review of your entire IM project. Think of it as a senior engineer reviewing your work before it goes to production — it reads every file in the project and identifies issues that could cause failures, performance problems, or maintenance headaches. Produces a structured report with findings grouped by severity so you know what to fix first.
 
 ### migrate-integration
 
-Scans an existing IM project and **automatically applies** fixes for legacy patterns. Presents a migration plan before making changes, so you can approve or select specific migrations.
-
-**Migrations it performs:**
-- `split+tokenize+loaddata` → `streamingUnmarshal+loaddataFile` (simpler, more performant CSV imports)
-- `pfx-sftp` with `default-sftp-connection` → `file` component (SFTP storage is mounted locally in the pod)
-- Remove redundant `connection=pricefx` parameters
-- Remove `pfx:` prefix from route IDs
-- Rename single PriceFxConnection to `pricefx` (with all route references updated)
-- Fix `{{integration.data}}` / `{{data.directory}}` → `{{integration.sftp.root}}`
-- Remove invalid `extensionName` parameter from `pfx-api` URIs
+Modernizes legacy IM projects automatically. If you have older integrations built with outdated patterns, this agent scans the project, identifies what can be improved, and presents a migration plan. Once you approve, it applies the changes for you. Useful when onboarding an old customer project or after an IM platform upgrade.
 
 ### debug-integration
 
-Diagnoses Integration Manager errors and failures. Give it an error message or describe the problem, and it will:
-
-1. Find and read the relevant route, mapper, and filter files
-2. Cross-reference against common error patterns
-3. Verify partition state via pfx CLI (connection, table existence, field schema, sample data)
-4. Report the root cause with a specific fix
-
-**Common issues it diagnoses:**
-- "No bean could be found" — mapper/filter ID mismatch
-- Empty exports — filter too restrictive, missing `name` criterion, broken delta sync
-- Wrong data imported — mapper field mapping errors, missing converters, wrong key field
-- Connection errors — bad credentials, wrong URL, timeout
-- XML parse errors — unescaped `&`, encoding issues
-- File not picked up — wrong directory, missing done file, already processed
-- Partial imports — batch size, duplicate keys, type mismatches
+Your first stop when something goes wrong. Paste an error message or describe the problem, and it will trace through the route, mapper, filter, and configuration files to find the root cause. It can also connect to the Pricefx partition to verify that tables and fields actually exist. Returns a clear diagnosis with the exact fix needed.
 
 ### impact-analysis
 
-Answers the question: **"What breaks if I change X?"** before you make the change. Give it a proposed change (rename a field, delete a table, modify a connection) and it scans every route, mapper, filter, and config file to find all references.
-
-**Example queries:**
-- "What happens if I rename attribute5 on PX MichaluvTest?"
-- "Which routes use the CustomerHierarchy extension?"
-- "What breaks if I delete the sftp.connection?"
-- "I'm adding 10 new attributes to PX Prices — what needs to change?"
-
-**Output:** List of every affected file and line, required changes in order, and a risk assessment (high/medium/low) for each change.
+Answers the question **"What breaks if I change X?"** before you make the change. Whether you're renaming a field, removing a table, or changing a connection, this agent scans every file in the project to find all references that would be affected. Essential for safe refactoring on projects with many integrations, so you don't accidentally break a route you didn't know existed.
 
 ### document-integration
 
-Reverse-engineers existing routes into structured requirement documents. The inverse of `generate-from-requirement` — useful for documenting legacy or undocumented projects.
-
-**What it generates:**
-- Individual requirement docs for each route (`docs/requirements/{route-name}.md`)
-- Project summary with all integrations, connections, and key properties
-- Field mapping tables with types and converters
-- Filter conditions in human-readable format
-- Schedule descriptions (translates cron/timer URIs to plain English)
-- Enriches docs with actual field labels from partition metadata when available
+Generates documentation from existing integrations — the reverse of building from a spec. Point it at a project with undocumented routes and it produces structured requirement documents describing what each integration does, which fields it maps, what filters it applies, and when it runs. Great for onboarding new team members or creating documentation for legacy projects that were never properly documented.
 
 ### generate-test-data
 
-Generates realistic CSV test data for import routes. Uses partition metadata to create data with correct field types, appropriate values based on field labels, and edge cases.
-
-**How it works:**
-1. Reads the import route and mapper to understand the expected CSV format
-2. Fetches field metadata (types, labels) via pfx CLI
-3. Generates contextually appropriate data (product names for "name" fields, prices for "cost" fields, dates for "date" fields, etc.)
-4. Includes edge cases: empty optional fields, long strings, special characters
-5. Writes to `src/test/resources/data/{route-name}/test-data.csv`
+Creates realistic CSV test data for your import routes. Instead of manually crafting test files, this agent reads the route's mapper and fetches field metadata from the partition to generate data with correct types, meaningful values, and edge cases. Saves time when setting up integration tests or validating a new route.
 
 ## Skills
 
