@@ -1,0 +1,66 @@
+# ${PROJECT_NAME} - Integration Manager Project
+
+## Project Overview
+
+This is a Pricefx Integration Manager customer project that integrates ${EXTERNAL_SYSTEM} with Pricefx.
+
+**Integration Manager Docs:** See `.claude/docs/` for the full IM framework reference (unpacked from `integration-claude-docs` artifact).
+
+## Build & Run
+
+- **Java 17** required
+- Build: `mvn clean install -DskipTests`
+- Run: `mvn spring-boot:run` or `java -jar target/*.jar`
+
+## Project Structure
+
+```
+src/main/resources/
+├── application.properties     # Configuration (PFX credentials, schedulers, paths)
+├── camel-context.xml          # Route wiring (imports + camelContext)
+└── refs/routes/               # Route XML files
+    ├── ProductRoutes.xml
+    ├── CustomerRoutes.xml
+    └── ...
+config/
+├── connections/               # Connection JSON files
+├── properties/                # External properties overrides
+└── ...
+```
+
+## Code Generation Rules
+
+1. **XML routes only** — use `<beans>` root with `<routeContext>` and `<pfx:loadMapper>`/`<pfx:integrateMapper>` beans
+2. **Use `pfx-*` components** — `pfx-api`, `pfx-csv`, `pfx-rest`, `pfx-sftp`, etc.
+3. **Property placeholders** — `{{property.name}}` for externalized config
+4. **XML escaping** — `&amp;` for `&` in URI attributes
+5. **Register routes** in `camel-context.xml` via `<import>` and `<routeContextRef>`
+
+## Framework Reference
+
+Detailed documentation in `.claude/docs/`:
+
+- [routes.md](.claude/docs/routes.md) — XML route patterns and examples
+- [components.md](.claude/docs/components.md) — All `pfx-*` component parameters
+- [mappers.md](.claude/docs/mappers.md) — Field mapping and converters
+- [connections.md](.claude/docs/connections.md) — Connection types and configuration
+- [configuration.md](.claude/docs/configuration.md) — Properties, deployment, scheduling
+
+## Knowledge Base
+
+- IM Documentation: https://knowledge.pricefx.com/space/IM/
+- Pricefx API: https://knowledge.pricefx.com/space/API/
+
+## Common Object Types
+
+| Code | Object |
+|------|--------|
+| `P` | Products |
+| `C` | Customers |
+| `PX` | Product Extensions |
+| `CX` | Customer Extensions |
+| `SX` | Seller Extensions |
+| `DM` | Data Mart / Data Source |
+| `LTV` | Lookup Table Value |
+| `MLTV2` | Matrix Lookup Table |
+| `CRCP` | Condition Records |
