@@ -21,7 +21,12 @@ Invoke via `/pricefx-integration:<skill-name>`:
 
 | Agent | Description |
 |-------|-------------|
-| `review-integration` | Full project review — validates routes, mappers, filters, checks connections, naming, performance, cross-file consistency, and recommends improvements |
+| `review-integration` | Full project review — validates routes, mappers, filters, checks connections, naming, performance, and cross-file consistency |
+| `migrate-integration` | Automatically refactors legacy patterns to modern best practices (split+tokenize → loaddataFile, pfx-sftp → file, etc.) |
+| `debug-integration` | Diagnoses route failures and errors — analyzes logs, cross-references routes/mappers/filters, and verifies partition metadata |
+| `impact-analysis` | Analyzes the impact of field, table, or config changes across all routes, mappers, and filters |
+| `document-integration` | Reverse-engineers existing routes into structured requirement docs |
+| `generate-test-data` | Generates realistic CSV test data based on partition metadata and route mapper definitions |
 
 ### Bundled Tools
 
