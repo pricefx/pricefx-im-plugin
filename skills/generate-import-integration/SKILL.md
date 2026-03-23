@@ -22,7 +22,7 @@ Ask the user: **What Pricefx object are you importing into?**
 | PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` |
 | C | Customer Master | — | — | — |
 | CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` |
-| DS | Data Source | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {name}` |
+| DMDS | PA Data Source | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {name}` |
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
@@ -38,11 +38,13 @@ If the user already specified the object type (e.g., in $ARGUMENTS), skip asking
 3. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {selected-table}` to get field names
 4. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {selected-table}` to get attribute labels and types (needed for Smart Auto-Mapping)
 
-### For DS: List available data sources and fetch metadata
-1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` to show available DS tables
+### For DMDS: List available PA data sources and fetch metadata
+1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` to show available data sources
 2. Ask the user to select a data source
 3. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {selected-table}` to get field names
 4. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {selected-table}` to get attribute labels and types
+
+**Important:** DMDS imports use a different route pattern than P/PX/CX/C — they require `split+tokenize+loaddata` followed by `pfx-api:flush`. See the DMDS route template in Step 9.
 
 ### Creating a new PX/CX table
 
@@ -244,14 +246,16 @@ If auto-detected, skip Steps 6 (Batch Size), 7 (CSV Header) — they are already
 
 ## Step 5: Choose Import Method
 
-Ask the user: **Which import method do you want to use?**
+**For DMDS (PA Data Source):** Skip this step — DMDS always uses `split+tokenize+loaddata+flush` pattern (see DMDS route template in Step 9). Do NOT offer `loaddataFile` for DMDS.
+
+**For P, PX, CX, C:** Ask the user: **Which import method do you want to use?**
 
 | Method | Best for | Description |
 |--------|----------|-------------|
-| `pfx-api:loaddata` | Smaller files, complex transformations | IM parses and maps data, sends via JSON API |
-| `pfx-api:loaddataFile` | Large files, performance-critical imports | Streams file directly to Pricefx server, more efficient |
+| `pfx-api:loaddataFile` | Default — large files, performance | Streams file directly to Pricefx server, handles batching internally |
+| `pfx-api:loaddata` | Complex transformations | IM parses and maps data, sends via JSON API. Use when Groovy row-level logic is needed |
 
-**Default recommendation:** For P, PX, CX, and C imports, always use `loaddataFile` — it handles batching, streaming, and chunking internally. For **DS/DMDS imports**, use the `split+tokenize+loaddata+flush` pattern instead (see DS route template below) because DS imports require a flush step. Only use `loaddata` for non-DS objects when complex Groovy transformations or row-level logic is needed.
+**Default:** Always use `loaddataFile` for P, PX, CX, C imports.
 
 ## Step 6: Batch Size
 
@@ -355,9 +359,9 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
 </routes>
 ```
 
-### Route XML — DS/DMDS import (Data Source)
+### Route XML — DMDS import (PA Data Source)
 
-DS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`) because they typically require Groovy transformations. After loading, a **flush** step is required to push data from the data feed (DMF) to the data source (DMDS).
+DMDS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`). After loading, a **flush** step is required to push data from the data feed (DMF) to the data source (DMDS).
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
@@ -470,6 +474,6 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - **Key field name depends on object type:**
   - P (Product Master) and PX (Product Extension): key field is `sku`
   - C (Customer Master) and CX (Customer Extension): key field is `customerId`
-  - DS (Data Source / DMDS): key field is `sku`
+  - DMDS (PA Data Source): key field is `sku`
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
 - **DS imports use `objectType=DMDS`** on the `pfx-api` URI, with `dsUniqueName=DMDS.{DataSourceName}` (e.g., `dsUniqueName=DMDS.PriceListDS`). DS mappers do NOT need `<constant expression="..." out="name"/>` — the data source is identified by `dsUniqueName` on the URI, not by the mapper.
