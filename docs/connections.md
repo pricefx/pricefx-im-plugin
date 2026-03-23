@@ -185,6 +185,19 @@ When a component parameter `connection` is not specified, the default Pricefx co
 
 For `pfx-rest`, `pfx-sftp`, and `pfx-sql`, a connection is typically required unless the URI includes full connection details.
 
+## Best Practices
+
+### Pricefx connection naming
+- If the project has only one `PriceFxConnection`, it is recommended to name it `pricefx`. When the connection is named `pricefx`, it is used as the implicit default and you don't need to add a `connection` parameter on any `pfx-api` component.
+- NEVER add `connection=pricefx` to route URIs — it is redundant since `pricefx` is the default.
+- Only use the `connection` parameter when connecting to a non-default Pricefx instance.
+
+### Default SFTP connection — use `file` component instead
+- The connection named `default-sftp-connection` (or any name starting with `default-sftp-connection`) refers to the IM pod's own SFTP storage, which is mounted directly into the pod's local file system.
+- **Do NOT use `pfx-sftp` with `default-sftp-connection`.** Instead, use the `file` component to access these files directly: `file://{{integration.sftp.root}}/{path}`
+- Using `pfx-sftp` to access locally mounted storage adds unnecessary SFTP protocol overhead, impacting performance and cost. The `file` component accesses the same files directly from the file system — faster and simpler.
+- Only use `pfx-sftp` when connecting to an **external** SFTP server (not the default IM storage).
+
 ## Connection Discriminator Reference
 
 | Discriminator Class | Use Case |

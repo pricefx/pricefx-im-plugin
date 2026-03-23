@@ -419,6 +419,7 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - Offer done file option (`doneFileName=${file:name}.done`) to the user
 - The `mapper` parameter in route XML MUST use the mapper file name (without `.mapper.xml`), e.g., `mapper=import-csv-to-products.mapper`. NEVER use a property placeholder.
 - Do NOT include `connection=pricefx` parameter — the default Pricefx connection is named `pricefx` and is used automatically. Only add `connection={name}` when the project has multiple Pricefx connections and a non-default one is needed.
+- Do NOT use `pfx-sftp` with `default-sftp-connection` — the SFTP storage is mounted into the IM pod's local file system. Use `file://{{integration.sftp.root}}/{path}` instead for better performance. Only use `pfx-sftp` for external SFTP servers.
 - **Resource ID naming rule:** The `id` attribute of mappers and routes MUST match the file name (without `.xml`). Example: file `import-products.mapper.xml` → `id="import-products.mapper"`. Using a different ID (e.g., `importProductsMapper`) will cause deployment failure.
 - **Key field name depends on object type:**
   - P (Product Master) and PX (Product Extension): key field is `sku`

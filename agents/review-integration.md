@@ -68,6 +68,16 @@ For each finding, include:
 - Routes using a secondary connection MUST specify `connection={name}` explicitly
 - Verify each referenced connection name has a corresponding config file
 
+### Default SFTP connection (local file access)
+- Check if any connection config has the name `default-sftp-connection` or a name starting with `default-sftp-connection`
+- If found, search all routes for `pfx-sftp` URIs that reference this connection (e.g., `connection=default-sftp-connection` or `connection={{...}}` resolving to it)
+- **Highly recommend** replacing `pfx-sftp` with the `file` component in these routes
+- **Reason:** The SFTP storage is mounted directly into the IM pod's file system. Using `pfx-sftp` to access it goes through an unnecessary SFTP protocol layer, adding overhead in performance and cost. Since the files are already on the local file system, use `file://{{integration.sftp.root}}/{path}` instead — it is faster, simpler, and avoids the SFTP connection entirely
+- Show the user the recommended replacement, e.g.:
+  - Before: `pfx-sftp://{{pfx:route.sftp.path}}?connection=default-sftp-connection`
+  - After: `file://{{integration.sftp.root}}/{path}`
+- Flag every route using `default-sftp-connection` as a **recommendation** with high priority
+
 ### Non-default connections
 - If a route uses `connection={name}` where name is NOT `pricefx`, verify that a corresponding connection config file exists
 - Warn if a connection is referenced but not defined

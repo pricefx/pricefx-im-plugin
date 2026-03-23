@@ -372,4 +372,6 @@ Hardcode `batchSize` directly in the route XML (NEVER as a property placeholder)
 - Route file contains ONLY the route XML, NEVER inline mapper or filter beans
 - The `batchSize` parameter MUST be hardcoded directly in the route XML, NEVER as a property placeholder
 - The scheduler URI MUST be hardcoded directly in the route `<from>` element, NEVER as a property placeholder
+- Do NOT include `connection=pricefx` parameter — the default Pricefx connection is named `pricefx` and is used automatically. Only add `connection={name}` when the project has multiple Pricefx connections and a non-default one is needed.
+- Do NOT use `pfx-sftp` with `default-sftp-connection` — the SFTP storage is mounted into the IM pod's local file system. Use `file://{{integration.sftp.root}}/{path}` instead for better performance. Only use `pfx-sftp` for external SFTP servers.
 - **Resource ID naming rule:** The `id` attribute of filters, mappers, and routes MUST match the file name (without `.xml`). Example: file `export-products.filter.xml` → `id="export-products.filter"`. Using a different ID (e.g., `exportProductsFilter`) will cause deployment failure.
