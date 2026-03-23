@@ -267,17 +267,31 @@ Generate the route and mapper files using the conventions below.
 
 | Source | URI Pattern |
 |--------|-------------|
-| CSV file | `file://{{integration.sftp.root}}/{user-path}` |
+| CSV file | `file://{{integration.sftp.root}}/{user-path}?delay=10000&amp;{{archive.file}}` |
 | Zipped CSV | Same as CSV file, then add `<to uri="pfx-io:streamCompressedFile"/>` after `<from>` and before `<split>` |
 | SFTP | `pfx-sftp://{{pfx:{route-name}.sftp.path}}?connection={{pfx:{route-name}.sftp.connection}}&amp;delete=true` |
 | Database | Use `pfx-sql:select` as a `<to>` step |
 | REST API | Use `pfx-rest:get` as a `<to>` step with connection |
 
 **File component options:**
-- NEVER use `noop=true` — files should be processed and moved/deleted
+- **Archive (default):** Always include `&amp;{{archive.file}}` on the file URI. This uses the `archive.file` property from `application.properties` to move processed files to a timestamped archive folder. The default property value is:
+  ```properties
+  archive.file=move=.archive/${date:now:yyyy}/${date:now:MM}/${file:name.noext}__${date:now:yyyyMMdd_HHmmss}.${file:ext}
+  ```
+  This moves processed files to e.g. `.archive/2026/03/sales-data__20260323_143000.csv`
+- NEVER use `noop=true` — files should be processed and archived/moved/deleted
 - NEVER use `include` parameter by default
-- Offer the user **done file** option: `&amp;doneFileName=${file:name}.done` — waits for a `.done` marker file before processing
-- Other useful options to offer: `delete=true` (delete after processing), `moveFailed=.error` (move failed files)
+- **Done file (optional):** Offer the user the option to add `&amp;{{done.file}}` to the file URI. This waits for a `.done` marker file before processing the data file. The property is defined in `application.properties`:
+  ```properties
+  done.file=doneFileName=${file:name}.done
+  ```
+  Use when an external system writes the data file first, then drops a `.done` marker to signal it's ready.
+- **Move failed (optional):** Offer the user the option to add `&amp;{{error.file}}` to the file URI. This moves files that fail processing to a timestamped error folder. The property is defined in `application.properties`:
+  ```properties
+  error.file=moveFailed=.error/${file:name.noext}__${date:now:yyyyMMdd-HHmmss}.${file:ext}
+  ```
+  Moves failed files to e.g. `.error/sales-data__20260323-143000.csv`
+- Other useful options: `delete=true` (delete instead of archive)
 
 ### Mapper XML
 
@@ -310,8 +324,13 @@ Standalone mapper files use `<mappers>` root with `<loadMapper>` and `<body>` el
 
 ### Properties
 
-Add to `src/main/resources/repo/config/application.properties` only when needed (e.g., SFTP connection, etc.).
-Most CSV import routes require NO properties — delimiter, skipHeaderRecord, mapper, batch size, and file path are all hardcoded in route XML.
+Add the `archive.file` property to `src/main/resources/repo/config/application.properties` if not already present:
+
+```properties
+archive.file=move=.archive/${date:now:yyyy}/${date:now:MM}/${file:name.noext}__${date:now:yyyyMMdd_HHmmss}.${file:ext}
+```
+
+Other properties are only needed for SFTP connections, etc. Delimiter, skipHeaderRecord, mapper, batch size, and file path are all hardcoded in route XML.
 
 ## Important Rules
 
@@ -331,7 +350,7 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - The file input directory MUST use `{{integration.sftp.root}}/{path}` directly in the route XML, NEVER a property placeholder
 - NEVER use `noop=true` on file component
 - NEVER use `include` parameter on file component by default
-- Offer done file option (`doneFileName=${file:name}.done`) to the user
+- Offer done file option (`&amp;{{done.file}}`) to the user
 - The `mapper` parameter in route XML MUST use the mapper file name (without `.mapper.xml`), e.g., `mapper=import-sales-data.mapper`. NEVER use a property placeholder.
 - Do NOT include `connection=pricefx` parameter — the default Pricefx connection is named `pricefx` and is used automatically. Only add `connection={name}` when the project has multiple Pricefx connections and a non-default one is needed.
 - Do NOT use `pfx-sftp` with `default-sftp-connection` — use `file://{{integration.sftp.root}}/{path}` instead. Only use `pfx-sftp` for external SFTP servers.

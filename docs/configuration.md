@@ -35,6 +35,21 @@ logging.file.name=${integration.logging.file}
 
 ```properties
 ###############################################################################
+# File archiving — moves processed files to timestamped archive folder
+###############################################################################
+archive.file=move=.archive/${date:now:yyyy}/${date:now:MM}/${file:name.noext}__${date:now:yyyyMMdd_HHmmss}.${file:ext}
+
+###############################################################################
+# Move failed files — moves files that fail processing to timestamped error folder
+###############################################################################
+error.file=moveFailed=.error/${file:name.noext}__${date:now:yyyyMMdd-HHmmss}.${file:ext}
+
+###############################################################################
+# Done file — waits for a .done marker file before processing the data file
+###############################################################################
+done.file=doneFileName=${file:name}.done
+
+###############################################################################
 # Data directories
 ###############################################################################
 data.directory=/var/pricefx/data
