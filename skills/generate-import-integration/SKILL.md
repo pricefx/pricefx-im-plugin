@@ -362,7 +362,7 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
 **File component options:**
 - **Archive (default):** Always include `&amp;{{archive.file}}` on the file URI. This uses the `archive.file` property from `application.properties` to move processed files to a timestamped archive folder. The default property value is:
   ```properties
-  archive.file=move=.archive/${date:now:yyyy}/${date:now:MM}/${file:name.noext}__${date:now:yyyyMMdd_HHmmss}.${file:ext}
+  archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
   ```
   This moves processed files to e.g. `.archive/2026/03/products__20260323_143000.csv`
 - NEVER use `noop=true` — files should be processed and archived/moved/deleted
@@ -374,7 +374,7 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
   Use when an external system writes the data file first, then drops a `.done` marker to signal it's ready.
 - **Move failed (optional):** Offer the user the option to add `&amp;{{error.file}}` to the file URI. This moves files that fail processing to a timestamped error folder. The property is defined in `application.properties`:
   ```properties
-  error.file=moveFailed=.error/${file:name.noext}__${date:now:yyyyMMdd-HHmmss}.${file:ext}
+  error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D
   ```
   Moves failed files to e.g. `.error/products__20260323-143000.csv`
 - Other useful options: `delete=true` (delete instead of archive)
@@ -411,7 +411,7 @@ For integrate (upsert) use `<integrateMapper>` instead of `<loadMapper>`.
 Add the `archive.file` property to `src/main/resources/repo/config/application.properties` if not already present:
 
 ```properties
-archive.file=move=.archive/${date:now:yyyy}/${date:now:MM}/${file:name.noext}__${date:now:yyyyMMdd_HHmmss}.${file:ext}
+archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
 ```
 
 Other properties are only needed for SFTP connections, etc. Delimiter, skipHeaderRecord, mapper, batchSize, and file path are all hardcoded in route XML.

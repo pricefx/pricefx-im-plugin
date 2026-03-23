@@ -37,12 +37,12 @@ logging.file.name=${integration.logging.file}
 ###############################################################################
 # File archiving — moves processed files to timestamped archive folder
 ###############################################################################
-archive.file=move=.archive/${date:now:yyyy}/${date:now:MM}/${file:name.noext}__${date:now:yyyyMMdd_HHmmss}.${file:ext}
+archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
 
 ###############################################################################
 # Move failed files — moves files that fail processing to timestamped error folder
 ###############################################################################
-error.file=moveFailed=.error/${file:name.noext}__${date:now:yyyyMMdd-HHmmss}.${file:ext}
+error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D
 
 ###############################################################################
 # Done file — waits for a .done marker file before processing the data file
