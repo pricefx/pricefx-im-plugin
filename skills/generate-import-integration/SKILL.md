@@ -18,33 +18,33 @@ Ask the user: **What Pricefx object are you importing into?**
 
 | Code | Object | CLI command to list | CLI for fields | CLI for labels & types |
 |------|--------|--------------------|-----------------------|------------------------|
-| P | Product Master | — | `pfx product-metadata` | — |
-| PX | Product Extension | `pfx product-extensions` | `pfx product-extension {name}` | `pfx product-extension-metadata {name}` |
+| P | Product Master | — | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-metadata` | — |
+| PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}` |
 | C | Customer Master | — | — | — |
-| CX | Customer Extension | `pfx customer-extensions` | `pfx customer-extension {name}` | `pfx customer-extension-metadata {name}` |
+| CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}` |
 | DS | Data Source | — | — | — |
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
 ### For PX: List available tables and fetch metadata
-1. Run `pfx product-extensions` to show available PX tables
+1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extensions` to show available PX tables
 2. Ask the user to select a table (or create a new one)
-3. Run `pfx product-extension {selected-table}` to get field names
-4. Run `pfx product-extension-metadata {selected-table}` to get attribute labels and types (needed for Smart Auto-Mapping)
+3. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {selected-table}` to get field names
+4. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {selected-table}` to get attribute labels and types (needed for Smart Auto-Mapping)
 
 ### For CX: List available tables and fetch metadata
-1. Run `pfx customer-extensions` to show available CX tables
+1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extensions` to show available CX tables
 2. Ask the user to select a table (or create a new one)
-3. Run `pfx customer-extension {selected-table}` to get field names
-4. Run `pfx customer-extension-metadata {selected-table}` to get attribute labels and types (needed for Smart Auto-Mapping)
+3. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {selected-table}` to get field names
+4. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {selected-table}` to get attribute labels and types (needed for Smart Auto-Mapping)
 
 ### Creating a new PX/CX table
 
 If the user wants a new extension table, use the `pfx` CLI to create it:
 
 ```bash
-pfx create-product-extension {Name} --label "{Label}" --attributes {N}
-pfx create-customer-extension {Name} --label "{Label}" --attributes {N}
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs create-product-extension {Name} --label "{Label}" --attributes {N}
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs create-customer-extension {Name} --label "{Label}" --attributes {N}
 ```
 
 **Validation rules (enforced by Pricefx API — violations are silently ignored!):**
@@ -54,7 +54,7 @@ pfx create-customer-extension {Name} --label "{Label}" --attributes {N}
 
 ### Setting attribute metadata on new PX/CX tables
 
-After creating a new extension table, if sample CSV data is available, **auto-detect data types** from the sample rows and offer to set attribute labels and types using `pfx set-attribute`.
+After creating a new extension table, if sample CSV data is available, **auto-detect data types** from the sample rows and offer to set attribute labels and types using `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsset-attribute`.
 
 **Detection rules — analyze sample data rows for each column:**
 
@@ -84,11 +84,11 @@ Detected attribute types for {ExtensionName}:
 ```
 
 3. Ask the user: **Do you want to set these attribute labels and types? (yes/no/adjust)**
-4. If yes, run `pfx set-attribute` for each attribute:
+4. If yes, run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsset-attribute` for each attribute:
 
 ```bash
-pfx set-attribute PX {ExtensionName} attribute1 --label "Product Name" --type STRING --format TEXT
-pfx set-attribute PX {ExtensionName} attribute9 --label "Product Costs" --type REAL --format NUMERIC
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute PX {ExtensionName} attribute1 --label "Product Name" --type STRING --format TEXT
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute PX {ExtensionName} attribute9 --label "Product Costs" --type REAL --format NUMERIC
 ```
 
 **Available types and formats:**

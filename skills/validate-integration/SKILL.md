@@ -114,6 +114,6 @@ No issues found.
 ## Running Metadata Checks
 
 For rules that require partition metadata (e.g., checking if `inSet` is used on numeric fields):
-1. Run `pfx product-metadata`, `pfx product-extension-metadata {name}`, or `pfx customer-extension-metadata {name}` as needed
+1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-metadata`, `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}`, or `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}` as needed
 2. Cross-reference field types with filter operators
 3. Only run metadata checks if the `pfx` CLI is available (check `.env` exists)

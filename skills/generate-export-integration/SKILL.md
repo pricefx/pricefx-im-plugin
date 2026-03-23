@@ -18,26 +18,26 @@ Ask the user: **What Pricefx object are you exporting from?**
 
 | Code | Object | CLI to list | CLI for fields | CLI for labels & types |
 |------|--------|-------------|----------------|------------------------|
-| P | Product Master | — | `pfx product-metadata` | — |
-| PX | Product Extension | `pfx product-extensions` | `pfx product-extension {name}` | `pfx product-extension-metadata {name}` |
+| P | Product Master | — | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-metadata` | — |
+| PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}` |
 | C | Customer Master | — | — (use sample data) | — |
-| CX | Customer Extension | `pfx customer-extensions` | `pfx customer-extension {name}` | `pfx customer-extension-metadata {name}` |
-| DS | Data Source | `pfx data-sources` | `pfx data-source {name}` | — |
+| CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}` |
+| DS | Data Source | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsdata-sources` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsdata-source {name}` | — |
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
 ### For PX, CX, DS: List available tables first
 1. Run the appropriate `pfx` CLI list command to show available tables
 2. Ask the user to select a table (or create a new one for PX/CX)
-3. For PX/CX: also run `pfx product-extension-metadata {name}` or `pfx customer-extension-metadata {name}` to get attribute labels and types
+3. For PX/CX: also run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}` or `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}` to get attribute labels and types
 
 ### Creating a new PX/CX table
 
 If the user wants a new extension table, use the `pfx` CLI to create it:
 
 ```bash
-pfx create-product-extension {Name} --label "{Label}" --attributes {N}
-pfx create-customer-extension {Name} --label "{Label}" --attributes {N}
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs create-product-extension {Name} --label "{Label}" --attributes {N}
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs create-customer-extension {Name} --label "{Label}" --attributes {N}
 ```
 
 **Validation rules (enforced by Pricefx API — violations are silently ignored!):**
@@ -47,11 +47,11 @@ pfx create-customer-extension {Name} --label "{Label}" --attributes {N}
 
 ### Setting attribute metadata on new PX/CX tables
 
-After creating a new extension table, offer to set attribute labels and types using `pfx set-attribute`.
+After creating a new extension table, offer to set attribute labels and types using `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsset-attribute`.
 
 ```bash
-pfx set-attribute PX {ExtensionName} attribute1 --label "Field Label" --type STRING --format TEXT
-pfx set-attribute CX {ExtensionName} attribute1 --label "Field Label" --type REAL --format NUMERIC
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute PX {ExtensionName} attribute1 --label "Field Label" --type STRING --format TEXT
+node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute CX {ExtensionName} attribute1 --label "Field Label" --type REAL --format NUMERIC
 ```
 
 **Available types and formats:**
@@ -69,9 +69,9 @@ pfx set-attribute CX {ExtensionName} attribute1 --label "Field Label" --type REA
 
 Use the `pfx` CLI to get the real field names and types for the source object:
 - **P, C:** Use sample data from the user or ask for field mappings manually
-- **PX:** `pfx product-extension {name}`
-- **CX:** `pfx customer-extension {name}`
-- **DS:** `pfx data-source {name}`
+- **PX:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {name}`
+- **CX:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {name}`
+- **DS:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsdata-source {name}`
 
 Present the fields to the user in a clear table.
 
@@ -155,7 +155,7 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
 </routes>
 ```
 
-**Delta filter template** (see `.claude/docs/filters.md` for all operators and patterns):
+**Delta filter template** (see `docs/filters.md` for all operators and patterns):
 ```xml
 <filter id="{route-name}.filter"
         sortBy="lastUpdateDate"
@@ -294,7 +294,7 @@ There is NO `extensionName` parameter on `pfx-api:fetch`. For PX and CX, the ext
 
 File: `src/main/resources/repo/filters/{route-name}.filter.xml`
 
-**Full filter reference (operators, logic, patterns):** See `.claude/docs/filters.md`
+**Full filter reference (operators, logic, patterns):** See `docs/filters.md`
 
 ```xml
 <filter id="{route-name}.filter"
@@ -315,7 +315,7 @@ Ask the user if they want to add filter conditions. Offer common options:
 - Filter by numeric range (greaterOrEqual/lessOrEqual or isBetween)
 - Filter by non-empty fields (notNull)
 - Filter by list of values (in)
-- See `.claude/docs/filters.md` for the full list of operators and examples.
+- See `docs/filters.md` for the full list of operators and examples.
 
 ### Mapper XML (separate file)
 

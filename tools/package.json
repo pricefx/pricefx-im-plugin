@@ -1,0 +1,18 @@
+{
+  "name": "pricefx-cli",
+  "version": "1.0.0",
+  "description": "CLI for Pricefx REST API",
+  "type": "module",
+  "bin": {
+    "pfx": "./bin/pfx.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "keywords": ["pricefx", "cli"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^14.0.3"
+  }
+}

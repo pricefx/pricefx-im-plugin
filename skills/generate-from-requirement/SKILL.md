@@ -30,9 +30,9 @@ Read the markdown file and extract:
 ## Step 3: Fetch Metadata
 
 Run the appropriate `pfx` CLI command to get real field metadata:
-- P: `pfx product-metadata`
-- PX: `pfx product-extension {name}` + `pfx product-extension-metadata {name}`
-- CX: `pfx customer-extension {name}` + `pfx customer-extension-metadata {name}`
+- P: `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-metadata`
+- PX: `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {name}` + `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}`
+- CX: `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {name}` + `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}`
 
 ## Step 4: Resolve Fields
 
