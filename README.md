@@ -1,6 +1,6 @@
-# pricefx-integration
+# Pricefx Integration Manager - Claude Code Plugin
 
-Claude Code plugin for Pricefx Integration Manager. Provides skills, tools, documentation, and agents for building, reviewing, debugging, and maintaining IM integrations.
+Build, review, debug, and maintain Pricefx Integration Manager projects with AI-powered skills, agents, and tools.
 
 ## Agents
 
