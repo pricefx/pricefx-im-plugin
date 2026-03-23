@@ -2,56 +2,6 @@
 
 Claude Code plugin for Pricefx Integration Manager. Provides skills, tools, documentation, and agents for building, reviewing, debugging, and maintaining IM integrations.
 
-## Skills
-
-Invoke via `/pricefx-integration:<skill-name>`:
-
-### generate-import-integration
-
-Generates a complete import integration (route, mapper, config) for any Pricefx object type (P, PX, CX, DS, C). Walks you through the process step by step:
-
-- Fetches real field metadata from the partition via pfx CLI
-- Auto-detects CSV format (delimiter, header, data types) from sample data
-- Smart auto-mapping: matches CSV columns to Pricefx attributes using label matching, type compatibility, and fuzzy matching
-- Generates `loaddataFile` routes by default (recommended over legacy split+tokenize+loaddata)
-- Creates new PX/CX extension tables and sets attribute metadata when needed
-- Supports CSV, zipped CSV, SFTP, database, and REST API sources
-
-### generate-export-integration
-
-Generates a complete export integration (route, mapper, filter) for any Pricefx object type. Features:
-
-- Fetches real metadata and proposes export field list automatically based on configured attributes
-- Supports full export and delta sync (only changed records since last run)
-- Generates batched fetch pattern with proper pagination
-- Configurable scheduling: one-time, timer-based, or cron (Quartz)
-- Supports CSV file, SFTP, database, and REST API targets
-
-### generate-from-requirement
-
-Reads a business requirement document from `docs/requirements/` and generates the complete integration without asking any interactive questions. All information (direction, object type, fields, filters, schedule) is extracted from the requirement doc. Useful for batch-generating integrations from specs.
-
-### generate-integration-test
-
-Generates Spock framework integration tests for IM routes. Creates test classes with proper setup (seed properties, test data), route execution, and result assertions. Handles file-based routes, API routes, and temporary directory management.
-
-### new-integration-wizard
-
-Interactive step-by-step wizard for users who are new to IM or unsure what they need. Guides through:
-1. Import or export?
-2. Which object type?
-3. Which table?
-4. Data source/target?
-5. Field mapping
-
-Then delegates to the appropriate generation skill.
-
-### list-pricefx-tables
-
-Quick metadata lookup. Lists available PX, CX, or DS tables and their field definitions from the connected Pricefx partition. Useful for exploring what's available before building an integration.
-
-Usage: `/pricefx-integration:list-pricefx-tables PX` or `/pricefx-integration:list-pricefx-tables CX TableName`
-
 ## Agents
 
 Agents run autonomously in an isolated context. Invoke via `@pricefx-integration:agent-name` or let Claude delegate automatically.
@@ -138,6 +88,56 @@ Generates realistic CSV test data for import routes. Uses partition metadata to 
 3. Generates contextually appropriate data (product names for "name" fields, prices for "cost" fields, dates for "date" fields, etc.)
 4. Includes edge cases: empty optional fields, long strings, special characters
 5. Writes to `src/test/resources/data/{route-name}/test-data.csv`
+
+## Skills
+
+Invoke via `/pricefx-integration:<skill-name>`:
+
+### generate-import-integration
+
+Generates a complete import integration (route, mapper, config) for any Pricefx object type (P, PX, CX, DS, C). Walks you through the process step by step:
+
+- Fetches real field metadata from the partition via pfx CLI
+- Auto-detects CSV format (delimiter, header, data types) from sample data
+- Smart auto-mapping: matches CSV columns to Pricefx attributes using label matching, type compatibility, and fuzzy matching
+- Generates `loaddataFile` routes by default (recommended over legacy split+tokenize+loaddata)
+- Creates new PX/CX extension tables and sets attribute metadata when needed
+- Supports CSV, zipped CSV, SFTP, database, and REST API sources
+
+### generate-export-integration
+
+Generates a complete export integration (route, mapper, filter) for any Pricefx object type. Features:
+
+- Fetches real metadata and proposes export field list automatically based on configured attributes
+- Supports full export and delta sync (only changed records since last run)
+- Generates batched fetch pattern with proper pagination
+- Configurable scheduling: one-time, timer-based, or cron (Quartz)
+- Supports CSV file, SFTP, database, and REST API targets
+
+### generate-from-requirement
+
+Reads a business requirement document from `docs/requirements/` and generates the complete integration without asking any interactive questions. All information (direction, object type, fields, filters, schedule) is extracted from the requirement doc. Useful for batch-generating integrations from specs.
+
+### generate-integration-test
+
+Generates Spock framework integration tests for IM routes. Creates test classes with proper setup (seed properties, test data), route execution, and result assertions. Handles file-based routes, API routes, and temporary directory management.
+
+### new-integration-wizard
+
+Interactive step-by-step wizard for users who are new to IM or unsure what they need. Guides through:
+1. Import or export?
+2. Which object type?
+3. Which table?
+4. Data source/target?
+5. Field mapping
+
+Then delegates to the appropriate generation skill.
+
+### list-pricefx-tables
+
+Quick metadata lookup. Lists available PX, CX, or DS tables and their field definitions from the connected Pricefx partition. Useful for exploring what's available before building an integration.
+
+Usage: `/pricefx-integration:list-pricefx-tables PX` or `/pricefx-integration:list-pricefx-tables CX TableName`
 
 ## Bundled Tools
 
