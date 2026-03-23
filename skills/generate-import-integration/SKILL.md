@@ -393,7 +393,7 @@ DS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`) bec
 - **Flush is mandatory** — after loading, `pfx-api:flush` pushes data from `DMF.{name}` to `DMDS.{name}`
 - `onCompletion onCompleteOnly="true"` ensures flush only runs after successful load
 - Groovy `<transform>` blocks can be added inside `<split>` for row-level filtering/transformation
-- Mapper must include `<constant expression="{DataSourceName}" out="name"/>`
+- DS mappers do NOT need `<constant expression="..." out="name"/>` — the target is identified by `dsUniqueName` on the URI
 
 **Source URI patterns by data source type:**
 
@@ -449,11 +449,10 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - NEVER use generic/placeholder field names — always fetch real metadata
 - Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID. Example: file `import-product-master.xml` → `id="import-product-master"`
 - All URI parameters with `&` MUST be escaped as `&amp;` in XML
-- There is NO `extensionName` parameter on `loaddataFile` or `loaddata`. For PX, CX, and DS, the table name is set in the **mapper** as a `<constant>` element:
+- There is NO `extensionName` parameter on `loaddataFile` or `loaddata`. For PX and CX, the table name is set in the **mapper** as a `<constant>` element (DS uses `dsUniqueName` on the URI instead):
   - `<constant expression="{TableName}" out="name"/>` — this MUST be present in the mapper (position does not matter)
   - Example for PX "Prices": `<constant expression="Prices" out="name"/>`
   - Example for CX "Segments": `<constant expression="Segments" out="name"/>`
-  - Example for DS "SalesData": `<constant expression="SalesData" out="name"/>`
 - **DS (Data Source) imports use `objectType=DMDS`** — not `DS`. The object type code on the pfx-api URI must be `DMDS`.
 - Use URL-encoded values for delimiter in XML:
   - Comma: `delimiter=,`
@@ -473,4 +472,4 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
   - C (Customer Master) and CX (Customer Extension): key field is `customerId`
   - DS (Data Source / DMDS): key field is `sku`
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
-- **DS imports use `objectType=DMDS`** on the `pfx-api` URI, with `dsUniqueName=DMDS.{DataSourceName}` (e.g., `dsUniqueName=DMDS.PriceListDS`). They also require `<constant expression="{DataSourceName}" out="name"/>` in the mapper, same as PX/CX.
+- **DS imports use `objectType=DMDS`** on the `pfx-api` URI, with `dsUniqueName=DMDS.{DataSourceName}` (e.g., `dsUniqueName=DMDS.PriceListDS`). DS mappers do NOT need `<constant expression="..." out="name"/>` — the data source is identified by `dsUniqueName` on the URI, not by the mapper.
