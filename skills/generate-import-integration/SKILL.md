@@ -373,7 +373,7 @@ DS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`) bec
 
             <log loggingLevel="INFO" message="Running batch number# ${exchangeProperty.CamelSplitIndex}"/>
 
-            <to uri="pfx-api:loaddata?objectType=DMDS&amp;mapper={route-name}.mapper&amp;businessKeys={business-keys}"/>
+            <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{DataSourceName}&amp;mapper={route-name}.mapper&amp;businessKeys={business-keys}"/>
         </split>
 
         <log message="Load completed, performing flush on {DataSourceName}" loggingLevel="INFO"/>
@@ -388,6 +388,7 @@ DS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`) bec
 
 **DS import specifics:**
 - `objectType=DMDS` — not `DS`
+- `dsUniqueName=DMDS.{DataSourceName}` — required, identifies the target data source (e.g., `dsUniqueName=DMDS.PriceListDS`)
 - `businessKeys` — comma-separated list of key fields (e.g., `sku` or custom keys)
 - **Flush is mandatory** — after loading, `pfx-api:flush` pushes data from `DMF.{name}` to `DMDS.{name}`
 - `onCompletion onCompleteOnly="true"` ensures flush only runs after successful load
@@ -472,4 +473,4 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
   - C (Customer Master) and CX (Customer Extension): key field is `customerId`
   - DS (Data Source / DMDS): key field is `sku`
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
-- **DS imports use `objectType=DMDS`** on the `pfx-api` URI, and require `<constant expression="{DataSourceName}" out="name"/>` in the mapper, same as PX/CX.
+- **DS imports use `objectType=DMDS`** on the `pfx-api` URI, with `dsUniqueName=DMDS.{DataSourceName}` (e.g., `dsUniqueName=DMDS.PriceListDS`). They also require `<constant expression="{DataSourceName}" out="name"/>` in the mapper, same as PX/CX.
