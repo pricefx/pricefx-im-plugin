@@ -48,15 +48,28 @@ For each finding, include:
 
 ## Connection Rules
 
-### Default Pricefx connection
-- The default Pricefx connection MUST be named `pricefx` in the connection config
-- When the connection is named `pricefx`, the `connection` parameter MUST NOT appear on `pfx-api` components — it is the default and adding it is redundant
-- `connection=pricefx` on any `pfx-api:*`, `pfx-model:*`, `pfx-csv:*` URI → **recommend removing it**
-- The `connection` parameter should ONLY be used when the project has multiple Pricefx connections and a non-default one is needed (e.g., `connection=pricefx-staging`)
-- If you find `connection=pricefx` anywhere, recommend removing it and explain that `pricefx` is the default
+### Connection naming check
+1. Scan all connection config files in `config/connections/` and `src/main/resources/repo/config/connections/`
+2. Count how many connections have type `PriceFxConnection`
+3. Apply these rules:
+
+**Single PriceFxConnection:**
+- If there is exactly ONE `PriceFxConnection`, it is recommended to name it `pricefx`
+- If it has a different name (e.g., `myConnection`), recommend renaming it to `pricefx` — when the connection is named `pricefx`, it is used as the default and you don't need to specify the `connection` parameter on any `pfx-api` component
+
+**Connection named `pricefx`:**
+- When a connection is named `pricefx`, it is the implicit default — the `connection` parameter MUST NOT appear on any `pfx-api:*`, `pfx-model:*`, `pfx-csv:*` URI
+- `connection=pricefx` on any component → **recommend removing it** (redundant, `pricefx` is used automatically)
+- Search all route XMLs for `connection=pricefx` or `connection={{...}}` resolving to `pricefx` and flag each occurrence
+
+**Multiple PriceFxConnections:**
+- If there are multiple `PriceFxConnection` configs, one SHOULD be named `pricefx` (the default/primary)
+- Routes using the default connection should NOT specify `connection` parameter
+- Routes using a secondary connection MUST specify `connection={name}` explicitly
+- Verify each referenced connection name has a corresponding config file
 
 ### Non-default connections
-- If a route uses `connection={name}` where name is NOT `pricefx`, verify that a corresponding connection config file exists in `config/connections/` or `src/main/resources/repo/config/connections/`
+- If a route uses `connection={name}` where name is NOT `pricefx`, verify that a corresponding connection config file exists
 - Warn if a connection is referenced but not defined
 
 ## Route Rules
