@@ -1,0 +1,8 @@
+{
+  "name": "pricefx-integration",
+  "description": "Claude plugin for Pricefx platform integration - providing tools and context for working with Pricefx APIs, configuration, and pricing logic",
+  "version": "1.0.0",
+  "author": {
+    "name": "Pricefx Tools Team"
+  }
+}
