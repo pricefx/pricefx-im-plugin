@@ -535,24 +535,19 @@ program
     }
   });
 
-function printDataSourceTable(config) {
-  if (!config || typeof config !== "object") {
+function printDataSourceTable(dataSources) {
+  if (!Array.isArray(dataSources) || dataSources.length === 0) {
     console.log("No data sources found.");
     return;
   }
-  // DS config structure may differ from PX/CX — adapt
-  const names = Object.keys(config);
-  if (names.length === 0) {
-    console.log("No data sources found.");
-    return;
-  }
-  const rows = names.map((name) => {
-    const ds = config[name];
+  const rows = dataSources.map((ds) => {
+    const fields = ds.fields || [];
+    const keys = fields.filter((f) => f.key).map((f) => f.name);
     return {
-      name,
-      label: ds.label || ds.uniqueName || "",
-      attributes: ds.numberOfAttributes ?? ds.numberOfValueAttributes ?? "",
-      keys: (ds.businessKey || ds.keyAttributes || []).join(", "),
+      name: ds.uniqueName,
+      label: ds.label || "",
+      fields: fields.length,
+      keys: keys.join(", "),
     };
   });
   printTable(rows);

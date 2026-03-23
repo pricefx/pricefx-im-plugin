@@ -211,8 +211,9 @@ export class PricefxClient {
     return results;
   }
 
-  async listDataSources() {
-    return this.getExtensionConfig("datamart");
+  async listDataSources(locale = "en") {
+    const r = await this.post(`/datamart.getfcs/DMDS?dataLocale=${locale}`, {});
+    return r?.response?.data || [];
   }
 
   async fetchDataSourceAttributeMeta(name, locale = "en") {
