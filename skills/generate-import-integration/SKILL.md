@@ -251,7 +251,7 @@ Ask the user: **Which import method do you want to use?**
 | `pfx-api:loaddata` | Smaller files, complex transformations | IM parses and maps data, sends via JSON API |
 | `pfx-api:loaddataFile` | Large files, performance-critical imports | Streams file directly to Pricefx server, more efficient |
 
-**Default recommendation:** Always use `loaddataFile` for CSV/zipped CSV imports. It handles batching, streaming, and chunking internally — simpler and more performant. NEVER use the legacy pattern of `<split>` + `<tokenize>` + `pfx-csv:unmarshal` + `pfx-api:loaddata` for CSV file imports. Only use `loaddata` when complex Groovy transformations or row-level logic is needed on individual records.
+**Default recommendation:** For P, PX, CX, and C imports, always use `loaddataFile` — it handles batching, streaming, and chunking internally. For **DS/DMDS imports**, use the `split+tokenize+loaddata+flush` pattern instead (see DS route template below) because DS imports require `direct2ds` and a flush step. Only use `loaddata` for non-DS objects when complex Groovy transformations or row-level logic is needed.
 
 ## Step 6: Batch Size
 
@@ -354,6 +354,46 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
     </route>
 </routes>
 ```
+
+### Route XML — DS/DMDS import (Data Source)
+
+DS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`) because they typically require Groovy transformations and `direct2ds`. After loading, a **flush** step is required to push data from the data feed (DMF) to the data source (DMDS).
+
+```xml
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="{route-name}">
+        <from uri="{source-uri-with-placeholders}"/>
+
+        <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
+
+        <split aggregationStrategy="recordsCountAggregation" stopOnException="true" parallelProcessing="false" streaming="true">
+            <tokenize group="{BATCH_SIZE}" token="\n"/>
+
+            <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={DELIMITER}"/>
+
+            <log loggingLevel="INFO" message="Running batch number# ${exchangeProperty.CamelSplitIndex}"/>
+
+            <to uri="pfx-api:loaddata?objectType=DMDS&amp;mapper={route-name}.mapper&amp;businessKeys={business-keys}&amp;direct2ds=true"/>
+        </split>
+
+        <log message="Load completed, performing flush on {DataSourceName}" loggingLevel="INFO"/>
+
+        <onCompletion onCompleteOnly="true">
+            <toD uri="pfx-api:flush?dataFeedName=DMF.{DataSourceName}&amp;dataSourceName=DMDS.{DataSourceName}"/>
+            <log message="Flush completed." loggingLevel="INFO"/>
+        </onCompletion>
+    </route>
+</routes>
+```
+
+**DS import specifics:**
+- `objectType=DMDS` — not `DS`
+- `direct2ds=true` — loads directly to the data source, bypassing the data mart
+- `businessKeys` — comma-separated list of key fields (e.g., `sku` or custom keys)
+- **Flush is mandatory** — after loading, `pfx-api:flush` pushes data from `DMF.{name}` to `DMDS.{name}`
+- `onCompletion onCompleteOnly="true"` ensures flush only runs after successful load
+- Groovy `<transform>` blocks can be added inside `<split>` for row-level filtering/transformation
+- Mapper must include `<constant expression="{DataSourceName}" out="name"/>`
 
 **Source URI patterns by data source type:**
 

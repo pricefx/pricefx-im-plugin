@@ -130,7 +130,9 @@ This approach manually splits the CSV into chunks, unmarshals each chunk, and se
 
 `loaddataFile` handles all batching, streaming, and chunking internally — it streams the file directly to Pricefx, which is both simpler and more performant. No `<split>`, no `<tokenize>`, no aggregation strategy needed.
 
-**When to flag:** Any import route that combines `<split>` with `<tokenize>` and `pfx-api:loaddata` for CSV file imports should be recommended to switch to `loaddataFile`.
+**When to flag:** Any import route for P, PX, CX, or C that combines `<split>` with `<tokenize>` and `pfx-api:loaddata` should be recommended to switch to `loaddataFile`.
+
+**Exception — DS/DMDS imports:** Do NOT flag `split+tokenize+loaddata` as legacy for DS imports (`objectType=DMDS`). DS imports require this pattern because they need `direct2ds` and a `pfx-api:flush` step after loading. The correct DS pattern is: `split+tokenize` → `unmarshal` → `loaddata` with `direct2ds=true` → `onCompletion` with `pfx-api:flush` (`dataFeedName=DMF.{name}`, `dataSourceName=DMDS.{name}`).
 
 ### Export Routes
 - Recommend using the two-step batched fetch pattern: `pfx-api:fetch` with `batchedMode=true` → `<split>` → `pfx-api:fetchIterator`. This is the recommended approach but using `pfx-api:fetch` inside `<split>` also works — do NOT flag it as an error
