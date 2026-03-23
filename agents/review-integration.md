@@ -108,6 +108,30 @@ Both hardcoded values and property placeholders (`{{property.name}}`) are valid 
 - Check that `noop=true` is NOT used on file component — files should be moved/deleted after processing
 - `include` parameter on file component should not be used by default — recommend removing unless intentional
 
+### Import method: prefer `loaddataFile` over manual split+loaddata
+If you find an import route that uses manual CSV chunking with `<split>` + `<tokenize>` + `pfx-csv:unmarshal` + `pfx-api:loaddata`, **strongly recommend** replacing it with the simpler `loaddataFile` pattern.
+
+**Legacy pattern (complex, discouraged):**
+```xml
+<split aggregationStrategy="recordsCountAggregation" streaming="true">
+    <tokenize group="20000" token="\n"/>
+    <toD uri="pfx-csv:unmarshal?...&amp;skipHeaderRecord=true"/>
+    <toD uri="pfx-api:loaddata?...mapper=...&amp;businessKeys=..."/>
+</split>
+```
+
+This approach manually splits the CSV into chunks, unmarshals each chunk, and sends it via `loaddata`. It is unnecessarily complex — the developer has to manage chunking, aggregation, header skipping across chunks, and streaming themselves.
+
+**Recommended pattern (simple, performant):**
+```xml
+<to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true&amp;delimiter=,"/>
+<to uri="pfx-api:loaddataFile?objectType=PX&amp;mapper=route-name.mapper&amp;batchSize=500000"/>
+```
+
+`loaddataFile` handles all batching, streaming, and chunking internally — it streams the file directly to Pricefx, which is both simpler and more performant. No `<split>`, no `<tokenize>`, no aggregation strategy needed.
+
+**When to flag:** Any import route that combines `<split>` with `<tokenize>` and `pfx-api:loaddata` for CSV file imports should be recommended to switch to `loaddataFile`.
+
 ### Export Routes
 - Recommend using the two-step batched fetch pattern: `pfx-api:fetch` with `batchedMode=true` → `<split>` → `pfx-api:fetchIterator`. This is the recommended approach but using `pfx-api:fetch` inside `<split>` also works — do NOT flag it as an error
 

@@ -245,7 +245,7 @@ Ask the user: **Which import method do you want to use?**
 | `pfx-api:loaddata` | Smaller files, complex transformations | IM parses and maps data, sends via JSON API |
 | `pfx-api:loaddataFile` | Large files, performance-critical imports | Streams file directly to Pricefx server, more efficient |
 
-**Default recommendation:** `loaddataFile` for CSV/zipped CSV imports (better performance). Use `loaddata` when complex Groovy transformations or row-level logic is needed.
+**Default recommendation:** Always use `loaddataFile` for CSV/zipped CSV imports. It handles batching, streaming, and chunking internally — simpler and more performant. NEVER use the legacy pattern of `<split>` + `<tokenize>` + `pfx-csv:unmarshal` + `pfx-api:loaddata` for CSV file imports. Only use `loaddata` when complex Groovy transformations or row-level logic is needed on individual records.
 
 ## Step 6: Batch Size
 
