@@ -267,7 +267,7 @@ Generate the route and mapper files using the conventions below.
 
 | Source | URI Pattern |
 |--------|-------------|
-| CSV file | `file://{{integration.sftp.root}}/{user-path}?delay=10000&amp;{{archive.file}}` |
+| CSV file | `file://{{integration.sftp.root}}/{user-path}?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}` |
 | Zipped CSV | Same as CSV file, then add `<to uri="pfx-io:streamCompressedFile"/>` after `<from>` and before `<split>` |
 | SFTP | `pfx-sftp://{{pfx:{route-name}.sftp.path}}?connection={{pfx:{route-name}.sftp.connection}}&amp;delete=true` |
 | Database | Use `pfx-sql:select` as a `<to>` step |
@@ -279,13 +279,17 @@ Generate the route and mapper files using the conventions below.
   archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
   ```
   This moves processed files to e.g. `.archive/2026/03/sales-data__20260323_143000.csv`
-- NEVER use `noop=true` — files should be processed and archived/moved/deleted
-- NEVER use `include` parameter by default
-- **Done file (optional):** Offer the user the option to add `&amp;{{done.file}}` to the file URI. This waits for a `.done` marker file before processing the data file. The property is defined in `application.properties`:
+- **Read lock (default):** Always include `&amp;{{read.lock}}` on the file URI. This prevents Camel from picking up files that are still being written — it waits until the file size stabilizes before processing. The property is defined in `application.properties`:
+  ```properties
+  read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
+  ```
+- **Done file (alternative to read.lock):** If the external system produces a `.done` marker file, replace `&amp;{{read.lock}}` with `&amp;{{done.file}}` on the file URI. The property is defined in `application.properties`:
   ```properties
   done.file=doneFileName=%24%7Bfile:name%7D.done
   ```
-  Use when an external system writes the data file first, then drops a `.done` marker to signal it's ready.
+  Ask the user: **Does the external system produce a `.done` marker file, or should we use read lock (wait for file size to stabilize)?**
+- NEVER use `noop=true` — files should be processed and archived/moved/deleted
+- NEVER use `include` parameter by default
 - **Move failed (optional):** Offer the user the option to add `&amp;{{error.file}}` to the file URI. This moves files that fail processing to a timestamped error folder. The property is defined in `application.properties`:
   ```properties
   error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D
