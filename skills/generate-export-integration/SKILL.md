@@ -1,6 +1,6 @@
 ---
 name: generate-export-integration
-description: Generate a Pricefx export integration (route, mapper, properties) for any object type. Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx export integration (route, mapper, filter, properties) for any object type (P, PX, CX, C, DS/DMDS). Use this skill whenever the user wants to export or extract data FROM Pricefx — to CSV, SFTP, database, or REST API. Covers full exports, delta/incremental sync, scheduled exports, and batched fetch patterns. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate Export Integration
@@ -363,7 +363,7 @@ Choose `batchSize` based on number of fields:
 
 - **When changing exported fields, ALWAYS update BOTH the filter (`resultFields`) AND the mapper (`<body>` entries) to keep them in sync.** Changing only one causes errors or missing columns.
 - NEVER use generic/placeholder field names — always fetch real metadata
-- Route ID MUST start with `pfx:`
+- Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID. Example: file `export-products-to-csv.xml` → `id="export-products-to-csv"`
 - All URI parameters with `&` MUST be escaped as `&amp;` in XML
 - For batched fetch: use the two-step pattern (batched fetch for pagination, then inner fetch per batch)
 - Export routes use `<routes>` format (standalone) — route, mapper, and filter are in SEPARATE files

@@ -1,6 +1,6 @@
 ---
 name: new-integration-wizard
-description: Interactive wizard that guides through integration setup, saves a requirement doc, then generates all files.
+description: Interactive step-by-step wizard that guides through setting up a new Pricefx integration. Use this skill when the user says "new integration", "create an integration", "set up import/export", or wants guided help building an integration from scratch. Asks one question at a time, saves a requirement doc, then generates all route/mapper/filter files. Best for users who are unsure about configuration details.
 ---
 
 # New Integration Wizard
@@ -27,7 +27,7 @@ Ask: **Which Pricefx object?**
 | PX | Product Extension |
 | CX | Customer Extension |
 | C | Customer Master |
-| DS | Data Source |
+| DS/DMDS | PA Data Source |
 
 ### Step 3: Table Name (PX/CX/DS only)
 

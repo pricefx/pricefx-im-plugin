@@ -1,6 +1,6 @@
 ---
 name: generate-pa-import-integration
-description: Generate a Pricefx PA (Price Analyser) Data Source import integration using the DMDS split+tokenize+loaddata+flush pattern. Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx PA (Price Analyser) Data Source import integration using the DMDS split+tokenize+loaddata+flush pattern. Use this skill whenever the user wants to import data into a PA Data Source, Data Source (DS), DMDS, or mentions Price Analyser data loading. This pattern is different from standard imports — it requires split+tokenize batching and a mandatory flush step. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate PA Data Source Import Integration

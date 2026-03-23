@@ -1,6 +1,6 @@
 ---
 name: generate-import-integration
-description: Generate a Pricefx import integration (route, mapper, properties) for P, PX, CX, or C object types. Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx import integration (route, mapper, properties) for Product (P), Product Extension (PX), Customer (C), or Customer Extension (CX). Use this skill whenever the user wants to load, import, or push data INTO Pricefx from CSV files, SFTP, database, or REST API. Covers loaddataFile (streaming) and loaddata patterns, smart auto-mapping from CSV headers, and new table creation. For PA/Data Source (DMDS) imports, use generate-pa-import-integration instead. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate Import Integration

@@ -1,6 +1,6 @@
 ---
 name: generate-from-requirement
-description: Read a business requirement doc from docs/requirements/ and generate the full integration (route, mapper, filter, test data). No interactive questions.
+description: Read a business requirement doc from docs/requirements/ and generate the full integration (route, mapper, filter, test data) without interactive questions. Use this skill when the user says "generate from requirement", "build from spec", references a requirement doc, or wants to turn a written specification into a working integration. All information comes from the document — no questions asked.
 ---
 
 # Generate Integration from Requirement
@@ -19,8 +19,8 @@ Read the markdown file and extract:
 | Field | Required | Example |
 |---|---|---|
 | Direction | yes | `import` or `export` |
-| Object type | yes | `P`, `PX`, `CX`, `C`, `DS` |
-| Table name | for PX/CX/DS | `MichaluvTest` |
+| Object type | yes | `P`, `PX`, `CX`, `C`, `DMDS` |
+| Table name | for PX/CX/DMDS | `MichaluvTest` |
 | Target/Source | yes | `CSV file`, `SFTP` |
 | Fields | yes | table of mappings or `all fields` |
 | Filter | no | conditions |
