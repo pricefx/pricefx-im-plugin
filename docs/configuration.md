@@ -47,7 +47,7 @@ error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-H
 ###############################################################################
 # Done file — waits for a .done marker file before processing the data file
 ###############################################################################
-done.file=doneFileName=${file:name}.done
+done.file=doneFileName=%24%7Bfile:name%7D.done
 
 ###############################################################################
 # Data directories

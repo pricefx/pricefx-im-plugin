@@ -369,7 +369,7 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
 - NEVER use `include` parameter by default
 - **Done file (optional):** Offer the user the option to add `&amp;{{done.file}}` to the file URI. This waits for a `.done` marker file before processing the data file. The property is defined in `application.properties`:
   ```properties
-  done.file=doneFileName=${file:name}.done
+  done.file=doneFileName=%24%7Bfile:name%7D.done
   ```
   Use when an external system writes the data file first, then drops a `.done` marker to signal it's ready.
 - **Move failed (optional):** Offer the user the option to add `&amp;{{error.file}}` to the file URI. This moves files that fail processing to a timestamped error folder. The property is defined in `application.properties`:
