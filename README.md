@@ -1,55 +1,107 @@
 # pricefx-integration
 
-Claude plugin for Pricefx platform integration. Provides tools, context, and workflows for working with Pricefx APIs, configuration, and pricing logic within Claude Code.
+Claude Code plugin for Pricefx Integration Manager. Provides skills, tools, documentation, and code review agents for building and maintaining IM integrations.
 
-## Overview
+## Features
 
-This plugin enhances Claude Code with Pricefx-specific capabilities:
+### Skills
 
-- **API Integration** - Tools for interacting with Pricefx REST APIs (pricing, quoting, data management)
-- **Configuration Assistance** - Help with Pricefx partition configuration, price parameters, and logic setup
-- **Groovy Logic Support** - Context-aware assistance for writing Pricefx pricing logic in Groovy
-- **Data Model Awareness** - Understanding of Pricefx data structures (products, customers, price lists, etc.)
+Invoke via `/pricefx-integration:<skill-name>`:
+
+| Skill | Description |
+|-------|-------------|
+| `generate-import-integration` | Generate import routes, mappers, and config for any object type (P, PX, CX, DS, C) with smart auto-mapping from CSV |
+| `generate-export-integration` | Generate export routes, mappers, filters with delta sync support and automatic field selection from metadata |
+| `generate-from-requirement` | Read a requirement doc and generate the complete integration without interactive questions |
+| `generate-integration-test` | Generate Spock integration tests for routes |
+| `new-integration-wizard` | Interactive step-by-step wizard for defining new integrations |
+| `list-pricefx-tables` | Quick metadata lookup for PX, CX, DS tables using the bundled pfx CLI |
+| `validate-integration` | Validate all routes, mappers, and filters against project rules |
+
+### Agents
+
+| Agent | Description |
+|-------|-------------|
+| `review-integration` | Full project review — checks connections, naming, performance, cross-file consistency, and recommends improvements |
+
+### Bundled Tools
+
+The `pfx` CLI (`tools/bin/pfx.mjs`) is bundled with the plugin and provides direct access to Pricefx partition metadata:
+
+- List and inspect Product Extension (PX), Customer Extension (CX), and Data Source (DS) tables
+- Fetch field metadata and attribute labels/types
+- Create new extension tables and set attribute metadata
+- Fetch sample data with flexible output formats
+- Test connection to Pricefx partition
+
+Requires a `.env` file in the project root with `PFX_URL`, `PFX_PARTITION`, `PFX_USERNAME`, `PFX_PASSWORD`.
+
+### Shared Documentation
+
+Reference docs loaded into context for all skills via `CLAUDE.md`:
+
+- **routes.md** — XML route patterns, scheduler URIs, file/SFTP/REST targets
+- **components.md** — All `pfx-*` component parameters
+- **mappers.md** — Field mapping, converters, mapper types
+- **filters.md** — Filter operators, logic, delta sync patterns
+- **connections.md** — Connection types, best practices (SFTP, PriceFx naming)
+- **configuration.md** — Properties, deployment, scheduling
+- **project.md** — IM project structure and conventions
+
+Also includes `CLAUDE.md.template` for bootstrapping customer project CLAUDE.md files.
 
 ## Installation
 
-1. Clone this repository:
+1. Clone the repository:
    ```bash
    git clone https://gitlab.pricefx.eu/tools/pricefx-integration.git
    ```
 
-2. Place the plugin in your Claude Code plugins directory or reference it in your project's `.claude/` configuration.
+2. Install tool dependencies:
+   ```bash
+   cd pricefx-integration/tools && npm install
+   ```
+
+3. Add the plugin to your Claude Code configuration.
 
 ## Plugin Structure
 
 ```
 pricefx-integration/
-├── .claude-plugin       # Plugin manifest
-├── README.md            # This file
-└── ...                  # Plugin source files
-```
-
-## Configuration
-
-The plugin is defined in `.claude-plugin`:
-
-```json
-{
-  "name": "pricefx-integration",
-  "description": "Claude plugin for Pricefx platform integration",
-  "version": "1.0.0",
-  "author": {
-    "name": "Pricefx Tools Team"
-  }
-}
+├── .claude-plugin/
+│   └── plugin.json          # Plugin manifest
+├── CLAUDE.md                # Shared doc imports for all skills
+├── agents/
+│   └── review-integration.md
+├── skills/
+│   ├── generate-export-integration/
+│   ├── generate-from-requirement/
+│   ├── generate-import-integration/
+│   ├── generate-integration-test/
+│   ├── list-pricefx-tables/
+│   ├── new-integration-wizard/
+│   └── validate-integration/
+├── docs/
+│   ├── components.md
+│   ├── configuration.md
+│   ├── connections.md
+│   ├── filters.md
+│   ├── mappers.md
+│   ├── project.md
+│   ├── routes.md
+│   └── CLAUDE.md.template
+└── tools/
+    ├── bin/pfx.mjs          # CLI entry point
+    ├── lib/                  # Client, config, formatters
+    └── package.json
 ```
 
 ## Development
 
 ### Branches
 
-- `main` - Stable releases
-- `develop` - Active development
+- `main` — Stable releases
+- `develop` — Active development
 
 ### Contributing
 

@@ -42,13 +42,8 @@ No issues found.
 ### XML Syntax
 - [ ] All `&` in URI parameters MUST be escaped as `&amp;`
 
-### Hardcoded Values (prefer literal values — placeholders are valid but discouraged, report as WARNING not ERROR)
-- [ ] `batchSize` — prefer literal number. Placeholder is valid but discouraged. Missing is OK (uses default).
-- [ ] Scheduler URI in `<from>` — prefer hardcoded (timer, quartz, or file URI). Placeholder is valid but discouraged.
-- [ ] `<setHeader name="CamelFileName">` — prefer hardcoded expression. Placeholder is valid but discouraged.
-- [ ] `delimiter` — prefer hardcoded in the unmarshal URI. Placeholder is valid but discouraged.
-- [ ] `skipHeaderRecord` — prefer hardcoded (`true` or `false`). Placeholder is valid but discouraged.
-- [ ] `mapper` parameter — prefer literal mapper name. Placeholder is valid but discouraged.
+### Hardcoded vs. Property Placeholders
+Both hardcoded values and property placeholders (`{{property.name}}`) are valid for ANY route parameter. Do NOT flag placeholders as warnings.
 
 ### File Paths
 - [ ] File input/output URIs MUST use `{{integration.sftp.root}}`, NOT `{{integration.data}}` or `{{data.directory}}`
@@ -62,7 +57,7 @@ No issues found.
 - [ ] For P/PX/DS object types: mapper must use `sku` as key field
 
 ### Export Routes
-- [ ] Must use the two-step batched fetch pattern: `pfx-api:fetch` with `batchedMode=true` → `<split>` → `pfx-api:fetchIterator`
+- [ ] Recommend using the two-step batched fetch pattern: `pfx-api:fetch` with `batchedMode=true` → `<split>` → `pfx-api:fetchIterator`. Using `pfx-api:fetch` inside `<split>` also works — this is a recommendation, not an error.
 
 ### File Component
 - [ ] Import routes: check if `noop=true` is intentional (warn if present — files won't be moved/deleted after processing)
@@ -93,7 +88,7 @@ No issues found.
 - [ ] Mapper ID MUST match filename without `.xml` (e.g., file `export-products.mapper.xml` → `id="export-products.mapper"`)
 
 ### PX/CX Imports
-- [ ] For PX/CX imports: mapper MUST have `<constant expression="{ExtensionName}" out="name"/>` as the first element
+- [ ] For PX/CX imports: mapper MUST have `<constant expression="{ExtensionName}" out="name"/>` (position within mapper does not matter)
 
 ### Key Fields
 - [ ] P/PX/DS imports: must map to `sku` (not `customerId`)

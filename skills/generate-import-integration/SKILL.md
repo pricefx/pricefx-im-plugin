@@ -404,15 +404,14 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID. Example: file `import-product-master.xml` → `id="import-product-master"`
 - All URI parameters with `&` MUST be escaped as `&amp;` in XML
 - There is NO `extensionName` parameter on `loaddataFile` or `loaddata`. For PX and CX, the extension/table name is set in the **mapper** as a `<constant>` element:
-  - `<constant expression="{ExtensionName}" out="name"/>` — this MUST be the first element in the mapper
+  - `<constant expression="{ExtensionName}" out="name"/>` — this MUST be present in the mapper (position does not matter)
   - Example for PX "Prices": `<constant expression="Prices" out="name"/>`
   - Example for CX "Segments": `<constant expression="Segments" out="name"/>`
-- The `delimiter` parameter MUST be hardcoded directly in the route XML, NEVER as a property placeholder. Use URL-encoded values in XML:
+- Use URL-encoded values for delimiter in XML:
   - Comma: `delimiter=,`
   - Semicolon: `delimiter=;`
   - Tab: `delimiter=%09`
   - Pipe: `delimiter=%7C`
-- The `skipHeaderRecord` parameter MUST be hardcoded directly in the route XML (`true` or `false`), NEVER as a property placeholder.
 - The file input directory MUST use `{{integration.sftp.root}}/{path}` directly in the route XML, NEVER a property placeholder. Always ask the user for the path.
 - NEVER use `noop=true` on file component
 - NEVER use `include` parameter on file component by default

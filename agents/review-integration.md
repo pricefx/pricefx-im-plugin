@@ -92,13 +92,7 @@ For each finding, include:
 - All `&` in URI parameters MUST be escaped as `&amp;` — unescaped `&` will cause XML parse errors
 
 ### Hardcoded vs. Property Placeholders
-These values should be hardcoded directly in the route XML. Using property placeholders is valid but discouraged — recommend hardcoding:
-- `batchSize` — literal number in the URI
-- Scheduler URI in `<from>` — `timer://`, `quartz://`, or `file://` directly
-- `<setHeader name="CamelFileName">` — literal Simple expression
-- `delimiter` — literal value in unmarshal URI
-- `skipHeaderRecord` — literal `true` or `false`
-- `mapper` parameter — literal mapper name
+Both hardcoded values and property placeholders (`{{property.name}}`) are valid for ANY route parameter. Do NOT flag placeholders as warnings — they are a legitimate and common approach used across IM projects.
 
 ### File Paths
 - File input/output URIs MUST use `{{integration.sftp.root}}`, NOT `{{integration.data}}` or `{{data.directory}}`
@@ -115,8 +109,7 @@ These values should be hardcoded directly in the route XML. Using property place
 - `include` parameter on file component should not be used by default — recommend removing unless intentional
 
 ### Export Routes
-- Must use the two-step batched fetch pattern: `pfx-api:fetch` with `batchedMode=true` → `<split>` → `pfx-api:fetchIterator`
-- Single-step fetch without batching will fail on large datasets — recommend batched pattern
+- Recommend using the two-step batched fetch pattern: `pfx-api:fetch` with `batchedMode=true` → `<split>` → `pfx-api:fetchIterator`. This is the recommended approach but using `pfx-api:fetch` inside `<split>` also works — do NOT flag it as an error
 
 ### Delta Sync
 - If route uses `pfx-config:get` for timestamp, verify the full delta pattern:
@@ -141,7 +134,7 @@ These values should be hardcoded directly in the route XML. Using property place
 - Mapper ID MUST match filename without `.xml` (e.g., `import-products.mapper.xml` → `id="import-products.mapper"`)
 
 ### PX/CX Imports
-- Mapper MUST have `<constant expression="{ExtensionName}" out="name"/>` as the FIRST element — without this, the import target table is undefined
+- Mapper MUST have `<constant expression="{ExtensionName}" out="name"/>` — without this, the import target table is undefined. The position within the mapper does not matter.
 
 ### Key Fields
 - P/PX/DS: must map to `sku`
