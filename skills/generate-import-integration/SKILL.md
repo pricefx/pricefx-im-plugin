@@ -1,11 +1,14 @@
 ---
 name: generate-import-integration
-description: Generate a Pricefx import integration (route, mapper, properties) for any object type (P, PX, CX, DS, C). Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx import integration (route, mapper, properties) for P, PX, CX, or C object types. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate Import Integration
 
 You are generating an import integration for a Pricefx Integration Manager project. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
+
+**Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension).
+For PA Data Source (DMDS) imports, use the `/generate-pa-import-integration` skill instead.
 
 ## Step 1: Check Credentials
 
@@ -22,7 +25,6 @@ Ask the user: **What Pricefx object are you importing into?**
 | PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` |
 | C | Customer Master | — | — | — |
 | CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` |
-| DMDS | PA Data Source | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {name}` |
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
@@ -37,14 +39,6 @@ If the user already specified the object type (e.g., in $ARGUMENTS), skip asking
 2. Ask the user to select a table (or create a new one)
 3. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {selected-table}` to get field names
 4. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {selected-table}` to get attribute labels and types (needed for Smart Auto-Mapping)
-
-### For DMDS: List available PA data sources and fetch metadata
-1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` to show available data sources
-2. Ask the user to select a data source
-3. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {selected-table}` to get field names
-4. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {selected-table}` to get attribute labels and types
-
-**Important:** DMDS imports use a different route pattern than P/PX/CX/C — they require `split+tokenize+loaddata` followed by `pfx-api:flush`. See the DMDS route template in Step 9.
 
 ### Creating a new PX/CX table
 
@@ -113,7 +107,7 @@ node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute PX {ExtensionName} at
 ## Step 3: Fetch Metadata
 
 For PX/CX: Use the `pfx` CLI commands above to get real field names and types from the partition.
-For P/C/DS: Use sample data from the user or ask for field mappings manually.
+For P/C: Use sample data from the user or ask for field mappings manually.
 Present the fields to the user in a clear table.
 
 ## Step 3b: Smart Auto-Mapping (when CSV sample data AND PX/CX metadata are available)
@@ -128,7 +122,6 @@ For each CSV column, find the best matching Pricefx field using these rules in p
 - CSV column name contains `id`, `sku`, `key`, `code`, `product_id`, `item_number` → map to key field:
   - For P/PX: map to `sku`
   - For C/CX: map to `customerId`
-  - For DS: map to `sku`
 - CSV column name contains `name`, `description`, `label`, `title` (and is not a category/hierarchy) → map to `label`
 
 **Priority 2 — Fuzzy match against attribute labels (confidence: HIGH or MEDIUM)**
@@ -183,7 +176,7 @@ When proposing the mapping, also detect and suggest converter expressions based 
 
 - **No CSV sample data available** → fall back to manual mapping (Step 8)
 - **No attribute labels set** (all labels empty in metadata) → fall back to sequential mapping + ask user
-- **P, C, DS objects** (no `*-metadata` command available) → fall back to manual mapping
+- **P, C objects** (no `*-metadata` command available) → fall back to manual mapping
 
 ## Step 4: Determine Data Source
 
@@ -201,7 +194,6 @@ Ask the user: **What is the data source?**
 - CX table `CustomerHierarchy` → `/customer-hierarchy`
 - Product Master → `/products`
 - Customer Master → `/customers`
-- DS table `SalesData` → `/sales-data`
 
 Propose the derived path and let the user override if needed.
 
@@ -246,9 +238,7 @@ If auto-detected, skip Steps 6 (Batch Size), 7 (CSV Header) — they are already
 
 ## Step 5: Choose Import Method
 
-**For DMDS (PA Data Source):** Skip this step — DMDS always uses `split+tokenize+loaddata+flush` pattern (see DMDS route template in Step 9). Do NOT offer `loaddataFile` for DMDS.
-
-**For P, PX, CX, C:** Ask the user: **Which import method do you want to use?**
+Ask the user: **Which import method do you want to use?**
 
 | Method | Best for | Description |
 |--------|----------|-------------|
@@ -297,7 +287,7 @@ A mapper is almost always needed (99% of cases). Only skip the mapper if the CSV
 
 When extracting columns from a CSV file or header:
 1. Read the first line (header row) and split by delimiter
-2. The first column that looks like an ID/key → map to `sku`
+2. The first column that looks like an ID/key → map to `sku` (P/PX) or `customerId` (C/CX)
 3. The first column that looks like a name/description → map to `label`
 4. Remaining columns → map to `attribute1`, `attribute2`, ... in order
 5. Present the proposed mapping as a table and ask the user to confirm or adjust
@@ -359,46 +349,6 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
 </routes>
 ```
 
-### Route XML — DMDS import (PA Data Source)
-
-DMDS imports use `loaddata` with `split+tokenize` pattern (NOT `loaddataFile`). After loading, a **flush** step is required to push data from the data feed (DMF) to the data source (DMDS).
-
-```xml
-<routes xmlns="http://camel.apache.org/schema/spring">
-    <route id="{route-name}">
-        <from uri="{source-uri-with-placeholders}"/>
-
-        <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
-
-        <split aggregationStrategy="recordsCountAggregation" stopOnException="true" parallelProcessing="false" streaming="true">
-            <tokenize group="{BATCH_SIZE}" token="\n"/>
-
-            <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={DELIMITER}"/>
-
-            <log loggingLevel="INFO" message="Running batch number# ${exchangeProperty.CamelSplitIndex}"/>
-
-            <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{DataSourceName}&amp;mapper={route-name}.mapper&amp;businessKeys={business-keys}"/>
-        </split>
-
-        <log message="Load completed, performing flush on {DataSourceName}" loggingLevel="INFO"/>
-
-        <onCompletion onCompleteOnly="true">
-            <toD uri="pfx-api:flush?dataFeedName=DMF.{DataSourceName}&amp;dataSourceName=DMDS.{DataSourceName}"/>
-            <log message="Flush completed." loggingLevel="INFO"/>
-        </onCompletion>
-    </route>
-</routes>
-```
-
-**DS import specifics:**
-- `objectType=DMDS` — not `DS`
-- `dsUniqueName=DMDS.{DataSourceName}` — required, identifies the target data source (e.g., `dsUniqueName=DMDS.PriceListDS`)
-- `businessKeys` — comma-separated list of key fields (e.g., `sku` or custom keys)
-- **Flush is mandatory** — after loading, `pfx-api:flush` pushes data from `DMF.{name}` to `DMDS.{name}`
-- `onCompletion onCompleteOnly="true"` ensures flush only runs after successful load
-- Groovy `<transform>` blocks can be added inside `<split>` for row-level filtering/transformation
-- DS mappers do NOT need `<constant expression="..." out="name"/>` — the target is identified by `dsUniqueName` on the URI
-
 **Source URI patterns by data source type:**
 
 | Source | URI Pattern |
@@ -453,11 +403,10 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - NEVER use generic/placeholder field names — always fetch real metadata
 - Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID. Example: file `import-product-master.xml` → `id="import-product-master"`
 - All URI parameters with `&` MUST be escaped as `&amp;` in XML
-- There is NO `extensionName` parameter on `loaddataFile` or `loaddata`. For PX and CX, the table name is set in the **mapper** as a `<constant>` element (DS uses `dsUniqueName` on the URI instead):
+- There is NO `extensionName` parameter on `loaddataFile` or `loaddata`. For PX and CX, the table name is set in the **mapper** as a `<constant>` element:
   - `<constant expression="{TableName}" out="name"/>` — this MUST be present in the mapper (position does not matter)
   - Example for PX "Prices": `<constant expression="Prices" out="name"/>`
   - Example for CX "Segments": `<constant expression="Segments" out="name"/>`
-- **DS (Data Source) imports use `objectType=DMDS`** — not `DS`. The object type code on the pfx-api URI must be `DMDS`.
 - Use URL-encoded values for delimiter in XML:
   - Comma: `delimiter=,`
   - Semicolon: `delimiter=;`
@@ -474,6 +423,4 @@ Most CSV import routes require NO properties — delimiter, skipHeaderRecord, ma
 - **Key field name depends on object type:**
   - P (Product Master) and PX (Product Extension): key field is `sku`
   - C (Customer Master) and CX (Customer Extension): key field is `customerId`
-  - DMDS (PA Data Source): key field is `sku`
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
-- **DS imports use `objectType=DMDS`** on the `pfx-api` URI, with `dsUniqueName=DMDS.{DataSourceName}` (e.g., `dsUniqueName=DMDS.PriceListDS`). DS mappers do NOT need `<constant expression="..." out="name"/>` — the data source is identified by `dsUniqueName` on the URI, not by the mapper.

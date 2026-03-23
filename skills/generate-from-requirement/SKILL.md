@@ -94,7 +94,7 @@ From the requirement filename and content, derive:
 
 ## Step 8: Generate All Files
 
-Generate the complete integration. Follow ALL rules from the existing generate-import-integration and generate-export-integration skills.
+Generate the complete integration. Follow ALL rules from the existing generate-import-integration (for P/PX/CX/C), generate-pa-import-integration (for DMDS/PA Data Source), and generate-export-integration skills.
 
 ### For Exports, generate:
 1. Route XML (`src/main/resources/repo/routes/{name}.xml`)
@@ -145,6 +145,6 @@ Configuration:
 
 - **NEVER ask interactive questions** — all information must come from the requirement doc
 - If critical information is missing from the requirement, list what's missing and stop
-- Follow ALL rules from generate-import-integration and generate-export-integration skills
+- Follow ALL rules from generate-import-integration (P/PX/CX/C), generate-pa-import-integration (DMDS), and generate-export-integration skills
 - Validate generated files against review-integration agent rules before finishing
 - If the requirement references fields that don't exist in metadata, warn and skip those fields
