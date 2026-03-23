@@ -18,18 +18,18 @@ Ask the user: **What Pricefx object are you exporting from?**
 
 | Code | Object | CLI to list | CLI for fields | CLI for labels & types |
 |------|--------|-------------|----------------|------------------------|
-| P | Product Master | — | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-metadata` | — |
-| PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}` |
+| P | Product Master | — | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-metadata` | — |
+| PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` |
 | C | Customer Master | — | — (use sample data) | — |
-| CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}` |
-| DS | Data Source | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsdata-sources` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsdata-source {name}` | — |
+| CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` |
+| DS | Data Source | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}` | — |
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
 ### For PX, CX, DS: List available tables first
 1. Run the appropriate `pfx` CLI list command to show available tables
 2. Ask the user to select a table (or create a new one for PX/CX)
-3. For PX/CX: also run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension-metadata {name}` or `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension-metadata {name}` to get attribute labels and types
+3. For PX/CX: also run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` or `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` to get attribute labels and types
 
 ### Creating a new PX/CX table
 
@@ -47,7 +47,7 @@ node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs create-customer-extension {Name} --
 
 ### Setting attribute metadata on new PX/CX tables
 
-After creating a new extension table, offer to set attribute labels and types using `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsset-attribute`.
+After creating a new extension table, offer to set attribute labels and types using `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute`.
 
 ```bash
 node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute PX {ExtensionName} attribute1 --label "Field Label" --type STRING --format TEXT
@@ -69,9 +69,9 @@ node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs set-attribute CX {ExtensionName} at
 
 Use the `pfx` CLI to get the real field names and types for the source object:
 - **P, C:** Use sample data from the user or ask for field mappings manually
-- **PX:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsproduct-extension {name}`
-- **CX:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjscustomer-extension {name}`
-- **DS:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjsdata-source {name}`
+- **PX:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}`
+- **CX:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}`
+- **DS:** `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}`
 
 Present the fields to the user in a clear table.
 
