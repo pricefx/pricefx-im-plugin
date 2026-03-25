@@ -161,7 +161,7 @@ Generate the route and mapper files using the conventions below.
 
 ### Route XML — LTV/MLTV2 import
 
-PPV imports use `pfx-csv:unmarshal` + `pfx-api:loaddata` (not `loaddataFile`). The key difference from standard imports is the `pricingParameterName` parameter.
+PPV imports use `pfx-csv:streamingUnmarshal` + `pfx-api:loaddataFile` with the `pricingParameterName` parameter to identify the target table.
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
@@ -170,9 +170,9 @@ PPV imports use `pfx-csv:unmarshal` + `pfx-api:loaddata` (not `loaddataFile`). T
 
         <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
 
-        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={DELIMITER}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true&amp;delimiter={DELIMITER}"/>
 
-        <to uri="pfx-api:{loaddata|integrate}?objectType={LTV|MLTV2}&amp;pricingParameterName={ParameterName}&amp;mapper={route-name}.mapper"/>
+        <to uri="pfx-api:loaddataFile?objectType={LTV|MLTV2}&amp;pricingParameterName={ParameterName}&amp;mapper={route-name}.mapper&amp;batchSize={BATCH_SIZE}"/>
 
         <log message="Import completed for file: ${header.CamelFileName}" loggingLevel="INFO"/>
     </route>
@@ -182,9 +182,10 @@ PPV imports use `pfx-csv:unmarshal` + `pfx-api:loaddata` (not `loaddataFile`). T
 **Key parameters:**
 - `objectType=LTV` for single-key lookup tables
 - `objectType=MLTV2` for multi-key matrix tables
-- `pricingParameterName={name}` — the pricing parameter table name in Pricefx (required)
+- `pricingParameterName={name}` — the pricing parameter table name in Pricefx (required). This is the `uniqueName` of the table.
 - `mapper={route-name}.mapper` — field mapping
-- Use `loaddata` for full replace, `integrate` for upsert
+- `batchSize` — same guidance as standard imports (500000 for few fields, less for many)
+- Use `loaddataFile` for loading (default), `integrate` for upsert (with `pfx-csv:unmarshal` instead of `streamingUnmarshal`)
 
 **Source URI patterns by data source type:**
 
@@ -260,6 +261,7 @@ Other properties are only needed for SFTP connections, etc.
 - Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID
 - All URI parameters with `&` MUST be escaped as `&amp;` in XML
 - `pricingParameterName` is **required** on the pfx-api URI — this identifies which pricing parameter table to load into
+- The parameter on the URI is `pricingParameterName` — NOT `lookupTableName`
 - PPV imports do NOT need `businessKeys` — the key structure is defined by the table type (LTV uses `name`, MLTV2 uses `key1`–`key6`)
 - PPV mappers do NOT need `<constant expression="..." out="name"/>` — the table is identified by `pricingParameterName` on the URI
 - Use URL-encoded values for delimiter in XML:
