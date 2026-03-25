@@ -48,7 +48,7 @@ error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-H
 # Read lock — waits until file size stabilizes before processing (use when
 # no .done marker is available). Default alternative to done.file.
 ###############################################################################
-read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
+read.lock=readLock=changed
 
 ###############################################################################
 # Done file — waits for a .done marker file before processing the data file

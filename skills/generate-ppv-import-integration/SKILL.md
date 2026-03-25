@@ -240,15 +240,17 @@ PPV imports use `pfx-csv:streamingUnmarshal` + `pfx-api:loaddataFile` with the `
   ```properties
   archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
   ```
-- **Read lock (default):** Always include `&amp;{{read.lock}}` on the file URI. The property is defined in `application.properties`:
-  ```properties
-  read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
-  ```
-- **Done file (alternative to read.lock):** If the external system produces a `.done` marker file, replace `&amp;{{read.lock}}` with `&amp;{{done.file}}` on the file URI:
-  ```properties
-  done.file=doneFileName=%24%7Bfile:name%7D.done
-  ```
-  Ask the user: **Does the external system produce a `.done` marker file, or should we use read lock (wait for file size to stabilize)?**
+- **File safety (read.lock vs done.file — mutually exclusive, always use one):**
+  Ask the user: **Does the external system produce a `.done` marker file, or should we use read lock?**
+  - If **no .done file** (default): use `&amp;{{read.lock}}` — waits until file size stabilizes before processing. Property:
+    ```properties
+    read.lock=readLock=changed
+    ```
+  - If **yes .done file**: replace `{{read.lock}}` with `{{done.file}}` — waits for a `.done` marker before processing. Property:
+    ```properties
+    done.file=doneFileName=%24%7Bfile:name%7D.done
+    ```
+  These are mutually exclusive — never use both on the same route.
 - **Move failed (optional):** Offer `&amp;{{error.file}}` to move failed files:
   ```properties
   error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D
@@ -290,7 +292,9 @@ Add the file handling properties to `src/main/resources/repo/config/application.
 
 ```properties
 archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
-read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
+read.lock=readLock=changed
+# Use done.file instead of read.lock when external system produces .done markers:
+# done.file=doneFileName=%24%7Bfile:name%7D.done
 ```
 
 Other properties are only needed for SFTP connections, etc.

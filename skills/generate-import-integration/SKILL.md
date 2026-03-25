@@ -365,15 +365,17 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
   archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
   ```
   This moves processed files to e.g. `.archive/2026/03/products__20260323_143000.csv`
-- **Read lock (default):** Always include `&amp;{{read.lock}}` on the file URI. This prevents Camel from picking up files that are still being written — it waits until the file size stabilizes before processing. The property is defined in `application.properties`:
-  ```properties
-  read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
-  ```
-- **Done file (alternative to read.lock):** If the external system produces a `.done` marker file, replace `&amp;{{read.lock}}` with `&amp;{{done.file}}` on the file URI. The property is defined in `application.properties`:
-  ```properties
-  done.file=doneFileName=%24%7Bfile:name%7D.done
-  ```
-  Ask the user: **Does the external system produce a `.done` marker file, or should we use read lock (wait for file size to stabilize)?**
+- **File safety (read.lock vs done.file — mutually exclusive, always use one):**
+  Ask the user: **Does the external system produce a `.done` marker file, or should we use read lock?**
+  - If **no .done file** (default): use `&amp;{{read.lock}}` — waits until file size stabilizes before processing. Property:
+    ```properties
+    read.lock=readLock=changed
+    ```
+  - If **yes .done file**: replace `{{read.lock}}` with `{{done.file}}` — waits for a `.done` marker before processing. Property:
+    ```properties
+    done.file=doneFileName=%24%7Bfile:name%7D.done
+    ```
+  These are mutually exclusive — never use both on the same route.
 - NEVER use `noop=true` — files should be processed and archived/moved/deleted
 - NEVER use `include` parameter by default
 - **Move failed (optional):** Offer the user the option to add `&amp;{{error.file}}` to the file URI. This moves files that fail processing to a timestamped error folder. The property is defined in `application.properties`:
@@ -438,7 +440,7 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 - The file input directory MUST use `{{integration.sftp.root}}/{path}` directly in the route XML, NEVER a property placeholder. Always ask the user for the path.
 - NEVER use `noop=true` on file component
 - NEVER use `include` parameter on file component by default
-- Offer done file option (`&amp;{{done.file}}`) to the user
+- Always use either `{{read.lock}}` (default) or `{{done.file}}` on file URIs — never both, never neither
 - The `mapper` parameter in route XML MUST use the mapper file name (without `.mapper.xml`), e.g., `mapper=import-csv-to-products.mapper`. NEVER use a property placeholder.
 - Do NOT include `connection=pricefx` parameter — the default Pricefx connection is named `pricefx` and is used automatically. Only add `connection={name}` when the project has multiple Pricefx connections and a non-default one is needed.
 - Do NOT use `pfx-sftp` with `default-sftp-connection` — the SFTP storage is mounted into the IM pod's local file system. Use `file://{{integration.sftp.root}}/{path}` instead for better performance. Only use `pfx-sftp` for external SFTP servers.
