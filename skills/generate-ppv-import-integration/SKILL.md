@@ -15,11 +15,11 @@ You are generating an import integration for **Pricing Parameters** (also called
 |---|---|---|---|---|
 | `SIMPLE` | `LTV` | Single-key lookup | 1 key (`name`) | Exchange rates, discount codes, status lookups |
 | `RANGE` | `LTV` | Range-based lookup | 1 key (`name`) + bounds | Tax brackets, volume discounts, tiered pricing |
-| `MATRIX` | `MLTV2` | 2-key matrix | `key1`, `key2` | Price by region+product, discount by segment+category |
-| `MATRIX2` | `MLTV2` | 3-key matrix | `key1`–`key3` | Price by region+product+channel |
-| `MATRIX3` | `MLTV2` | 4-key matrix | `key1`–`key4` | Multi-dimensional pricing |
-| `MATRIX4` | `MLTV2` | 5-key matrix | `key1`–`key5` | Complex multi-dimensional lookups |
-| `MATRIX5` | `MLTV2` | 6-key matrix | `key1`–`key6` | Maximum dimensionality lookups |
+| `MATRIX` | `MLTV2` | 1 key + key2 | `name`, `key2` | Price by product+region, discount by code+segment |
+| `MATRIX2` | `MLTV2` | 2-key matrix | `key1`, `key2` | Price by region+product |
+| `MATRIX3` | `MLTV2` | 3-key matrix | `key1`–`key3` | Price by region+product+channel |
+| `MATRIX4` | `MLTV2` | 4-key matrix | `key1`–`key4` | Multi-dimensional pricing |
+| `MATRIX5` | `MLTV2` | 5-key matrix | `key1`–`key5` | Complex multi-dimensional lookups |
 
 ### Value Types (the `valueType` when creating a table)
 
@@ -56,22 +56,33 @@ Example CSV: `code,rate` → maps to `name,value`
 
 Example CSV: `tier,minQty,maxQty,discount` → maps to `name,lowerBound,upperBound,value`
 
-### MLTV2 — MATRIX to MATRIX5 (Multi-Key Matrix)
+### MLTV2 — MATRIX (name + key2)
 
-Flexible field structure — number of keys depends on the MATRIX type:
+MATRIX is special — it uses `name` as the first key (like SIMPLE/LTV) plus `key2`:
 
-| Field | MATRIX | MATRIX2 | MATRIX3 | MATRIX4 | MATRIX5 |
-|---|---|---|---|---|---|
-| `key1` | yes | yes | yes | yes | yes |
-| `key2` | yes | yes | yes | yes | yes |
-| `key3` | — | yes | yes | yes | yes |
-| `key4` | — | — | yes | yes | yes |
-| `key5` | — | — | — | yes | yes |
-| `key6` | — | — | — | — | yes |
-| `attribute1`–`attributeN` | values | values | values | values | values |
+| Field | Description |
+|---|---|
+| `name` | First key dimension (required) |
+| `key2` | Second key dimension (required) |
+| `attribute1`–`attributeN` | Value fields |
 
-Example CSV (MATRIX): `region,productType,discount` → maps to `key1,key2,attribute1`
-Example CSV (MATRIX2): `region,productType,channel,price` → maps to `key1,key2,key3,attribute1`
+Example CSV: `product,region,discount` → maps to `name,key2,attribute1`
+
+### MLTV2 — MATRIX2 to MATRIX5 (Multi-Key Matrix)
+
+MATRIX2 and above use `key1`–`keyN` (no `name` field):
+
+| Field | MATRIX2 | MATRIX3 | MATRIX4 | MATRIX5 |
+|---|---|---|---|---|
+| `key1` | yes | yes | yes | yes |
+| `key2` | yes | yes | yes | yes |
+| `key3` | — | yes | yes | yes |
+| `key4` | — | — | yes | yes |
+| `key5` | — | — | — | yes |
+| `attribute1`–`attributeN` | values | values | values | values |
+
+Example CSV (MATRIX2): `region,productType,discount` → maps to `key1,key2,attribute1`
+Example CSV (MATRIX3): `region,productType,channel,price` → maps to `key1,key2,key3,attribute1`
 
 ## Step 1: Check Credentials
 
@@ -88,11 +99,11 @@ If you already fetched the table metadata in Step 3 (the user specified a table 
 |---|---|---|
 | **SIMPLE** | `LTV` | Simple key→value pairs (exchange rates, discount codes) |
 | **RANGE** | `LTV` | Range-based lookups (tax brackets, volume discounts) |
-| **MATRIX** | `MLTV2` | 2-key matrix (price by region+product) |
-| **MATRIX2** | `MLTV2` | 3-key matrix (price by region+product+channel) |
-| **MATRIX3** | `MLTV2` | 4-key matrix |
-| **MATRIX4** | `MLTV2` | 5-key matrix |
-| **MATRIX5** | `MLTV2` | 6-key matrix |
+| **MATRIX** | `MLTV2` | `name` + `key2` (price by product+region) |
+| **MATRIX2** | `MLTV2` | 2-key matrix: `key1`, `key2` |
+| **MATRIX3** | `MLTV2` | 3-key matrix: `key1`–`key3` |
+| **MATRIX4** | `MLTV2` | 4-key matrix: `key1`–`key4` |
+| **MATRIX5** | `MLTV2` | 5-key matrix: `key1`–`key5` |
 
 If the user already specified the type (e.g., in $ARGUMENTS), skip asking. The `pricing-parameter` CLI command also shows the type in its output.
 
@@ -272,7 +283,19 @@ File: `src/main/resources/repo/mappers/{route-name}.mapper.xml`
 </mappers>
 ```
 
-#### MLTV2 Mapper Example
+#### MLTV2 — MATRIX Mapper Example (uses `name` + `key2`)
+```xml
+<mappers>
+    <loadMapper id="{route-name}.mapper">
+        <body in="{csv-name-column}" out="name"/>
+        <body in="{csv-key2-column}" out="key2"/>
+        <body in="{csv-value1-column}" out="attribute1"/>
+        <body in="{csv-value2-column}" out="attribute2" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>
+```
+
+#### MLTV2 — MATRIX2+ Mapper Example (uses `key1`, `key2`, ...)
 ```xml
 <mappers>
     <loadMapper id="{route-name}.mapper">
