@@ -472,7 +472,7 @@ program
   .command("create-pricing-parameter <name>")
   .description("Create a new Pricing Parameter (Company Parameter) table")
   .option("--label <label>", "Display label")
-  .option("--type <type>", "Table type: SIMPLE (LTV), MATRIX (MLTV2), MATRIX2 (MLTV2 v2), MATRIX3, MATRIX4, MATRIX5, MATRIX6", "SIMPLE")
+  .option("--type <type>", "Table type: SIMPLE (1 key), RANGE (1 key + bounds), MATRIX (2 keys), MATRIX2 (3 keys), MATRIX3 (4 keys), MATRIX4 (5 keys), MATRIX5 (6 keys)", "SIMPLE")
   .option("--value-type <valueType>", "Value type: REAL, STRING, INTEGER, DATE, DATETIME, BOOLEAN", "REAL")
   .option("--valid-after <date>", "Valid after date (YYYY-MM-DD), defaults to today")
   .option("--json", "Output raw JSON")

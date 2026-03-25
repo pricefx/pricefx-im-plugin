@@ -5,19 +5,38 @@ description: Generate a Pricefx Pricing Parameter (Company Parameter) import int
 
 # Generate Pricing Parameter Import Integration
 
-You are generating an import integration for **Pricing Parameters** (also called Company Parameters) in a Pricefx Integration Manager project. Pricing parameters come in two types:
+You are generating an import integration for **Pricing Parameters** (also called Company Parameters / Lookup Tables) in a Pricefx Integration Manager project. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
 
-| Type | Object Code | Description | Use Case |
-|---|---|---|---|
-| **LTV** | LTV | Single-key lookup table | Simple key→value pairs (e.g., exchange rates, discount codes) |
-| **MLTV2** | MLTV2 | Multi-key matrix table | Multiple keys→multiple values (e.g., price matrix by region+product type) |
+## Company Parameter Types Reference
 
-Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
+### Table Types
 
-## LTV vs MLTV2 Field Structure
+| API Type | IM objectType | Description | Keys | Use Case |
+|---|---|---|---|---|
+| `SIMPLE` | `LTV` | Single-key lookup | 1 key (`name`) | Exchange rates, discount codes, status lookups |
+| `RANGE` | `LTV` | Range-based lookup | 1 key (`name`) + bounds | Tax brackets, volume discounts, tiered pricing |
+| `MATRIX` | `MLTV2` | 2-key matrix | `key1`, `key2` | Price by region+product, discount by segment+category |
+| `MATRIX2` | `MLTV2` | 3-key matrix | `key1`–`key3` | Price by region+product+channel |
+| `MATRIX3` | `MLTV2` | 4-key matrix | `key1`–`key4` | Multi-dimensional pricing |
+| `MATRIX4` | `MLTV2` | 5-key matrix | `key1`–`key5` | Complex multi-dimensional lookups |
+| `MATRIX5` | `MLTV2` | 6-key matrix | `key1`–`key6` | Maximum dimensionality lookups |
 
-### LTV (Single-Key Lookup Table)
-Fixed field structure — every LTV table has these fields:
+### Value Types (the `valueType` when creating a table)
+
+| valueType | Description | Example |
+|---|---|---|
+| `REAL` | Decimal number (most common) | Prices, rates, percentages |
+| `STRING` | Text value | Status codes, category names |
+| `INTEGER` | Whole number | Counts, rankings |
+| `DATE` | Date | Effective dates, expiry dates |
+| `DATETIME` | Date + time | Timestamps |
+| `BOOLEAN` | True/false | Flags, toggles |
+
+## Field Structures
+
+### LTV — SIMPLE (Single-Key Lookup)
+
+Fixed field structure — every SIMPLE table has exactly these fields:
 
 | Field | Description |
 |---|---|
@@ -26,20 +45,33 @@ Fixed field structure — every LTV table has these fields:
 
 Example CSV: `code,rate` → maps to `name,value`
 
-### MLTV2 (Multi-Key Matrix Table)
-Flexible field structure with multiple keys and attributes:
+### LTV — RANGE (Range-Based Lookup)
 
 | Field | Description |
 |---|---|
-| `key1` | First key dimension (required) |
-| `key2` | Second key dimension (optional) |
-| `key3` | Third key dimension (optional) |
-| `key4` | Fourth key dimension (optional) |
-| `key5` | Fifth key dimension (optional) |
-| `key6` | Sixth key dimension (optional) |
-| `attribute1`–`attributeN` | Value fields |
+| `name` | The lookup key (required) |
+| `lowerBound` | Range lower bound |
+| `upperBound` | Range upper bound |
+| `value` | The lookup value (required) |
 
-Example CSV: `region,productType,discount` → maps to `key1,key2,attribute1`
+Example CSV: `tier,minQty,maxQty,discount` → maps to `name,lowerBound,upperBound,value`
+
+### MLTV2 — MATRIX to MATRIX5 (Multi-Key Matrix)
+
+Flexible field structure — number of keys depends on the MATRIX type:
+
+| Field | MATRIX | MATRIX2 | MATRIX3 | MATRIX4 | MATRIX5 |
+|---|---|---|---|---|---|
+| `key1` | yes | yes | yes | yes | yes |
+| `key2` | yes | yes | yes | yes | yes |
+| `key3` | — | yes | yes | yes | yes |
+| `key4` | — | — | yes | yes | yes |
+| `key5` | — | — | — | yes | yes |
+| `key6` | — | — | — | — | yes |
+| `attribute1`–`attributeN` | values | values | values | values | values |
+
+Example CSV (MATRIX): `region,productType,discount` → maps to `key1,key2,attribute1`
+Example CSV (MATRIX2): `region,productType,channel,price` → maps to `key1,key2,key3,attribute1`
 
 ## Step 1: Check Credentials
 
@@ -48,14 +80,21 @@ If not found, ASK the user for: URL, partition, username, password.
 
 ## Step 2: Determine Table Type
 
-Ask the user: **What type of pricing parameter are you importing?**
+If you already fetched the table metadata in Step 3 (the user specified a table name), the type is known from the API response. Otherwise ask:
 
-| Type | When to use |
-|---|---|
-| **LTV** (Single-key lookup) | Simple key→value pairs. Examples: currency exchange rates, discount percentages by code, status lookups |
-| **MLTV2** (Multi-key matrix) | Multiple dimensions. Examples: price matrix by region+product, discount by customer segment+product category |
+**What type of pricing parameter are you importing?**
 
-If the user already specified the type (e.g., in $ARGUMENTS), skip asking.
+| Type | IM objectType | When to use |
+|---|---|---|
+| **SIMPLE** | `LTV` | Simple key→value pairs (exchange rates, discount codes) |
+| **RANGE** | `LTV` | Range-based lookups (tax brackets, volume discounts) |
+| **MATRIX** | `MLTV2` | 2-key matrix (price by region+product) |
+| **MATRIX2** | `MLTV2` | 3-key matrix (price by region+product+channel) |
+| **MATRIX3** | `MLTV2` | 4-key matrix |
+| **MATRIX4** | `MLTV2` | 5-key matrix |
+| **MATRIX5** | `MLTV2` | 6-key matrix |
+
+If the user already specified the type (e.g., in $ARGUMENTS), skip asking. The `pricing-parameter` CLI command also shows the type in its output.
 
 ## Step 3: Select Pricing Parameter Table
 
