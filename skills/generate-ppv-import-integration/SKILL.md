@@ -1,0 +1,269 @@
+---
+name: generate-ppv-import-integration
+description: Generate a Pricefx Pricing Parameter (Company Parameter) import integration for LTV (single-key lookup table) or MLTV2 (multi-key matrix table). Use this skill whenever the user wants to import pricing parameters, company parameters, lookup tables, exchange rates, discount matrices, or any key/value configuration data into Pricefx. Fetches real metadata from the partition via pfx CLI.
+---
+
+# Generate Pricing Parameter Import Integration
+
+You are generating an import integration for **Pricing Parameters** (also called Company Parameters) in a Pricefx Integration Manager project. Pricing parameters come in two types:
+
+| Type | Object Code | Description | Use Case |
+|---|---|---|---|
+| **LTV** | LTV | Single-key lookup table | Simple key→value pairs (e.g., exchange rates, discount codes) |
+| **MLTV2** | MLTV2 | Multi-key matrix table | Multiple keys→multiple values (e.g., price matrix by region+product type) |
+
+Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
+
+## LTV vs MLTV2 Field Structure
+
+### LTV (Single-Key Lookup Table)
+Fixed field structure — every LTV table has these fields:
+
+| Field | Description |
+|---|---|
+| `name` | The lookup key (required) |
+| `value` | The lookup value (required) |
+
+Example CSV: `code,rate` → maps to `name,value`
+
+### MLTV2 (Multi-Key Matrix Table)
+Flexible field structure with multiple keys and attributes:
+
+| Field | Description |
+|---|---|
+| `key1` | First key dimension (required) |
+| `key2` | Second key dimension (optional) |
+| `key3` | Third key dimension (optional) |
+| `key4` | Fourth key dimension (optional) |
+| `key5` | Fifth key dimension (optional) |
+| `key6` | Sixth key dimension (optional) |
+| `attribute1`–`attributeN` | Value fields |
+
+Example CSV: `region,productType,discount` → maps to `key1,key2,attribute1`
+
+## Step 1: Check Credentials
+
+Check `src/main/resources/repo/config/application.properties` and `src/main/resources/repo/config/application-local.properties` for `integration.pfx.*` properties.
+If not found, ASK the user for: URL, partition, username, password.
+
+## Step 2: Determine Table Type
+
+Ask the user: **What type of pricing parameter are you importing?**
+
+| Type | When to use |
+|---|---|
+| **LTV** (Single-key lookup) | Simple key→value pairs. Examples: currency exchange rates, discount percentages by code, status lookups |
+| **MLTV2** (Multi-key matrix) | Multiple dimensions. Examples: price matrix by region+product, discount by customer segment+product category |
+
+If the user already specified the type (e.g., in $ARGUMENTS), skip asking.
+
+## Step 3: Get Pricing Parameter Name
+
+Ask the user: **What is the pricing parameter name?**
+
+This is the name of the table in Pricefx (e.g., `ExchangeRate`, `DiscountMatrix`, `PriceList`). It will be used as the `pricingParameterName` on the pfx-api URI.
+
+## Step 4: Determine Import Mode
+
+Ask the user: **Do you want to replace all data or upsert (update existing, insert new)?**
+
+| Mode | API Method | Mapper Type | Description |
+|---|---|---|---|
+| **Replace** (default) | `pfx-api:loaddata` | `<loadMapper>` | Replaces all data in the table. Best for full refreshes. |
+| **Upsert** | `pfx-api:integrate` | `<integrateMapper>` | Updates existing records, inserts new ones. Best for incremental updates. |
+
+Default: `loaddata` (replace).
+
+## Step 5: Determine Data Source
+
+Ask the user: **What is the data source?**
+- CSV file (local file system)
+- Zipped/compressed CSV (local file system)
+- SFTP
+- REST API
+- Other
+
+### If file system (CSV or Zipped CSV):
+**Always derive the folder name from context** — use the pricing parameter name converted to kebab-case:
+- `ExchangeRate` → `/exchange-rate`
+- `DiscountMatrix` → `/discount-matrix`
+
+Propose the derived path and let the user override if needed.
+
+The full `from` URI will be: `file://{{integration.sftp.root}}/{derived-path}?delay=10000&{{archive.file}}&{{read.lock}}`
+
+## Step 5b: Auto-detect CSV Format from Sample Data
+
+If the user attaches a CSV file or pastes sample data, analyze it automatically BEFORE asking remaining questions. Detect:
+
+1. **Delimiter** — `,`, `;`, `\t`, `|`
+2. **Has header row** — if the first row looks like column names
+3. **Column names** — extract from header row
+4. **Number of columns** — determines LTV (2 columns) vs MLTV2 (3+ columns)
+5. **Data types per column** — for converter expression suggestions
+
+Present the detected format and proposed mapping to the user for confirmation.
+
+If auto-detected, skip Steps 6 (CSV Header), 7 (Field Mapping) — they are already resolved.
+
+## Step 6: CSV Header
+
+Skip this step if already auto-detected in Step 5b.
+
+If the data source is CSV, ask: **Does the CSV file have a header row?**
+- Yes (default) → `skipHeaderRecord=true`
+- No → `skipHeaderRecord=false` with explicit `header` parameter
+
+## Step 7: Field Mapping
+
+Skip this step if already auto-detected and confirmed in Step 5b.
+
+### For LTV:
+The mapping is straightforward — ask which CSV column is the key and which is the value:
+
+```
+| CSV Column | → | Pricefx Field |
+|---|---|---|
+| {key column} | → | name |
+| {value column} | → | value |
+```
+
+### For MLTV2:
+Ask which CSV columns map to keys and which to attributes:
+
+```
+| CSV Column | → | Pricefx Field |
+|---|---|---|
+| {first key} | → | key1 |
+| {second key} | → | key2 |
+| {value column 1} | → | attribute1 |
+| {value column 2} | → | attribute2 |
+```
+
+Present the proposed mapping and let the user confirm or adjust.
+
+## Step 8: Generate Files
+
+Generate the route and mapper files using the conventions below.
+
+### Route Naming
+- File: `src/main/resources/repo/routes/{descriptive-name}.xml`
+- Route ID: `{descriptive-name}` (must match file name without `.xml`, NO `pfx:` prefix)
+- Naming convention: `import-ppv-{parameter-name-kebab}` (e.g., `import-ppv-exchange-rate`)
+- Use `$ARGUMENTS` or ask the user for a descriptive name
+
+### Route XML — LTV/MLTV2 import
+
+PPV imports use `pfx-csv:unmarshal` + `pfx-api:loaddata` (not `loaddataFile`). The key difference from standard imports is the `pricingParameterName` parameter.
+
+```xml
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="{route-name}">
+        <from uri="{source-uri}"/>
+
+        <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
+
+        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={DELIMITER}"/>
+
+        <to uri="pfx-api:{loaddata|integrate}?objectType={LTV|MLTV2}&amp;pricingParameterName={ParameterName}&amp;mapper={route-name}.mapper"/>
+
+        <log message="Import completed for file: ${header.CamelFileName}" loggingLevel="INFO"/>
+    </route>
+</routes>
+```
+
+**Key parameters:**
+- `objectType=LTV` for single-key lookup tables
+- `objectType=MLTV2` for multi-key matrix tables
+- `pricingParameterName={name}` — the pricing parameter table name in Pricefx (required)
+- `mapper={route-name}.mapper` — field mapping
+- Use `loaddata` for full replace, `integrate` for upsert
+
+**Source URI patterns by data source type:**
+
+| Source | URI Pattern |
+|--------|-------------|
+| CSV file | `file://{{integration.sftp.root}}/{user-path}?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}` |
+| Zipped CSV | Same as CSV file, then add `<to uri="pfx-io:streamCompressedFile"/>` after `<from>` and before unmarshal |
+| SFTP | `pfx-sftp://{{pfx:{route-name}.sftp.path}}?connection={{pfx:{route-name}.sftp.connection}}&amp;delete=true` |
+| REST API | Use `pfx-rest:get` as a `<to>` step with connection |
+
+**File component options:**
+- **Archive (default):** Always include `&amp;{{archive.file}}` on the file URI. The default property value is:
+  ```properties
+  archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
+  ```
+- **Read lock (default):** Always include `&amp;{{read.lock}}` on the file URI. The property is defined in `application.properties`:
+  ```properties
+  read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
+  ```
+- **Done file (alternative to read.lock):** If the external system produces a `.done` marker file, replace `&amp;{{read.lock}}` with `&amp;{{done.file}}` on the file URI:
+  ```properties
+  done.file=doneFileName=%24%7Bfile:name%7D.done
+  ```
+  Ask the user: **Does the external system produce a `.done` marker file, or should we use read lock (wait for file size to stabilize)?**
+- **Move failed (optional):** Offer `&amp;{{error.file}}` to move failed files:
+  ```properties
+  error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D
+  ```
+- NEVER use `noop=true` — files should be processed and archived/moved/deleted
+- NEVER use `include` parameter by default
+
+### Mapper XML
+
+File: `src/main/resources/repo/mappers/{route-name}.mapper.xml`
+
+#### LTV Mapper Example
+```xml
+<mappers>
+    <loadMapper id="{route-name}.mapper">
+        <body in="{csv-key-column}" out="name"/>
+        <body in="{csv-value-column}" out="value"/>
+    </loadMapper>
+</mappers>
+```
+
+#### MLTV2 Mapper Example
+```xml
+<mappers>
+    <loadMapper id="{route-name}.mapper">
+        <body in="{csv-key1-column}" out="key1"/>
+        <body in="{csv-key2-column}" out="key2"/>
+        <body in="{csv-value1-column}" out="attribute1"/>
+        <body in="{csv-value2-column}" out="attribute2" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>
+```
+
+For upsert mode, use `<integrateMapper>` instead of `<loadMapper>`.
+
+### Properties
+
+Add the file handling properties to `src/main/resources/repo/config/application.properties` if not already present:
+
+```properties
+archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
+read.lock=readLock=changed&readLockCheckInterval=5000&readLockTimeout=60000
+```
+
+Other properties are only needed for SFTP connections, etc.
+
+## Important Rules
+
+- Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID
+- All URI parameters with `&` MUST be escaped as `&amp;` in XML
+- `pricingParameterName` is **required** on the pfx-api URI — this identifies which pricing parameter table to load into
+- PPV imports do NOT need `businessKeys` — the key structure is defined by the table type (LTV uses `name`, MLTV2 uses `key1`–`key6`)
+- PPV mappers do NOT need `<constant expression="..." out="name"/>` — the table is identified by `pricingParameterName` on the URI
+- Use URL-encoded values for delimiter in XML:
+  - Comma: `delimiter=,`
+  - Semicolon: `delimiter=;`
+  - Tab: `delimiter=%09`
+  - Pipe: `delimiter=%7C`
+- The file input directory MUST use `{{integration.sftp.root}}/{path}` directly in the route XML
+- The `mapper` parameter in route XML MUST use the mapper file name (without `.mapper.xml`), e.g., `mapper=import-ppv-exchange-rate.mapper`
+- Do NOT include `connection=pricefx` parameter — the default connection is used automatically
+- Do NOT use `pfx-sftp` with `default-sftp-connection` — use `file://{{integration.sftp.root}}/{path}` instead
+- **Resource ID naming rule:** The `id` attribute of mappers and routes MUST match the file name (without `.xml`). Mismatched IDs cause deployment failure.
+- NEVER use `noop=true` on file component
+- NEVER use `include` parameter on file component by default

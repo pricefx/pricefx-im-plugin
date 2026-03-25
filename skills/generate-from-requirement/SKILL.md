@@ -19,7 +19,7 @@ Read the markdown file and extract:
 | Field | Required | Example |
 |---|---|---|
 | Direction | yes | `import` or `export` |
-| Object type | yes | `P`, `PX`, `CX`, `C`, `DMDS` |
+| Object type | yes | `P`, `PX`, `CX`, `C`, `DMDS`, `LTV`, `MLTV2` |
 | Table name | for PX/CX/DMDS | `MichaluvTest` |
 | Target/Source | yes | `CSV file`, `SFTP` |
 | Fields | yes | table of mappings or `all fields` |
@@ -145,6 +145,6 @@ Configuration:
 
 - **NEVER ask interactive questions** — all information must come from the requirement doc
 - If critical information is missing from the requirement, list what's missing and stop
-- Follow ALL rules from generate-import-integration (P/PX/CX/C), generate-pa-import-integration (DMDS), and generate-export-integration skills
+- Follow ALL rules from generate-import-integration (P/PX/CX/C), generate-pa-import-integration (DMDS), generate-ppv-import-integration (LTV/MLTV2), and generate-export-integration skills
 - Validate generated files against review-integration agent rules before finishing
 - If the requirement references fields that don't exist in metadata, warn and skip those fields
