@@ -223,6 +223,33 @@ export class PricefxClient {
     return r?.response?.data || [];
   }
 
+  async listPricingParameters(locale = "en") {
+    const r = await this.post(`/fetch/MLTVM?dataLocale=${locale}`, {
+      data: {
+        startRow: 0,
+        endRow: 200,
+        _constructor: "AdvancedCriteria",
+        criteria: [],
+      },
+    });
+    return r?.response?.data || [];
+  }
+
+  async fetchPricingParameterData(typedId, locale = "en") {
+    const r = await this.post(
+      `/lookuptablemanager.fetch/${typedId}?onConflict=validationError&isc_dataFormat=json&dataLocale=${locale}`,
+      {
+        data: {
+          startRow: 0,
+          endRow: 200,
+          _constructor: "AdvancedCriteria",
+          criteria: [],
+        },
+      }
+    );
+    return r?.response?.data || [];
+  }
+
   async testConnection() {
     const r = await this.post("/configurationmanager.get/productextension", {});
     return r?.response?.statusCode === 0 || r?.response?.data !== undefined;

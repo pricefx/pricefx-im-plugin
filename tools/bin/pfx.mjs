@@ -364,6 +364,109 @@ program
     }
   });
 
+// --- pricing-parameters ---
+program
+  .command("pricing-parameters")
+  .description("List all Pricing Parameter (Company Parameter) tables")
+  .option("--json", "Output raw JSON instead of a table")
+  .action(async (opts) => {
+    try {
+      const connOpts = getConnectionConfig();
+      const client = new PricefxClient(connOpts);
+      const data = await client.listPricingParameters();
+
+      if (opts.json) {
+        console.log(JSON.stringify(data, null, 2));
+      } else {
+        printPricingParameterTable(data);
+      }
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
+// --- pricing-parameter <name> ---
+program
+  .command("pricing-parameter <name>")
+  .description("Show metadata and sample data for a Pricing Parameter table")
+  .option("--limit <n>", "Number of data rows to fetch", parseInt, 10)
+  .option("--json", "Output raw JSON instead of a table")
+  .action(async (name, opts) => {
+    try {
+      const connOpts = getConnectionConfig();
+      const client = new PricefxClient(connOpts);
+      const allParams = await client.listPricingParameters();
+
+      // Find the parameter by uniqueName or label (case-insensitive)
+      const param = allParams.find(
+        (p) =>
+          p.uniqueName === name ||
+          p.label === name ||
+          (p.uniqueName && p.uniqueName.toLowerCase() === name.toLowerCase()) ||
+          (p.label && p.label.toLowerCase() === name.toLowerCase())
+      );
+
+      if (!param) {
+        const available = allParams.map((p) => p.uniqueName || p.label).join(", ");
+        throw new Error(`Pricing parameter "${name}" not found. Available: ${available}`);
+      }
+
+      if (opts.json) {
+        // Fetch data too for JSON output
+        const data = await client.fetchPricingParameterData(param.typedId, "en");
+        console.log(JSON.stringify({ parameter: param, data }, null, 2));
+      } else {
+        // Print parameter info
+        const type = param.simulationDimension > 0 ? "MLTV2" : "LTV";
+        const keys = (param.valueArray || []).filter((v) => v.key).map((v) => v.name || v.fieldName);
+        const attrs = (param.valueArray || []).filter((v) => !v.key).map((v) => v.name || v.fieldName);
+        console.log(`\nPricing Parameter: ${param.uniqueName || param.label}`);
+        console.log(`  Type:       ${type} (${type === "LTV" ? "Single-key Lookup" : "Multi-key Matrix"})`);
+        console.log(`  Label:      ${param.label || ""}`);
+        console.log(`  TypedId:    ${param.typedId}`);
+        if (keys.length > 0) console.log(`  Keys:       ${keys.join(", ")}`);
+        if (attrs.length > 0) console.log(`  Attributes: ${attrs.join(", ")}`);
+        console.log("");
+
+        // Print field details
+        if (param.valueArray && param.valueArray.length > 0) {
+          const rows = param.valueArray.map((v) => ({
+            fieldName: v.name || v.fieldName || "",
+            label: v.label || "",
+            type: v.key ? "KEY" : "VALUE",
+            fieldType: v.fieldType != null ? formatPpvFieldType(v.fieldType) : "",
+          }));
+          printTable(rows);
+        }
+
+        // Fetch and print sample data
+        const data = await client.fetchPricingParameterData(param.typedId, "en");
+        if (data.length > 0) {
+          const sample = data.slice(0, opts.limit);
+          console.log(`\nSample data (${sample.length} of ${data.length} rows):\n`);
+          // Build display rows from the actual data keys
+          const skipFields = new Set(["version", "typedId", "createDate", "createdBy", "lastUpdateDate", "lastUpdateBy", "lookupTableId", "lookupTable"]);
+          const allKeys = Object.keys(sample[0]).filter((k) => !skipFields.has(k));
+          const keysWithData = allKeys.filter((k) => sample.some((row) => row[k] != null && row[k] !== ""));
+          const displayRows = sample.map((row) => {
+            const r = {};
+            for (const k of keysWithData) {
+              r[k] = row[k] ?? "";
+            }
+            return r;
+          });
+          printResponsiveTable(displayRows);
+        } else {
+          console.log("\nNo data rows found.");
+        }
+      }
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
 // --- test-connection ---
 program
   .command("test-connection")
@@ -567,6 +670,32 @@ function printExtensionTable(extensions, type) {
     businessKey: (extensions[name].businessKey || []).join(", "),
   }));
   printTable(rows);
+}
+
+function printPricingParameterTable(params) {
+  if (!Array.isArray(params) || params.length === 0) {
+    console.log("No pricing parameters found.");
+    return;
+  }
+  const rows = params.map((p) => {
+    const type = p.simulationDimension > 0 ? "MLTV2" : "LTV";
+    const keys = (p.valueArray || []).filter((v) => v.key).map((v) => v.name || v.fieldName);
+    const values = (p.valueArray || []).filter((v) => !v.key).map((v) => v.name || v.fieldName);
+    return {
+      name: p.uniqueName || "",
+      label: p.label || "",
+      type,
+      typedId: p.typedId || "",
+      keys: keys.join(", "),
+      values: values.join(", "),
+    };
+  });
+  printTable(rows);
+}
+
+function formatPpvFieldType(code) {
+  const types = { 0: "NUMERIC", 1: "NUMERIC_LONG", 2: "TEXT", 3: "INTEGER", 4: "DATE", 5: "DATETIME", 9: "BOOLEAN" };
+  return types[code] || String(code);
 }
 
 program.parse();

@@ -57,11 +57,18 @@ Ask the user: **What type of pricing parameter are you importing?**
 
 If the user already specified the type (e.g., in $ARGUMENTS), skip asking.
 
-## Step 3: Get Pricing Parameter Name
+## Step 3: Select Pricing Parameter Table
 
-Ask the user: **What is the pricing parameter name?**
+Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameters` to list all available pricing parameter tables.
 
-This is the name of the table in Pricefx (e.g., `ExchangeRate`, `DiscountMatrix`, `PriceList`). It will be used as the `pricingParameterName` on the pfx-api URI.
+Ask the user to select a table. If the user already specified the name (e.g., in $ARGUMENTS), skip asking.
+
+Then run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameter {name}` to get the table's field structure and sample data. This shows:
+- Table type (LTV or MLTV2)
+- Key fields and value fields
+- Sample data rows
+
+The table's `uniqueName` will be used as the `pricingParameterName` on the pfx-api URI.
 
 ## Step 4: Determine Import Mode
 
