@@ -467,6 +467,36 @@ program
     }
   });
 
+// --- create-pricing-parameter ---
+program
+  .command("create-pricing-parameter <name>")
+  .description("Create a new Pricing Parameter (Company Parameter) table")
+  .option("--label <label>", "Display label")
+  .option("--type <type>", "Table type: SIMPLE (LTV), MATRIX (MLTV2), MATRIX2 (MLTV2 v2), MATRIX3, MATRIX4, MATRIX5, MATRIX6", "SIMPLE")
+  .option("--value-type <valueType>", "Value type: REAL, STRING, INTEGER, DATE, DATETIME, BOOLEAN", "REAL")
+  .option("--valid-after <date>", "Valid after date (YYYY-MM-DD), defaults to today")
+  .option("--json", "Output raw JSON")
+  .action(async (name, opts) => {
+    try {
+      const connOpts = getConnectionConfig();
+      const client = new PricefxClient(connOpts);
+      const result = await client.createPricingParameter(name, {
+        label: opts.label,
+        type: opts.type.toUpperCase(),
+        valueType: opts.valueType.toUpperCase(),
+        validAfter: opts.validAfter,
+      });
+      if (opts.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log(`Pricing parameter "${name}" created.`);
+      }
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exit(1);
+    }
+  });
+
 // --- test-connection ---
 program
   .command("test-connection")

@@ -38,6 +38,7 @@ Use the `pfx` CLI tool to discover tables and fetch field-level metadata from th
 | `pfx set-attributes {type} {table} {attrs...}` | Set multiple attributes at once (batch, format: `field:TYPE:FORMAT:Label`) |
 | `pfx pricing-parameters` | List all Pricing Parameter (Company Parameter) tables |
 | `pfx pricing-parameter {name}` | Get fields and sample data for a specific Pricing Parameter table |
+| `pfx create-pricing-parameter {name}` | Create a new Pricing Parameter table |
 | `pfx test-connection` | Verify that .env credentials are valid |
 | `pfx fetch-sample {type} --name {name} --limit N` | Fetch sample rows from any table (P, PX, CX, DMDS) |
 

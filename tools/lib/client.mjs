@@ -250,6 +250,22 @@ export class PricefxClient {
     return r?.response?.data || [];
   }
 
+  async createPricingParameter(uniqueName, { label, type = "SIMPLE", valueType = "REAL", validAfter } = {}, locale = "en") {
+    const r = await this.post(`/lookuptablemanager.add?dataLocale=${locale}`, {
+      data: {
+        uniqueName,
+        label: label || uniqueName,
+        validAfter: validAfter || new Date().toISOString().split("T")[0],
+        type,
+        valueType,
+        status: "ACTIVE",
+        nodeId: 0,
+      },
+      operation: "add",
+    });
+    return r;
+  }
+
   async testConnection() {
     const r = await this.post("/configurationmanager.get/productextension", {});
     return r?.response?.statusCode === 0 || r?.response?.data !== undefined;
