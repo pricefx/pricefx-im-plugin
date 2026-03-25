@@ -15,7 +15,7 @@ You are generating an import integration for **Pricing Parameters** (also called
 |---|---|---|---|---|
 | `SIMPLE` | `LTV` | Single-key lookup | 1 key (`name`) | Exchange rates, discount codes, status lookups |
 | `RANGE` | `LTV` | Range-based lookup | 1 key (`name`) + bounds | Tax brackets, volume discounts, tiered pricing |
-| `MATRIX` | `MLTV2` | 1 key + key2 | `name`, `key2` | Price by product+region, discount by code+segment |
+| `MATRIX` | `MLTV2` | 1-key matrix | `name` | Price by product, discount by code |
 | `MATRIX2` | `MLTV2` | 2-key matrix | `key1`, `key2` | Price by region+product |
 | `MATRIX3` | `MLTV2` | 3-key matrix | `key1`–`key3` | Price by region+product+channel |
 | `MATRIX4` | `MLTV2` | 4-key matrix | `key1`–`key4` | Multi-dimensional pricing |
@@ -56,21 +56,20 @@ Example CSV: `code,rate` → maps to `name,value`
 
 Example CSV: `tier,minQty,maxQty,discount` → maps to `name,lowerBound,upperBound,value`
 
-### MLTV2 — MATRIX (name + key2)
+### MLTV2 — MATRIX (1-key, uses `name`)
 
-MATRIX is special — it uses `name` as the first key (like SIMPLE/LTV) plus `key2`:
+MATRIX has a single key called `name` (same field name as SIMPLE/LTV) plus attribute values:
 
 | Field | Description |
 |---|---|
-| `name` | First key dimension (required) |
-| `key2` | Second key dimension (required) |
+| `name` | The lookup key (required) |
 | `attribute1`–`attributeN` | Value fields |
 
-Example CSV: `product,region,discount` → maps to `name,key2,attribute1`
+Example CSV: `product,discount,margin` → maps to `name,attribute1,attribute2`
 
-### MLTV2 — MATRIX2 to MATRIX5 (Multi-Key Matrix)
+### MLTV2 — MATRIX2 to MATRIX5 (Multi-Key, uses `key1`–`keyN`)
 
-MATRIX2 and above use `key1`–`keyN` (no `name` field):
+MATRIX2 and above use `key1`–`keyN`:
 
 | Field | MATRIX2 | MATRIX3 | MATRIX4 | MATRIX5 |
 |---|---|---|---|---|
@@ -99,7 +98,7 @@ If you already fetched the table metadata in Step 3 (the user specified a table 
 |---|---|---|
 | **SIMPLE** | `LTV` | Simple key→value pairs (exchange rates, discount codes) |
 | **RANGE** | `LTV` | Range-based lookups (tax brackets, volume discounts) |
-| **MATRIX** | `MLTV2` | `name` + `key2` (price by product+region) |
+| **MATRIX** | `MLTV2` | 1-key matrix: `name` (price by product) |
 | **MATRIX2** | `MLTV2` | 2-key matrix: `key1`, `key2` |
 | **MATRIX3** | `MLTV2` | 3-key matrix: `key1`–`key3` |
 | **MATRIX4** | `MLTV2` | 4-key matrix: `key1`–`key4` |
@@ -283,12 +282,11 @@ File: `src/main/resources/repo/mappers/{route-name}.mapper.xml`
 </mappers>
 ```
 
-#### MLTV2 — MATRIX Mapper Example (uses `name` + `key2`)
+#### MLTV2 — MATRIX Mapper Example (uses `name`)
 ```xml
 <mappers>
     <loadMapper id="{route-name}.mapper">
-        <body in="{csv-name-column}" out="name"/>
-        <body in="{csv-key2-column}" out="key2"/>
+        <body in="{csv-key-column}" out="name"/>
         <body in="{csv-value1-column}" out="attribute1"/>
         <body in="{csv-value2-column}" out="attribute2" converterExpression="stringToDecimal"/>
     </loadMapper>
