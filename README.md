@@ -52,36 +52,7 @@ You can load multiple plugins at once:
 claude --plugin-dir /path/to/pricefx-integration --plugin-dir /path/to/another-plugin
 ```
 
-**Option B — Install from a marketplace:**
-
-First, add the plugin marketplace (one-time setup). Run inside Claude Code:
-
-```
-/plugin marketplace add https://gitlab.pricefx.eu/tools/pricefx-integration.git
-```
-
-Or add it to your `settings.json` (`~/.claude/settings.json` for user-level, or `.claude/settings.json` for project-level):
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "pricefx-tools": {
-      "source": {
-        "source": "git",
-        "url": "https://gitlab.pricefx.eu/tools/pricefx-integration.git"
-      }
-    }
-  }
-}
-```
-
-Then install the plugin:
-
-```
-/plugin install pricefx-integration@pricefx-tools
-```
-
-**Option C — Manage via the plugin manager UI:**
+**Option B — Manage via the plugin manager UI:**
 
 Run `/plugin` inside Claude Code to open the plugin manager. From there you can browse marketplaces, install, enable/disable, and uninstall plugins.
 
@@ -132,10 +103,15 @@ your-im-project/
 ├── src/main/resources/
 │   ├── application.properties        # Route configuration
 │   ├── camel-context.xml             # Route wiring
-│   └── refs/routes/                  # Route XML files
-├── config/
-│   ├── connections/                  # Connection JSON files
-│   └── properties/                   # External properties
+│   └── repo/
+│       ├── routes/                   # Camel route XML files
+│       ├── mappers/                  # Field mapping XML files
+│       ├── filters/                  # Filter XML files
+│       ├── connections/              # Connection JSON files (pricefx, sftp, etc.)
+│       ├── beans/                    # Custom Java/Groovy beans
+│       ├── classes/                  # Custom classes
+│       ├── config/                   # Additional configuration
+│       └── resources/                # Static resources
 └── docs/
     └── requirements/                 # Business requirement docs
 ```
