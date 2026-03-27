@@ -52,21 +52,6 @@ You can load multiple plugins at once:
 claude --plugin-dir /path/to/pricefx-integration --plugin-dir /path/to/another-plugin
 ```
 
-**Option B — Manage via the plugin manager UI:**
-
-Run `/plugin` inside Claude Code to open the plugin manager. From there you can browse marketplaces, install, enable/disable, and uninstall plugins.
-
-### Useful plugin commands
-
-| Command | Purpose |
-|---------|---------|
-| `/plugin` | Open plugin manager UI |
-| `/plugin install <name>@<marketplace>` | Install a plugin |
-| `/plugin uninstall <name>@<marketplace>` | Remove a plugin |
-| `/plugin enable <name>@<marketplace>` | Re-enable a disabled plugin |
-| `/plugin disable <name>@<marketplace>` | Disable without uninstalling |
-| `/reload-plugins` | Apply changes without restarting Claude Code |
-
 ### 4. Verify installation
 
 Once loaded, you should see the plugin's skills available when you type `/` in Claude Code. Try `/pricefx-integration:list-pricefx-tables` to confirm it works.
@@ -102,7 +87,6 @@ your-im-project/
 ├── CLAUDE.md                         # Project instructions (optional)
 ├── src/main/resources/
 │   ├── application.properties        # Route configuration
-│   ├── camel-context.xml             # Route wiring
 │   └── repo/
 │       ├── routes/                   # Camel route XML files
 │       ├── mappers/                  # Field mapping XML files
