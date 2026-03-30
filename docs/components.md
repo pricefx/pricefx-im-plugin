@@ -75,15 +75,46 @@ The primary component for all Pricefx server interactions.
 | `maxRows` | Max rows for fetch | `50000` |
 | `converterStrategyType` | Converter strategy type | — |
 
+### loaddataFile vs loaddata
+
+| Method | When to Use | Batch size default |
+|--------|-------------|-------------------|
+| `loaddataFile` | **Default** for all CSV imports (P, PX, C, CX, LTV, MLTV2). Streams file directly to server — much faster for large files. | `500000` |
+| `loaddata` | Only when Groovy row-level logic is needed per record. IM parses and maps each row in memory. | `5000` |
+
+**Batch size guidance for `loaddataFile`:**
+
+| Fields per row | Recommended batchSize |
+|---|---|
+| < 10 | `500000` |
+| 10–20 | `100000`–`200000` |
+| 20+ | `50000` or less |
+
+**PX / CX imports — no `extensionName` parameter exists.** The table name is set in the **mapper** as a constant:
+
+```xml
+<loadMapper id="import-prices.mapper">
+    <constant expression="Prices" out="name"/>  <!-- table name — required for PX/CX -->
+    <body in="sku" out="sku"/>
+    <body in="price" out="attribute1" converterExpression="stringToDecimal"/>
+</loadMapper>
+```
+
+**Key field names by object type:**
+- P / PX → `sku`
+- C / CX → `customerId`
+
+**Do not include `connection=pricefx`** — the default connection bean is named `pricefx` and is used automatically.
+
 ### Examples
 
 ```xml
-<!-- Load products from CSV (row-by-row via JSON API) -->
-<to uri="pfx-api:loaddata?objectType=P&amp;mapper=productMapper&amp;businessKeys=sku"/>
-
-<!-- Load products via file upload (streaming, recommended for large files) -->
+<!-- Load products via file streaming (recommended) -->
 <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
-<to uri="pfx-api:loaddataFile?objectType=P&amp;mapper=productMapper&amp;batchSize=500000"/>
+<to uri="pfx-api:loaddataFile?objectType=P&amp;mapper=import-products.mapper&amp;batchSize=500000"/>
+
+<!-- Load products row-by-row (use only when Groovy logic is needed) -->
+<to uri="pfx-api:loaddata?objectType=P&amp;mapper=productMapper&amp;businessKeys=sku"/>
 
 <!-- Fetch with SQL-like syntax -->
 <to uri="pfx-api:fetch?sql=select sku,attribute1 where name='Cars'&amp;objectType=PX&amp;batchedMode=true&amp;batchSize=5000"/>
@@ -102,6 +133,92 @@ The primary component for all Pricefx server interactions.
 
 <!-- Poll events (consumer) -->
 <from uri="pfx-api:events?delay=60000&amp;eventTypes=ITEM_UPDATE_PPV,PADATALOAD_COMPLETED"/>
+```
+
+---
+
+## File Consumer Patterns
+
+When reading files from the local file system, define these properties once in `config/application.properties` and reference them in route URIs:
+
+```properties
+# Move processed files to timestamped archive (always include)
+archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
+
+# Wait until file size stabilizes (default — use when no .done marker)
+read.lock=readLock=changed
+
+# Wait for a .done marker file (use when upstream writes a .done file)
+done.file=doneFileName=%24%7Bfile:name%7D.done
+
+# Move failed files to error folder (optional)
+error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D
+```
+
+**File URI template:**
+
+```xml
+<from uri="file://{{integration.sftp.root}}/my-path?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+```
+
+**Rules:**
+- Always include `{{archive.file}}`
+- Use **either** `{{read.lock}}` **or** `{{done.file}}` — never both, never neither
+- `{{error.file}}` is optional
+- Never use `noop=true`
+
+---
+
+## Scheduled Exports with Quartz Cron
+
+In Camel URIs, **spaces in Quartz cron expressions are replaced with `+`**:
+
+```xml
+<from uri="quartz://export/my-export?cron=0+0+6+*+*+?"/>   <!-- daily at 6:00 AM -->
+<from uri="quartz://export/my-export?cron=0+0+0+*+*+?"/>   <!-- daily at midnight -->
+<from uri="quartz://export/my-export?cron=0+0+8+?+*+MON-FRI"/>  <!-- Mon–Fri at 8:00 AM -->
+```
+
+Cron format: `seconds minutes hours day-of-month month day-of-week`
+
+---
+
+## Delta Sync via pfx-config
+
+Use `pfx-config:get/set` to persist a timestamp between runs for incremental exports:
+
+```xml
+<!-- Read stored timestamp into header -->
+<toD uri="pfx-config:get?name={{integration.name}}.${routeId}.export.timestamp&amp;toHeader=lastExportTimestamp"/>
+
+<!-- Fallback for first run -->
+<choice>
+    <when>
+        <simple>${headers.lastExportTimestamp} == null || ${headers.lastExportTimestamp} == ''</simple>
+        <setHeader name="lastExportTimestamp"><constant>1970-01-01T00:00:00</constant></setHeader>
+    </when>
+</choice>
+
+<!-- Capture upper bound -->
+<setHeader name="currentExportTimestamp">
+    <simple>${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mm:ss}</simple>
+</setHeader>
+
+<!-- ... fetch, split, export ... -->
+
+<!-- Save upper bound for next run -->
+<toD uri="pfx-config:set?name={{integration.name}}.${routeId}.export.timestamp&amp;value=${headers.currentExportTimestamp}"/>
+```
+
+**Delta filter** (use both bounds to avoid missing records that change during export):
+
+```xml
+<filter id="my-export.filter" sortBy="lastUpdateDate">
+    <and>
+        <criterion fieldName="lastUpdateDate" operator="greaterThan" value="simple:${headers.lastExportTimestamp}"/>
+        <criterion fieldName="lastUpdateDate" operator="lessOrEqual" value="simple:${headers.currentExportTimestamp}"/>
+    </and>
+</filter>
 ```
 
 ---

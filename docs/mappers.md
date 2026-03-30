@@ -253,11 +253,34 @@ When `includeUnmappedProperties="true"`, all source fields pass through as-is. O
 </pfx:loadMapper>
 ```
 
-## Mapper File Organization
+## Mapper File Organization (Provisioned IM)
 
-Mappers can be defined:
+In provisioned IM, mappers live in **standalone files** under `mappers/`. Each file uses a `<mappers>` root element (no `pfx:` namespace prefix, no `<?xml>` declaration):
 
-1. **Inline with routes** — in the same XML file, before the `<routeContext>` (most common)
-2. **In standalone mapper XML files** — imported via `<import resource="..."/>` in `camel-context.xml`
+```xml
+<mappers>
+    <loadMapper id="import-products.mapper">
+        <body in="partNumber" out="sku"/>
+        <body in="price" out="attribute1" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>
+```
 
-Convention: mapper IDs should be descriptive and end with `Mapper` (e.g., `productMasterDataMapper`, `customerSFDCDataMapper`).
+**Naming rules:**
+- File: `mappers/{descriptive-name}.mapper.xml`
+- The `id` attribute **must match the file name** without `.mapper.xml` extension.
+  - File `import-products.mapper.xml` → `id="import-products.mapper"`
+  - A mismatched ID causes deployment failure — IM cannot load the mapper.
+- Reference in route: `mapper=import-products.mapper`
+
+**PX / CX mappers must include the table name as a constant:**
+
+```xml
+<loadMapper id="import-prices.mapper">
+    <constant expression="Prices" out="name"/>  <!-- required: sets extension table name -->
+    <body in="sku" out="sku"/>
+    <body in="price" out="attribute1" converterExpression="stringToDecimal"/>
+</loadMapper>
+```
+
+Without `<constant ... out="name"/>`, the PX/CX import will fail or write to the wrong table.
