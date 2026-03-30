@@ -77,9 +77,9 @@ The primary component for all Pricefx server interactions.
 
 ### loaddataFile vs loaddata
 
-| Method | When to Use | Batch size default |
+| Method | When to Use | Default batchSize |
 |--------|-------------|-------------------|
-| `loaddataFile` | **Default** for all CSV imports (P, PX, C, CX, LTV, MLTV2). Streams file directly to server — much faster for large files. | `500000` |
+| `loaddataFile` | **Default** for all CSV imports (P, PX, C, CX, LTV, MLTV2). Streams file directly to server — much faster for large files. | `5000` |
 | `loaddata` | Only when Groovy row-level logic is needed per record. IM parses and maps each row in memory. | `5000` |
 
 **Batch size guidance for `loaddataFile`:**
@@ -213,12 +213,14 @@ Use `pfx-config:get/set` to persist a timestamp between runs for incremental exp
 **Delta filter** (use both bounds to avoid missing records that change during export):
 
 ```xml
-<filter id="my-export.filter" sortBy="lastUpdateDate">
-    <and>
-        <criterion fieldName="lastUpdateDate" operator="greaterThan" value="simple:${headers.lastExportTimestamp}"/>
-        <criterion fieldName="lastUpdateDate" operator="lessOrEqual" value="simple:${headers.currentExportTimestamp}"/>
-    </and>
-</filter>
+<filters>
+    <filter id="my-export.filter" sortBy="lastUpdateDate">
+        <and>
+            <criterion fieldName="lastUpdateDate" operator="greaterThan" value="simple:${headers.lastExportTimestamp}"/>
+            <criterion fieldName="lastUpdateDate" operator="lessOrEqual" value="simple:${headers.currentExportTimestamp}"/>
+        </and>
+    </filter>
+</filters>
 ```
 
 ---
@@ -235,6 +237,7 @@ Use `pfx-config:get/set` to persist a timestamp between runs for incremental exp
 |--------|-------------|
 | `unmarshal` | Parse CSV into list of maps |
 | `marshal` | Convert list of maps to CSV |
+| `streamingUnmarshal` | Parse CSV without loading full file into memory — use with `loaddataFile` for large files |
 
 ### Key Parameters
 

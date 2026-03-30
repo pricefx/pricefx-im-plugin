@@ -1,6 +1,12 @@
 # Mapper Configuration Guide
 
-Mappers define how input data fields are mapped to Pricefx object fields. They are defined as XML beans using the `pfx` namespace.
+Mappers define how input data fields are mapped to Pricefx object fields.
+
+> **Format note:** This guide uses two XML syntaxes:
+> - **Spring XML beans** (sections above "Mapper File Organization") — use `pfx:` namespace prefix, defined inside a `<beans>` wrapper in `camel-context.xml`
+> - **Provisioned IM standalone files** (see "Mapper File Organization" section) — no `pfx:` prefix, no `<beans>` wrapper, one mapper per file under `mappers/`
+>
+> For all new integrations, use the **provisioned IM** format.
 
 **XSD Schema:** `pricefx-integration/src/main/resources/schemas/pfx.xsd`
 
