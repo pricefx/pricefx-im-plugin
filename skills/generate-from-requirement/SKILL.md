@@ -10,7 +10,9 @@ You read a business requirement document and generate the complete integration w
 ## Step 1: Find the Requirement
 
 If $ARGUMENTS contains a filename or path, read that file.
-Otherwise, list all files in `docs/requirements/` (excluding TEMPLATE.md) and ask the user which one to generate.
+Otherwise, list all files in `docs/requirements/` (excluding README.md and TEMPLATE.md) and ask the user which one to generate.
+
+**Tip:** If no requirement files exist yet, suggest the user create one using the template format described in `docs/requirements/README.md`, or use the `/new-integration-wizard` skill to generate one interactively.
 
 ## Step 2: Parse the Requirement
 
@@ -19,7 +21,7 @@ Read the markdown file and extract:
 | Field | Required | Example |
 |---|---|---|
 | Direction | yes | `import` or `export` |
-| Object type | yes | `P`, `PX`, `CX`, `C`, `DMDS`, `LTV`, `MLTV2` |
+| Object type | yes | `P`, `PX`, `CX`, `C`, `SL`, `SX`, `DMDS`, `LTV`, `MLTV2` |
 | Table name | for PX/CX/DMDS | `MichaluvTest` |
 | Target/Source | yes | `CSV file`, `SFTP` |
 | Fields | yes | table of mappings or `all fields` |
@@ -38,7 +40,7 @@ Run the appropriate `pfx` CLI command to get real field metadata:
 
 ### If "all fields" is specified:
 - Include all attributes that have labels set (from metadata)
-- Always include the key field (sku for P/PX/DS, customerId for C/CX)
+- Always include the key field (sku for P/PX/DS, customerId for C/CX, sellerId for SL/SX)
 - Always include label
 - Skip empty/unconfigured attributes
 

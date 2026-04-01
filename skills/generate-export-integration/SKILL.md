@@ -1,6 +1,6 @@
 ---
 name: generate-export-integration
-description: Generate a Pricefx export integration (route, mapper, filter, properties) for any object type (P, PX, CX, C, DS/DMDS). Use this skill whenever the user wants to export or extract data FROM Pricefx — to CSV, SFTP, database, or REST API. Covers full exports, delta/incremental sync, scheduled exports, and batched fetch patterns. Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx export integration (route, mapper, filter, properties) for any object type (P, PX, CX, C, SL, SX, DS/DMDS). Use this skill whenever the user wants to export or extract data FROM Pricefx — to CSV, SFTP, database, or REST API. Covers full exports, delta/incremental sync, scheduled exports, and batched fetch patterns. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate Export Integration

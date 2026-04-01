@@ -151,20 +151,23 @@ This approach manually splits the CSV into chunks, unmarshals each chunk, and se
 - `inSet` and `notInSet` must ONLY be used on String fields — for numeric fields, use `<or>` with multiple `equals` instead
 - If `.env` exists, use pfx CLI to verify field types from partition metadata
 
-### PX/CX Exports
+### PX/CX/SX Exports
 - Filter MUST include `<criterion fieldName="name" operator="equals" value="{ExtensionName}"/>` — without this, ALL extension tables are fetched
+- This applies to PX, CX, and SX exports
 
 ## Mapper Rules
 
 ### ID and Naming
 - Mapper ID MUST match filename without `.xml` (e.g., `import-products.mapper.xml` → `id="import-products.mapper"`)
 
-### PX/CX Imports
+### PX/CX/SX Imports
 - Mapper MUST have `<constant expression="{ExtensionName}" out="name"/>` — without this, the import target table is undefined. The position within the mapper does not matter.
+- This applies to ALL extension types: PX (Product Extension), CX (Customer Extension), and SX (Seller Extension)
 
 ### Key Fields
 - P/PX/DS: must map to `sku`
 - C/CX: must map to `customerId` — using `sku` for customer objects is a common mistake
+- SL/SX: must map to `sellerId` — using `sku` or `customerId` for seller objects is incorrect
 
 ### Type Conversions
 - Numeric fields being imported from CSV should have `converterExpression="stringToDecimal"` or `stringToInteger`

@@ -1,13 +1,13 @@
 ---
 name: generate-import-integration
-description: Generate a Pricefx import integration (route, mapper, properties) for Product (P), Product Extension (PX), Customer (C), or Customer Extension (CX). Use this skill whenever the user wants to load, import, or push data INTO Pricefx from CSV files, SFTP, database, or REST API. Covers loaddataFile (streaming) and loaddata patterns, smart auto-mapping from CSV headers, and new table creation. For PA/Data Source (DMDS) imports, use generate-pa-import-integration instead. Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx import integration (route, mapper, properties) for Product (P), Product Extension (PX), Customer (C), Customer Extension (CX), Seller (SL), or Seller Extension (SX). Use this skill whenever the user wants to load, import, or push data INTO Pricefx from CSV files, SFTP, database, or REST API. Covers loaddataFile (streaming) and loaddata patterns, smart auto-mapping from CSV headers, and new table creation. For PA/Data Source (DMDS) imports, use generate-pa-import-integration instead. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate Import Integration
 
 You are generating an import integration for a Pricefx Integration Manager project. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
 
-**Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension).
+**Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension), SL (Seller), SX (Seller Extension).
 For PA Data Source (DMDS) imports, use the `/generate-pa-import-integration` skill instead.
 
 ## Step 1: Check Credentials
@@ -25,6 +25,10 @@ Ask the user: **What Pricefx object are you importing into?**
 | PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` |
 | C | Customer Master | — | — | — |
 | CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` |
+| SL | Seller Master | — | — | — |
+| SX | Seller Extension | — | — | — |
+
+**Note on SL/SX:** Seller metadata CLI commands may not be available. If metadata cannot be fetched, ask the user to provide the field mapping manually. Key field for SL/SX is `sellerId`.
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
@@ -448,4 +452,78 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 - **Key field name depends on object type:**
   - P (Product Master) and PX (Product Extension): key field is `sku`
   - C (Customer Master) and CX (Customer Extension): key field is `customerId`
+  - SL (Seller Master) and SX (Seller Extension): key field is `sellerId`
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
+  - NEVER use `sku` for Seller/SX imports — always use `sellerId`
+- **SX requires table name constant:** Like PX/CX, Seller Extensions require `<constant expression="{TableName}" out="name"/>` in the mapper.
+
+## Data Source Patterns (Database, REST API)
+
+### Database Import (pfx-sql)
+
+When the user's data source is a database, use this route pattern instead of file consumer:
+
+```xml
+<route id="{name}">
+    <from uri="timer://{name}?repeatCount=1"/>
+    <to uri="pfx-sql:select?sql={{db.query}}&amp;dataSource=externalDb&amp;dialect={{db.dialect}}"/>
+    <to uri="pfx-api:loaddata?objectType={type}&amp;mapper={name}.mapper&amp;businessKeys={key}"/>
+</route>
+```
+
+For large datasets (50k+ rows), use `pfx-sql:selectIterator` with `split`:
+
+```xml
+<to uri="pfx-sql:selectIterator?sql={{db.query}}&amp;dataSource=externalDb&amp;dialect={{db.dialect}}&amp;batchSize=5000"/>
+<split>
+    <simple>${body}</simple>
+    <to uri="pfx-sql:selectIterator?dataSource=externalDb"/>
+    <to uri="pfx-api:loaddata?objectType={type}&amp;mapper={name}.mapper&amp;businessKeys={key}"/>
+</split>
+```
+
+Add database connection properties to application.properties:
+```properties
+integration.connections.externalDb.type=jdbc
+integration.connections.externalDb.url=jdbc:{{db.type}}://{{db.host}}:{{db.port}}/{{db.name}}
+integration.connections.externalDb.username={{db.username}}
+integration.connections.externalDb.password={{db.password}}
+db.dialect=POSTGRESQL
+```
+
+**Important:** Mapper `in` fields must match the exact database column names (typically UPPERCASE).
+
+### REST API Import (pfx-rest)
+
+When the user's data source is a REST API, use this route pattern:
+
+```xml
+<route id="{name}">
+    <from uri="timer://{name}?repeatCount=1"/>
+    <to uri="pfx-rest:get?url={{api.base.url}}/{endpoint}&amp;connection=externalApi"/>
+    <to uri="pfx-json:unmarshal"/>
+    <to uri="pfx-api:loaddata?objectType={type}&amp;mapper={name}.mapper&amp;businessKeys={key}"/>
+</route>
+```
+
+For nested JSON responses, extract the array before loading:
+```xml
+<setBody>
+    <groovy>body.data.items</groovy>
+</setBody>
+```
+
+Use Groovy expressions in the mapper for nested fields:
+```xml
+<groovy expression="body.details?.name" out="label"/>
+```
+
+Add REST connection properties to application.properties:
+```properties
+integration.connections.externalApi.type=rest
+integration.connections.externalApi.url={{api.base.url}}
+integration.connections.externalApi.auth.type=oauth2
+integration.connections.externalApi.auth.tokenUrl={{api.token.url}}
+integration.connections.externalApi.auth.clientId={{api.client.id}}
+integration.connections.externalApi.auth.clientSecret={{api.client.secret}}
+```

@@ -124,6 +124,107 @@ The expected JSON matches the Pricefx loaddata API format:
 - String values stay as strings. Fields with `converterExpression="stringToInteger"` become integers (no quotes).
 - Constants from `<constant expression="..." out="..."/>` appear in every row.
 
+### Test Class Pattern (Export)
+
+For export routes (Pricefx → CSV), mock the fetch endpoint and verify the output file:
+
+```groovy
+package net.pricefx.integration.test
+
+import net.pricefx.integration.test.IntegrationTestSpecification
+import spock.util.concurrent.PollingConditions
+
+import static net.pricefx.integration.test.utils.PrnUtils.mapperPrn
+import static net.pricefx.integration.test.utils.PrnUtils.routePrn
+import static net.pricefx.integration.test.utils.PrnUtils.filterPrn
+
+class {TestName} extends IntegrationTestSpecification {
+
+    def "{test description}"() {
+
+        given: 'mock pricefx fetch endpoint and seed entities'
+        mockPost('/pricefx/test-partition/fetch/{objectType}',
+                expectedResponse("responses/{mock-response}.json"))
+
+        seedProperty("integration.sftp.root", temporaryFolder.toString())
+        seedEntities([routePrn("{route-file}.xml"), mapperPrn("{mapper-file}.mapper.xml"), filterPrn("{filter-file}.filter.xml")])
+
+        when: 'the export route runs'
+        // Timer-based routes start automatically
+
+        then: 'verify CSV file is created with expected content'
+        def conditions = new PollingConditions(timeout: 10)
+        conditions.eventually {
+            def exportDir = new File(temporaryFolder, "{export-subfolder}")
+            def csvFiles = exportDir.listFiles()?.findAll { it.name.endsWith('.csv') }
+            assert csvFiles?.size() == 1
+
+            def lines = csvFiles[0].readLines()
+            assert lines.size() >= 2  // header + at least 1 data row
+            assert lines[0].contains('{expected-header-field}')
+        }
+
+    }
+
+}
+```
+
+### Mock Fetch Response JSON
+
+For export tests, create a mock response that simulates the Pricefx fetch API:
+
+```json
+{
+  "response": {
+    "data": [
+      {
+        "sku": "PROD-001",
+        "label": "Widget A",
+        "attribute1": "Electronics",
+        "attribute2": "99.99"
+      },
+      {
+        "sku": "PROD-002",
+        "label": "Widget B",
+        "attribute1": "Hardware",
+        "attribute2": "149.99"
+      }
+    ]
+  }
+}
+```
+
+Place mock responses in `src/test/resources/responses/{name}.json`.
+
+### Test Class Pattern (Event-Driven Route)
+
+For event-driven routes using `direct:` consumers:
+
+```groovy
+class {TestName} extends IntegrationTestSpecification {
+
+    def "{test description}"() {
+
+        given: 'seed entities and mock endpoints'
+        mockPost('/pricefx/test-partition/fetch/{objectType}',
+                expectedResponse("responses/{mock-response}.json"))
+
+        seedProperty("integration.sftp.root", temporaryFolder.toString())
+        seedEntities([routePrn("{route-file}.xml"), mapperPrn("{mapper-file}.mapper.xml")])
+
+        when: 'event handler is triggered directly'
+        sendBody("direct:{handler-route-name}", null)
+
+        then: 'verify the expected action occurred'
+        verifyPost("/pricefx/test-partition/fetch/{objectType}", 1)
+
+    }
+
+}
+```
+
+**Note:** For `direct:` routes, use `sendBody()` to trigger them instead of `PollingConditions`.
+
 ### Important Rules
 
 - **NEVER create copies of routes or mappers in test resources.** Use production files from `src/main/resources/repo/` directly via `seedEntities`.

@@ -139,7 +139,7 @@ Skills are interactive — they ask questions and generate files. Invoke them wi
 
 ### generate-import-integration
 
-Generates import routes for **P** (Product), **PX** (Product Extension), **C** (Customer), or **CX** (Customer Extension).
+Generates import routes for **P** (Product), **PX** (Product Extension), **C** (Customer), **CX** (Customer Extension), **SL** (Seller), or **SX** (Seller Extension).
 
 ```
 /pricefx-integration:generate-import-integration
@@ -151,7 +151,7 @@ What it produces:
 - Properties entries for scheduling, file paths
 - Registration in `camel-context.xml`
 
-Supports: CSV files, zipped CSV, SFTP sources, database, REST API.
+Supports: CSV files, zipped CSV, SFTP sources, database (pfx-sql), REST API (pfx-rest).
 
 ### generate-pa-import-integration
 
@@ -210,9 +210,24 @@ Produces:
 - Sample CSV test data
 - Expected JSON request payloads
 
+### generate-event-driven-route
+
+Generates event-driven routes that react to Pricefx events.
+
+```
+/pricefx-integration:generate-event-driven-route
+```
+
+Supports:
+- Properties-based event mapping (recommended — simplest approach)
+- Direct `pfx-event:fetch` polling (custom intervals, multiple event types)
+- Custom event publishing (`pfx-event:sendCustom` for chaining routes)
+
+Common events: `PADATALOAD_COMPLETED`, `CALCULATION_COMPLETED_CFS`, `REFRESH_COMPLETED`, custom events.
+
 ### new-integration-wizard
 
-Interactive step-by-step wizard for building integrations from scratch. Best for users who are new to IM.
+Interactive step-by-step wizard for building integrations from scratch. Best for users who are new to IM. Now supports event-driven integrations, SL/SX object types, and all scheduling options.
 
 ```
 /pricefx-integration:new-integration-wizard
