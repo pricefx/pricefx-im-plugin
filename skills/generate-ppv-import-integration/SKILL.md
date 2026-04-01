@@ -20,6 +20,9 @@ You are generating an import integration for **Pricing Parameters** (also called
 | `MATRIX3` | `MLTV2` | 3-key matrix | `key1`–`key3` | Price by region+product+channel |
 | `MATRIX4` | `MLTV2` | 4-key matrix | `key1`–`key4` | Multi-dimensional pricing |
 | `MATRIX5` | `MLTV2` | 5-key matrix | `key1`–`key5` | Complex multi-dimensional lookups |
+| `MATRIX3` | `MLTV3` | 3-key matrix | key1, key2, key3 | attribute1-N | Three-dimensional lookups |
+| `MATRIX4` | `MLTV4` | 4-key matrix | key1-key4 | attribute1-N | Four-dimensional lookups |
+| `MATRIX5` | `MLTV5` | 5-key matrix | key1-key5 | attribute1-N | Five-dimensional lookups |
 
 ### Value Types (the `valueType` when creating a table)
 
@@ -305,6 +308,18 @@ File: `src/main/resources/repo/mappers/{route-name}.mapper.xml`
 </mappers>
 ```
 
+### MLTV3 (Three-Key) Mapper
+
+```xml
+<loadMapper id="{{mapperId}}" convertEmptyStringToNull="true">
+  <body in="{{csvKey1}}" out="key1"/>
+  <body in="{{csvKey2}}" out="key2"/>
+  <body in="{{csvKey3}}" out="key3"/>
+  <body in="{{csvValue1}}" converterExpression="{{converter1}}" out="attribute1"/>
+  <!-- additional attributes as needed -->
+</loadMapper>
+```
+
 For upsert mode, use `<integrateMapper>` instead of `<loadMapper>`.
 
 ### Properties
@@ -319,6 +334,26 @@ read.lock=readLock=changed
 ```
 
 Other properties are only needed for SFTP connections, etc.
+
+## Truncate Before Load (Full Refresh)
+
+When the import replaces all existing data (not upsert), truncate old records first:
+
+```xml
+<!-- Before the split/load block -->
+<toD uri="pfx-api:delete?objectType=${headers.objectType}&amp;filter=truncateByNameFilter&amp;connection={{pfx:connection}}"/>
+```
+
+With filter:
+```xml
+<filter id="truncateByNameFilter" resultFields="name">
+  <and>
+    <criterion fieldName="name" operator="equals" value="simple:headers.entityName"/>
+  </and>
+</filter>
+```
+
+Ask the user: "Should this import replace all existing data (full refresh) or add/update records (upsert)?" If full refresh, include truncate.
 
 ## Important Rules
 

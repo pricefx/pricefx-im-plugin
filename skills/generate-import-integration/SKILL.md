@@ -263,6 +263,16 @@ Provide this guidance:
 
 Default: `500000` for loaddataFile, `5000` for loaddata.
 
+### Batch Size by Object Type
+
+| Object Type | Default Batch Size | Notes |
+|---|---|---|
+| P, C, SL | 20,000 | Standard master data |
+| PX, CX, SX | 20,000 | Extensions |
+| PPV (LTV/MLTV2) | 5,000-10,000 | Heavier records |
+
+If the route uses `loaddata` (not `loaddataFile`), ALWAYS use `streaming="true"` on the `<split>` element.
+
 ## Step 7: CSV Header
 
 Skip this step if already auto-detected in Step 4b.
@@ -456,6 +466,8 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
   - NEVER use `sku` for Seller/SX imports — always use `sellerId`
 - **SX requires table name constant:** Like PX/CX, Seller Extensions require `<constant expression="{TableName}" out="name"/>` in the mapper.
+- When the user specifies a post-import calculation (CFS), use `<onCompletion onCompleteOnly="true">` to trigger it AFTER all batches complete — never inside the split loop
+- Always include `<setBody><constant/></setBody>` after loaddata inside the split to release memory per batch
 
 ## Data Source Patterns (Database, REST API)
 
@@ -567,3 +579,11 @@ After generating all files, run this checklist automatically. Fix any issues BEF
    - No `include=` on file component
    - No `pfx-sftp` with default-sftp-connection
    - `&amp;` used for all `&` in XML attributes
+
+8. **Additional quality gates:**
+   - [ ] `streaming="true"` is set on `<split>` (for loaddata routes)
+   - [ ] Batch size matches object type guidelines
+   - [ ] Archive/error folder pattern is configured on file source
+   - [ ] No inline Groovy exceeding 15 lines
+   - [ ] All values that could change per environment use `{{pfx:...}}` properties
+   - [ ] Route references pattern catalog: [CSV/SFTP Import](../../../integration-manager/docs/patterns/import-csv-sftp.md)

@@ -170,6 +170,10 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
 
 The `${headers.lastExportTimestamp}` is populated by `pfx-config:get` with the stored timestamp. On first run (no stored value), all records are exported.
 
+**Reference:** [Incremental Timestamp Export Pattern](../../../integration-manager/docs/patterns/export-incremental-timestamp.md)
+
+**Note:** Always use UTC timestamps and set timezone explicitly on Quartz (e.g., `trigger.timeZone=UTC`).
+
 ## Step 4c: Smart Field Selection (for PX/CX with metadata)
 
 When exporting from PX/CX and attribute metadata is available (from `product-extension-metadata` or `customer-extension-metadata`), **automatically propose the export field list and CSV column names** using the attribute labels. Do NOT ask the user to manually list fields — propose and let them confirm.
@@ -232,6 +236,11 @@ Ask the user: **When should the export run?**
 | First day of month at 1:00 AM | `0+0+1+1+*+?` | `quartz://export/{route-name}?cron=0+0+1+1+*+?` |
 
 **Note:** In Quartz cron URIs, spaces are replaced with `+` in the URI. Cron format: `seconds minutes hours day-of-month month day-of-week`.
+
+### Quartz Best Practices
+- ALWAYS set `trigger.timeZone` explicitly (e.g., `Europe/Prague`, `UTC`)
+- ALWAYS set `stateful=true` to prevent overlapping executions
+- Use `+` instead of spaces in cron expressions within URIs
 
 Default: `timer://runOnce?repeatCount=1` (run once).
 
@@ -352,6 +361,19 @@ Export routes typically require NO properties. The filename, scheduler, batchSiz
 
 **Important:** The file output directory MUST use `{{integration.sftp.root}}/{path}` directly in the route XML, NEVER as a property placeholder. **Always derive the folder name from context** — do NOT ask the user for the path. Use the source table/extension name converted to kebab-case (e.g., `MichaluvTest` → `/michaluv-test`, `CustomerHierarchy` → `/customer-hierarchy`). Propose the derived path and let the user override if needed.
 
+### Parallel Export to Multiple Destinations
+
+When exporting to both SFTP and S3, or writing multiple file formats:
+
+```xml
+<multicast parallelProcessing="true">
+  <to uri="direct:export-to-sftp"/>
+  <to uri="direct:export-to-s3"/>
+</multicast>
+```
+
+See [Chained Routes Pattern](../../../integration-manager/docs/patterns/chained-routes-direct.md).
+
 ## Batch Size
 
 Choose `batchSize` based on number of fields:
@@ -371,3 +393,6 @@ Choose `batchSize` based on number of fields:
 - Do NOT include `connection=pricefx` parameter — the default Pricefx connection is named `pricefx` and is used automatically. Only add `connection={name}` when the project has multiple Pricefx connections and a non-default one is needed.
 - Do NOT use `pfx-sftp` with `default-sftp-connection` — the SFTP storage is mounted into the IM pod's local file system. Use `file://{{integration.sftp.root}}/{path}` instead for better performance. Only use `pfx-sftp` for external SFTP servers.
 - **Resource ID naming rule:** The `id` attribute of filters, mappers, and routes MUST match the file name (without `.xml`). Example: file `export-products.filter.xml` → `id="export-products.filter"`. Using a different ID (e.g., `exportProductsFilter`) will cause deployment failure.
+- For incremental exports, save the timestamp AFTER successful export, not before
+- Always add `sortBy=lastUpdateDate,id` on fetch to ensure consistent pagination
+- Never use `batchedMode=false` for large exports — it loads everything into memory

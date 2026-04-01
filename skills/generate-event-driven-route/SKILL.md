@@ -197,6 +197,52 @@ integration.events.event-to-route-mapping.CUSTOM.PRODUCTS_IMPORTED=direct:refres
 </route>
 ```
 
+## Approach 4: SEDA Queue for Concurrent Processing
+
+When events need parallel processing (e.g., multiple items per event):
+
+```xml
+<route id="event-{{EVENT_NAME}}-processor">
+  <from uri="seda:event-{{EVENT_NAME}}?concurrentConsumers={{pfx:event.concurrency:5}}"/>
+  <split stopOnException="true">
+    <simple>${body[data]}</simple>
+    <to uri="direct:process-{{EVENT_NAME}}-item"/>
+  </split>
+</route>
+```
+
+Use `seda:` instead of `direct:` when:
+- Event handler does heavy work (API calls, file I/O)
+- Multiple events may arrive simultaneously
+- You want backpressure and configurable concurrency
+
+See [Event-Driven Routes Pattern](../../../integration-manager/docs/patterns/event-driven-routes.md).
+
+## Multiple Event Types in One Route
+
+For handling multiple related events with shared logic:
+
+```xml
+<!-- Separate entry points per event type -->
+<route id="event-ITEM_APPROVED_PL">
+  <from uri="direct:eventITEM_APPROVED_PL"/>
+  <setProperty name="eventSource"><constant>ITEM_APPROVED_PL</constant></setProperty>
+  <to uri="direct:shared-approval-handler"/>
+</route>
+
+<route id="event-ITEM_APPROVED_CT">
+  <from uri="direct:eventITEM_APPROVED_CT"/>
+  <setProperty name="eventSource"><constant>ITEM_APPROVED_CT</constant></setProperty>
+  <to uri="direct:shared-approval-handler"/>
+</route>
+
+<!-- Shared handler -->
+<route id="shared-approval-handler">
+  <from uri="direct:shared-approval-handler"/>
+  <!-- Common logic here -->
+</route>
+```
+
 ## Important Rules
 
 - **Approach 1 is recommended** for most cases — it's simpler and easier to maintain

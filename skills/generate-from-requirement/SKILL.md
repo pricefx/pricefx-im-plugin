@@ -29,6 +29,24 @@ Read the markdown file and extract:
 | Schedule | for exports | `every 10 minutes`, `cron`, `once` |
 | Sync mode | for exports | `full` or `delta` |
 
+### Advanced Pattern Detection
+
+When parsing requirements, look for these keywords to select the right pattern:
+
+| Keyword in Requirement | Pattern to Use |
+|---|---|
+| "scheduled", "daily", "hourly", "cron" | Add Quartz scheduler to route |
+| "incremental", "delta", "changes only" | Use incremental timestamp export pattern |
+| "event", "trigger", "after load", "on completion" | Use event-driven route |
+| "Kafka", "topic", "CDC", "real-time" | Use Kafka dual pipeline pattern |
+| "SOAP", "XML", "WSDL", "web service" | Use SOAP outbound pattern |
+| "REST", "API", "POST", "PUT", "webhook" | Use REST outbound pattern |
+| "S3", "bucket", "AWS" | Use S3 integration pattern |
+| "multi-tenant", "partitions", "multiple instances" | Use multi-tenant pattern |
+| "time window", "off-peak", "overnight" | Use scheduling start/stop pattern |
+
+When an advanced pattern is detected, reference the corresponding pattern catalog document and adapt the generated route accordingly.
+
 ## Step 3: Fetch Metadata
 
 Run the appropriate `pfx` CLI command to get real field metadata:

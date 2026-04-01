@@ -93,6 +93,34 @@ If direction is event-driven, ask: **What event should trigger the route?**
 
 Then ask: **What should happen when the event fires?** (export data, refresh datamart, call API, etc.)
 
+### Step 9c: Scheduling (import routes)
+
+For import routes, ask:
+> "Does this import need time-windowed scheduling? (e.g., only run between 23:00-06:00)"
+
+If yes, note `scheduling: start-stop` and include start/stop cron times.
+
+### Step 9d: Post-Import Actions
+
+Ask:
+> "Should anything happen after the import completes? Options:
+> a) Trigger a CFS calculation
+> b) Flush DMDS data source
+> c) Send a notification
+> d) No post-import action"
+
+Note the selection for route generation.
+
+### Step 9e: Error Handling Preference
+
+Ask:
+> "How should errors be handled?
+> a) Standard (archive/error folders + logging) — recommended
+> b) Email notification on failure
+> c) Retry with exponential backoff (for API sources)"
+
+Default to (a) if user is unsure.
+
 ### Step 10: Integration Name
 
 Propose a name based on the answers (e.g., `export-products-daily-to-csv`) and let the user confirm or change.
@@ -130,6 +158,9 @@ Save the requirement to `docs/requirements/{name}.md` using this format:
 - **Object type:** {P|PX|CX|C|DS}
 - **Table name:** {name if PX/CX/DS}
 - **Target/Source:** {CSV file|SFTP|Database|REST API}
+- **Scheduling:** {scheduling or 'none'}
+- **Post-Import Action:** {postAction or 'none'}
+- **Error Handling:** {errorHandling or 'standard'}
 
 ## Fields
 

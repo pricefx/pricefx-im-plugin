@@ -225,6 +225,63 @@ class {TestName} extends IntegrationTestSpecification {
 
 **Note:** For `direct:` routes, use `sendBody()` to trigger them instead of `PollingConditions`.
 
+## Edge Case Test Scenarios
+
+Always consider generating tests for these scenarios in addition to the happy path:
+
+### Empty File Test
+```groovy
+def "should handle empty CSV file gracefully"() {
+    given:
+    mockPost("/pricefx/{{partition}}/loaddata/{{objectType}}", 200, '{"node":{"data":[]}}')
+    seedFile("{{routeId}}/empty.csv", "header1,header2\n")
+
+    when:
+    camelContext.routeController.startRoute("{{routeId}}")
+
+    then:
+    new PollingConditions(timeout: 30).eventually {
+        verifyPost("/pricefx/{{partition}}/loaddata/{{objectType}}", 0)
+    }
+}
+```
+
+### Malformed CSV Test
+```groovy
+def "should handle malformed CSV rows"() {
+    given:
+    mockPost("/pricefx/{{partition}}/loaddata/{{objectType}}", 200, '{"node":{"data":[]}}')
+    seedFile("{{routeId}}/malformed.csv", "header1,header2\nvalue1\nvalue1,value2,extra")
+
+    when:
+    camelContext.routeController.startRoute("{{routeId}}")
+
+    then:
+    // Route should process valid rows and skip/log invalid ones
+    new PollingConditions(timeout: 30).eventually {
+        verifyPost("/pricefx/{{partition}}/loaddata/{{objectType}}", 1)
+    }
+}
+```
+
+### Large Batch Test
+```groovy
+def "should process file with multiple batches"() {
+    given:
+    mockPost("/pricefx/{{partition}}/loaddata/{{objectType}}", 200, '{"node":{"data":[]}}')
+    def csvContent = "header1,header2\n" + (1..100).collect { "val${it},val${it}" }.join("\n")
+    seedFile("{{routeId}}/large.csv", csvContent)
+
+    when:
+    camelContext.routeController.startRoute("{{routeId}}")
+
+    then:
+    new PollingConditions(timeout: 60).eventually {
+        verifyPost("/pricefx/{{partition}}/loaddata/{{objectType}}", { it >= 1 })
+    }
+}
+```
+
 ### Important Rules
 
 - **NEVER create copies of routes or mappers in test resources.** Use production files from `src/main/resources/repo/` directly via `seedEntities`.
