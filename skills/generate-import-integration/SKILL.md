@@ -527,3 +527,43 @@ integration.connections.externalApi.auth.tokenUrl={{api.token.url}}
 integration.connections.externalApi.auth.clientId={{api.client.id}}
 integration.connections.externalApi.auth.clientSecret={{api.client.secret}}
 ```
+
+## Step 10: Self-Check
+
+After generating all files, run this checklist automatically. Fix any issues BEFORE presenting the result to the user. Do NOT ask — just fix silently and mention what was corrected.
+
+### Checklist
+
+1. **Property placeholders resolved:** Read the generated route XML. For every `{{placeholder}}` used in the route, verify the property exists in `application.properties`. If missing, add it with a sensible default. Common ones:
+   - `{{integration.sftp.root}}` → `integration.sftp.root=/var/pricefx/sftp`
+   - `{{archive.file}}` → the standard archive property
+   - `{{read.lock}}` → `read.lock=readLock=changed`
+   - `{{done.file}}` → `done.file=doneFileName=%24%7Bfile:name%7D.done`
+   - `{{error.file}}` → the standard error.file property
+
+2. **Error handling offered:** If the data source is file-based (CSV, zipped CSV, SFTP) and `{{error.file}}` is NOT on the file URI, add it and ensure the property exists in `application.properties`.
+
+3. **Batch size vs field count:**
+   - < 10 fields → batchSize should be ≤ 500000
+   - 10–20 fields → batchSize should be ≤ 200000 (prefer 100000)
+   - 20+ fields → batchSize should be ≤ 50000
+   If the generated batchSize exceeds the recommendation, reduce it.
+
+4. **ID consistency:**
+   - Route file `{name}.xml` → route `id="{name}"`
+   - Mapper file `{name}.mapper.xml` → loadMapper `id="{name}.mapper"`
+   - `mapper=` parameter in route must reference the mapper ID exactly
+
+5. **PX/CX/SX table name constant:** If objectType is PX, CX, or SX, verify the mapper contains `<constant expression="{TableName}" out="name"/>`. If missing, add it.
+
+6. **Key field correctness:**
+   - P/PX → mapper must map to `sku`
+   - C/CX → mapper must map to `customerId`
+   - SL/SX → mapper must map to `sellerId`
+
+7. **No forbidden patterns:**
+   - No `noop=true` on file component
+   - No `connection=pricefx` (redundant)
+   - No `include=` on file component
+   - No `pfx-sftp` with default-sftp-connection
+   - `&amp;` used for all `&` in XML attributes
