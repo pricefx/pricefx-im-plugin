@@ -6,9 +6,9 @@
 
 **Architecture:** Add sections to existing SKILL.md files (Important Rules, templates, references). New skills follow the established SKILL.md format with YAML frontmatter, numbered steps, inline XML templates, and Important Rules.
 
-**Tech Stack:** Markdown skill files. Target repo: `/Users/mnagas/Documents/pricefx/pricefx-integration` on branch `develop`.
+**Tech Stack:** Markdown skill files. Target repo: `{PLUGIN_REPO}` on branch `develop`.
 
-**Working directory:** `/Users/mnagas/Documents/pricefx/pricefx-integration`
+**Working directory:** `{PLUGIN_REPO}`
 
 ---
 
@@ -503,7 +503,7 @@ git commit -m "skill: add advanced questions to new-integration-wizard"
 
 - [ ] **Step 1: Create skill directory and SKILL.md**
 
-Read the REST outbound pattern at `/Users/mnagas/Documents/pricefx/integration-manager/docs/patterns/rest-outbound.md` for the XML templates and structure.
+Read the REST outbound pattern at `{IM_REPO}/docs/patterns/rest-outbound.md` for the XML templates and structure.
 
 Create a SKILL.md following the established format (YAML frontmatter, numbered steps, inline templates, Important Rules). The skill should:
 
@@ -528,7 +528,7 @@ git commit -m "skill: create generate-rest-outbound-integration"
 
 - [ ] **Step 1: Create skill directory and SKILL.md**
 
-Read the scheduling pattern at `/Users/mnagas/Documents/pricefx/integration-manager/docs/patterns/scheduling-start-stop.md`.
+Read the scheduling pattern at `{IM_REPO}/docs/patterns/scheduling-start-stop.md`.
 
 The skill should:
 1. Ask: which route to schedule, start time, stop time, timezone
@@ -552,7 +552,7 @@ git commit -m "skill: create generate-scheduling-route"
 
 - [ ] **Step 1: Create skill directory and SKILL.md**
 
-Read the Kafka pattern at `/Users/mnagas/Documents/pricefx/integration-manager/docs/patterns/kafka-dual-pipeline.md`.
+Read the Kafka pattern at `{IM_REPO}/docs/patterns/kafka-dual-pipeline.md`.
 
 The skill should:
 1. Ask: Kafka topic, message format, target DS/DMDS, grouping key (OPCO), aggregation settings
@@ -576,7 +576,7 @@ git commit -m "skill: create generate-kafka-integration"
 
 - [ ] **Step 1: Create skill directory and SKILL.md**
 
-Read the SOAP pattern at `/Users/mnagas/Documents/pricefx/integration-manager/docs/patterns/soap-outbound.md`.
+Read the SOAP pattern at `{IM_REPO}/docs/patterns/soap-outbound.md`.
 
 The skill should:
 1. Ask: SOAP endpoint URL, SOAPAction, auth type, payload structure
@@ -601,11 +601,11 @@ git commit -m "skill: create generate-soap-integration"
 
 - [ ] **Step 1: Create S3 skill**
 
-Read pattern at `/Users/mnagas/Documents/pricefx/integration-manager/docs/patterns/s3-integration.md`. Generate: S3 consumer/producer routes, properties. Key: RAW() for secret key, composite parameter blocks.
+Read pattern at `{IM_REPO}/docs/patterns/s3-integration.md`. Generate: S3 consumer/producer routes, properties. Key: RAW() for secret key, composite parameter blocks.
 
 - [ ] **Step 2: Create multi-tenant skill**
 
-Read pattern at `/Users/mnagas/Documents/pricefx/integration-manager/docs/patterns/multi-tenant-partitions.md`. Generate: per-partition entry routes, shared handler, partition-specific properties. Key: partition list iteration, connection per partition.
+Read pattern at `{IM_REPO}/docs/patterns/multi-tenant-partitions.md`. Generate: per-partition entry routes, shared handler, partition-specific properties. Key: partition list iteration, connection per partition.
 
 - [ ] **Step 3: Commit**
 

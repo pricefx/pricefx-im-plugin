@@ -17,7 +17,7 @@ The test framework is based on **Spock + WireMock + Spring CamelContext** with t
 | `UnitTestSpecification` | Seed routes/mappers/files inline, `sendBody`, `expectedResponse` |
 | `IntegrationTestSpecification` | Load entities from disk repo via `seedEntities` |
 
-Reference implementation: `/Users/mnagas/Documents/pricefx/integration-manager/integration-test/`
+Reference implementation: `integration-test/` directory in the IM repo.
 
 ## Step 1: Identify the Route to Test
 

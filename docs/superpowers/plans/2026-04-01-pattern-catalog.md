@@ -6,9 +6,9 @@
 
 **Architecture:** Each pattern file follows a standard template (When to Use, XML Template, Required Properties, Common Mistakes). All content is generic — no customer names, credentials, or business-specific logic.
 
-**Tech Stack:** Markdown + XML templates. Target repo: `/Users/mnagas/Documents/pricefx/integration-manager` on branch `feature/PFIMCORE-2941`.
+**Tech Stack:** Markdown + XML templates. Target repo: `{IM_REPO}` on branch `feature/PFIMCORE-2941`.
 
-**Working directory:** `/Users/mnagas/Documents/pricefx/integration-manager`
+**Working directory:** `{IM_REPO}`
 
 ---
 
@@ -1390,11 +1390,11 @@ Each step includes the specific files to read for content.
 - Create: `docs/patterns/s3-integration.md`
 - Create: `docs/patterns/multi-tenant-partitions.md`
 
-- [ ] **Step 1: Extract Kafka pattern from pim-syscous**
+- [ ] **Step 1: Extract Kafka pattern from partner project (Kafka source)**
 
 Read these files for the actual XML templates:
-- `/Users/mnagas/Documents/pricefx/pim-syscous/src/main/resources/repo/routes/` — any `import-kafka-ds-*.xml` file
-- `/Users/mnagas/Documents/pricefx/pim-syscous/src/main/resources/application.properties` — Kafka connection config
+- `{PARTNER_PROJECT_KAFKA}/src/main/resources/repo/routes/` — any `import-kafka-ds-*.xml` file
+- `{PARTNER_PROJECT_KAFKA}/src/main/resources/application.properties` — Kafka connection config
 
 Create `docs/patterns/kafka-dual-pipeline.md` with:
 - When to Use: parallel file + Kafka pipelines for same data source
@@ -1402,10 +1402,10 @@ Create `docs/patterns/kafka-dual-pipeline.md` with:
 - Properties: Kafka broker config, topic, group ID, aggregation settings
 - Common Mistakes: missing consumer group, no dead letter, no throttling on errors
 
-- [ ] **Step 2: Extract SOAP pattern from pim-ahlsell**
+- [ ] **Step 2: Extract SOAP pattern from partner project (SOAP source)**
 
 Read these files:
-- `/Users/mnagas/Documents/pricefx/pim-ahlsell/src/main/resources/repo/routes/eventITEM_APPROVED_CT__To__Vivaldi_SOAP__Data.xml`
+- `{PARTNER_PROJECT_SOAP}/src/main/resources/repo/routes/` — SOAP event route file
 - Any FreeMarker template files in the project
 
 Create `docs/patterns/soap-outbound.md` with:
@@ -1414,11 +1414,11 @@ Create `docs/patterns/soap-outbound.md` with:
 - Properties: SOAP endpoint, action, credentials
 - Common Mistakes: missing SOAPAction header, no timeout, no retry
 
-- [ ] **Step 3: Extract REST outbound pattern from pim-cargill-cpla and pim-fiskars**
+- [ ] **Step 3: Extract REST outbound pattern from partner projects (REST sources)**
 
 Read these files:
-- `/Users/mnagas/Documents/pricefx/pim-cargill-cpla/src/main/resources/repo/routes/` — routes that call Boomi Layer7
-- `/Users/mnagas/Documents/pricefx/pim-fiskars/src/main/resources/repo/routes/outbound_commonRoutes.xml` — iPass API calls
+- `{PARTNER_PROJECT_REST_A}/src/main/resources/repo/routes/` — routes with external REST API calls
+- `{PARTNER_PROJECT_REST_B}/src/main/resources/repo/routes/outbound_commonRoutes.xml` — API gateway calls
 
 Create `docs/patterns/rest-outbound.md` with:
 - When to Use: calling external REST APIs (POST/PUT) from IM
@@ -1426,10 +1426,10 @@ Create `docs/patterns/rest-outbound.md` with:
 - Properties: endpoint URL, auth type, credentials
 - Common Mistakes: no timeout, no retry, swallowing error responses
 
-- [ ] **Step 4: Extract S3 pattern from pim-covetrus**
+- [ ] **Step 4: Extract S3 pattern from partner project (S3 source)**
 
 Read these files:
-- `/Users/mnagas/Documents/pricefx/pim-covetrus/src/main/resources/repo/routes/` — the competition-S3 route
+- `{PARTNER_PROJECT_S3}/src/main/resources/repo/routes/` — the competition-S3 route
 
 Create `docs/patterns/s3-integration.md` with:
 - When to Use: reading from or writing to AWS S3
@@ -1437,10 +1437,10 @@ Create `docs/patterns/s3-integration.md` with:
 - Properties: AWS credentials, bucket, region
 - Common Mistakes: wrong region, missing credentials, no error handling
 
-- [ ] **Step 5: Extract multi-tenant pattern from pim-watsco-inc**
+- [ ] **Step 5: Extract multi-tenant pattern from partner project (multi-tenant source)**
 
 Read these files:
-- `/Users/mnagas/Documents/pricefx/pim-watsco-inc/src/main/resources/repo/routes/` — event routes with partition routing
+- `{PARTNER_PROJECT_MULTITENANT}/src/main/resources/repo/routes/` — event routes with partition routing
 - Properties file for per-partition config
 
 Create `docs/patterns/multi-tenant-partitions.md` with:
@@ -1472,7 +1472,8 @@ ls -la docs/patterns/*.md | wc -l
 Grep for any customer-specific content that should not be there:
 
 ```bash
-grep -ri "watsco\|ford\|ahlsell\|syscous\|dotfoods\|cargill\|beacon\|fiskars\|covetrus\|ruukki\|vivaldi\|boomi\|layer7\|ipass" docs/patterns/
+grep -ri "customer-specific-terms" docs/patterns/
+# Replace with actual partner/customer names to check for leaks
 # Expected: no matches (references should be generic)
 ```
 

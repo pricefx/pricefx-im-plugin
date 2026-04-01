@@ -6,9 +6,9 @@
 
 **Architecture:** Append new sections to existing files (don't rewrite what's already there). New files follow existing doc style. Cross-reference `docs/patterns/` where appropriate.
 
-**Tech Stack:** Markdown documentation. Target repo: `/Users/mnagas/Documents/pricefx/integration-manager` on branch `feature/PFIMCORE-2941`.
+**Tech Stack:** Markdown documentation. Target repo: `{IM_REPO}` on branch `feature/PFIMCORE-2941`.
 
-**Working directory:** `/Users/mnagas/Documents/pricefx/integration-manager`
+**Working directory:** `{IM_REPO}`
 
 ---
 

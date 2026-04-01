@@ -6,17 +6,17 @@
 
 ## Context
 
-Analysis of 10 real partner integration projects revealed:
-- **pim-watsco-inc** (290 routes) — multi-tenant, S3, Kafka, event-driven
-- **pim-ford-gcp-eu** (146 routes) — SFTP, REST, custom Groovy, event-driven
-- **pim-syscous** (61 routes) — Kafka dual-pipeline (file + Kafka per DS)
-- **pim-ahlsell** (51 routes) — SOAP/Vivaldi, FreeMarker, scheduling
-- **pim-dotfoods** (43 routes) — Quartz exports, incremental sync, streaming
-- **pim-cargill-cpla** (39 routes) — Event-driven, Boomi Layer7, audit journaling
-- **pim-beacon-building** (24 routes) — Post-import CFS triggers, file zipping
-- **pim-fiskars** (20 routes) — SAP + Azure FileShare + iPass, seda queues, IM 7.0.1
-- **pim-covetrus** (9 routes) — AWS S3 bridge, multicast exports
-- **pim-ruukki** (3 routes) — Simple PX import, truncate-before-load
+Analysis of 10 real partner integration projects revealed (anonymized):
+- **Project A** (290 routes) — multi-tenant, S3, Kafka, event-driven
+- **Project B** (146 routes) — SFTP, REST, custom Groovy, event-driven
+- **Project C** (61 routes) — Kafka dual-pipeline (file + Kafka per DS)
+- **Project D** (51 routes) — SOAP/ERP, FreeMarker, scheduling
+- **Project E** (43 routes) — Quartz exports, incremental sync, streaming
+- **Project F** (39 routes) — Event-driven, middleware integration, audit journaling
+- **Project G** (24 routes) — Post-import CFS triggers, file zipping
+- **Project H** (20 routes) — SAP + Azure FileShare, seda queues, IM 7.0.1
+- **Project I** (9 routes) — AWS S3 bridge, multicast exports
+- **Project J** (3 routes) — Simple PX import, truncate-before-load
 
 Key findings:
 - Common patterns (CSV/SFTP, split/tokenize, streaming) used everywhere but current plugin docs/skills only partially cover them
