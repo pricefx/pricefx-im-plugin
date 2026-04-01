@@ -28,29 +28,43 @@ Key findings:
 
 Partner consultants building Pricefx integrations. Mixed technical level — some experienced with Camel/IM, many are not. Plugin must guide beginners while not slowing down experts.
 
+## Content Location Strategy
+
+Split between two repos:
+
+**IM repo (`integration-manager/docs/`)** — product knowledge, available to everyone:
+- Pattern catalog (`docs/patterns/`)
+- Docs revisions and new docs (`docs/`)
+- Troubleshooting, anti-patterns, best practices
+
+**Plugin repo (`pricefx-integration/`)** — plugin-specific, for Claude Code users:
+- Skills (generation logic, wizard flows)
+- Quality gates (embedded in skills + review agent)
+- Plugin docs reference IM docs, no duplication
+
 ## Architecture
 
 Five workstreams, each building on the previous:
 
 ```
-Pattern Catalog (docs/patterns/)
+Pattern Catalog (IM repo: docs/patterns/)
        |
        v
-Docs Revise (docs/*.md)  <--- references patterns
+Docs Revise (IM repo: docs/*.md)  <--- references patterns
        |
        v
-Skills Revise (skills/*)  <--- references docs + patterns
+Skills Revise (plugin: skills/*)  <--- references IM docs + patterns
        |
        v
-New Skills (skills/*)     <--- references docs + patterns
+New Skills (plugin: skills/*)     <--- references IM docs + patterns
        |
        v
-Quality Gates             <--- embedded in skills + review agent
+Quality Gates (plugin)            <--- embedded in skills + review agent
 ```
 
 ---
 
-## 1. Pattern Catalog (`docs/patterns/`)
+## 1. Pattern Catalog (IM repo: `docs/patterns/`)
 
 Structured catalog of anonymized, generalized patterns extracted from partner projects. Each pattern file contains:
 - **When to use** (use case description)
@@ -85,7 +99,7 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 
 ---
 
-## 2. Docs Revisions (`docs/`)
+## 2. Docs Revisions (IM repo: `docs/`)
 
 ### Updates to existing files:
 
@@ -111,7 +125,7 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 
 ---
 
-## 3. Skills Revisions
+## 3. Skills Revisions (Plugin repo)
 
 ### Updates to existing skills:
 
@@ -130,7 +144,7 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 
 ---
 
-## 4. New Skills
+## 4. New Skills (Plugin repo)
 
 | Skill | What it generates | Priority |
 |---|---|---|
@@ -145,7 +159,7 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 
 ---
 
-## 5. Quality Gates
+## 5. Quality Gates (Plugin repo)
 
 ### In generation skills (embedded validation):
 
@@ -171,16 +185,23 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 
 ## Deliverables Summary
 
+### IM repo (`integration-manager/docs/`)
+
 | Workstream | Count | New/Updated |
 |---|---|---|
 | Pattern catalog | 18 files | New |
 | Docs updates | 7 files | Updated |
 | Docs new | 3 files | New |
+
+### Plugin repo (`pricefx-integration/`)
+
+| Workstream | Count | New/Updated |
+|---|---|---|
 | Skills updates | 8 skills | Updated |
 | Skills new | 6 skills | New |
 | Quality gates | Embedded in skills + review agent | Updated |
 
-**Total: 42 deliverables**
+**Total: 42 deliverables across 2 repos**
 
 ## Security Constraint
 
