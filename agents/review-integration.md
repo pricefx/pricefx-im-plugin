@@ -218,3 +218,118 @@ If pfx CLI is available (`.env` exists with valid credentials):
 2. Check that mapped fields actually exist in the table schema
 3. Verify field types match converter expressions
 4. Flag mappings to unconfigured attributes (no label set)
+
+---
+
+## Anti-Pattern Detection
+
+For every route file, run all ten checks below. Report each hit under the **Anti-Patterns** section of the review report. Each finding must include the file name, the specific element or line range where the problem occurs, a short explanation of the risk, and the recommended fix with a reference to the pattern catalog.
+
+### AP-1 · Inline Groovy Over 15 Lines
+- Count lines inside every `<groovy>` block in the route XML.
+- If a block exceeds 15 lines, flag it.
+- **Risk:** No IDE support, no unit tests, no stack traces — hard to debug and maintain.
+- **Fix:** Extract to a Spring bean annotated `@Component` and call it with `<to uri="bean:myProcessor"/>`.
+- **Reference:** `docs/patterns/groovy-best-practices.md`
+
+### AP-2 · Copy-Paste Groovy (Duplicated API-Settings Parser)
+- Scan all Groovy blocks across all route files for structurally identical or near-identical blocks (e.g., the same apiSettings parsing logic repeated with only minor value changes).
+- If two or more routes share the same Groovy block body (ignoring whitespace and variable name differences), flag it as copy-paste duplication.
+- **Risk:** Bug fixes must be applied to every copy; diverging versions cause subtle behavioral differences.
+- **Fix:** Standardize on one canonical parser block. Add custom logic after the standard parser; do not modify the parser itself. Consider extracting to a shared bean.
+- **Reference:** `docs/anti-patterns.md#1-copy-paste-groovy-scripts`
+
+### AP-3 · Hardcoded Values (Not Using `{{pfx:...}}` Properties)
+- Search each route for literal values in places that should be environment-specific: connection names, file paths, batch sizes, cron expressions, hostnames, port numbers.
+- A value is hardcoded if it appears as a literal string in the XML rather than a `{{property.name}}` or `{{pfx:property.name}}` placeholder.
+- **Risk:** Cannot change per environment without redeploying the route.
+- **Fix:** Replace with `{{pfx:property.name}}` placeholders defined in `application.properties` or an environment-specific overlay.
+- **Example:**
+  ```xml
+  <!-- Hardcoded (bad) -->
+  <tokenize group="20000" token="\n"/>
+
+  <!-- Parameterized (good) -->
+  <tokenize group="{{pfx:batch.size}}" token="\n"/>
+  ```
+- **Reference:** `docs/anti-patterns.md#3-hardcoded-values-in-routes`
+
+### AP-4 · Missing Error Handling
+- For each route, check whether at least one of the following is present: `<doCatch>`, `<onException>`, or `moveFailed` on a `file:` consumer URI.
+- If none are present, flag the route.
+- **Risk:** Route failures are silent — no one knows the integration broke until missing data is reported downstream.
+- **Fix:** Every production route needs at minimum: `moveFailed` on the file source, `<doCatch>` for encoding errors, and `<log>` at ERROR level on failure.
+- **Reference:** `docs/patterns/error-handling.md`
+
+### AP-5 · Missing `streaming="true"` on Split for Large-File Routes
+- Look for `<split>` elements that tokenize a file body (i.e., paired with `<tokenize token="\n"/>` or similar) but do NOT have `streaming="true"`.
+- Applies primarily to loaddata routes that process CSV files.
+- **Risk:** Entire file is loaded into memory → OutOfMemoryError on files larger than ~100 MB.
+- **Fix:** Add `streaming="true"` to the `<split>` element.
+  ```xml
+  <split streaming="true">
+      <tokenize group="{{pfx:batch.size}}" token="\n"/>
+      ...
+  </split>
+  ```
+- **Reference:** `docs/anti-patterns.md#5-missing-streaming-on-large-files`
+
+### AP-6 · DMDS Route Without Flush (or Flush Inside Split Loop)
+- For routes with `objectType=DMDS`, check that a `pfx-api:flush` call exists AND that it appears AFTER the closing `</split>` tag (or inside an `<onCompletion>` block), not inside the split body.
+- Flag routes where flush is absent, or where flush appears as a step inside the split loop.
+- **Risk:** Partial data becomes visible in PA while the rest is still loading; calculations run on incomplete data.
+- **Fix:** Place flush after `</split>`, or use `<onCompletion>` with `pfx-api:flush`. Use `dataFeedName=DMF.{name}` and `dataSourceName=DMDS.{name}`.
+- **Reference:** `docs/anti-patterns.md#6-flush-before-all-batches-complete`
+
+### AP-7 · CFS Triggered Inside Split Loop
+- Scan for any call to a CFS (Calculate For Selection / calculation trigger) endpoint inside a `<split>` body.
+- Common indicators: `pfx-api:calculate`, `pfx-model:run`, or any URI containing `cfs` or `calculation` inside `<split>...</split>`.
+- **Risk:** One calculation trigger fires per batch (N batches = N triggers), wasting compute and potentially causing race conditions.
+- **Fix:** Move the CFS trigger to an `<onCompletion>` block so it fires exactly once after all batches complete.
+- **Reference:** `docs/anti-patterns.md#9-cfs-triggered-per-batch-instead-of-per-file`
+
+### AP-8 · Route File Exceeding 200 Lines
+- Count the total number of lines in each route XML file.
+- If a file exceeds 200 lines, flag it.
+- **Risk:** Large files are hard to read, hard to modify safely, and increase the risk of breaking unrelated routes during edits.
+- **Fix:** Decompose the route into sub-routes using `direct:` endpoints — one logical operation per route file.
+- **Reference:** `docs/patterns/chained-routes-direct.md`
+
+### AP-9 · Missing Archive or Error Folder on File Sources
+- For every `file:` consumer URI, check whether both `move` (archive) and `moveFailed` (error folder) parameters are configured.
+- Flag any file source that is missing either parameter.
+- **Risk:** Processed files are left in the pickup directory or silently deleted; no audit trail and no way to reprocess failures.
+- **Fix:** Configure both `move` and `moveFailed` on every file consumer:
+  ```xml
+  <from uri="file://{{integration.sftp.root}}/input
+      ?move=../archive/${date:now:yyyyMMdd}/${file:name}
+      &amp;moveFailed=../error/${file:name}"/>
+  ```
+- **Reference:** `docs/patterns/file-archive-pattern.md`
+
+### AP-10 · Inconsistent Artifact Naming
+- Collect the IDs of all routes, mappers, and filters in the project.
+- Check whether the naming style is consistent: the project must use one style throughout (`kebab-case` is the IM convention).
+- Flag if any ID uses `camelCase` or `PascalCase` while others use `kebab-case`, or if the same artifact type uses mixed styles.
+- **Risk:** Hard to find related artifacts; new team members cannot predict file or ID names.
+- **Fix:** Rename all artifacts to `kebab-case` consistently (e.g., `import-products`, `export-customer-prices`).
+- **Reference:** `docs/patterns/naming-conventions.md`
+
+---
+
+## Quality Score
+
+After completing all checks, tally the total number of distinct issues found across all anti-pattern checks (AP-1 through AP-10) and all other rule sections above, then output a quality score at the top of the Summary section.
+
+```
+## Quality Score: [COLOR]
+Total issues found: N
+
+  Green  (0–1 issues)  — Project is in good shape. Minor polish only.
+  Yellow (2–4 issues)  — Moderate concerns. Address before next release.
+  Red    (5+ issues)   — Significant problems. Prioritize remediation.
+```
+
+- Count each flagged file/element as one issue (not each anti-pattern category).
+- Critical Issues count double toward the total (each critical issue = 2 points).
+- Display the score as the first item in the report Summary so it is immediately visible.

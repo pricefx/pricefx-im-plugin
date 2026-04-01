@@ -10,13 +10,14 @@ Build, review, debug, and maintain Pricefx Integration Manager projects with AI-
 2. [Setup](#setup)
 3. [Quick Start](#quick-start)
 4. [Skills Reference](#skills-reference)
-5. [Agents Reference](#agents-reference)
-6. [pfx CLI Tool](#pfx-cli-tool)
-7. [Usage Examples](#usage-examples)
-8. [Tips & Best Practices](#tips--best-practices)
-9. [Shared Documentation](#shared-documentation)
-10. [Plugin Structure](#plugin-structure)
-11. [Development](#development)
+5. [Pattern Catalog](#pattern-catalog)
+6. [Agents Reference](#agents-reference)
+7. [pfx CLI Tool](#pfx-cli-tool)
+8. [Usage Examples](#usage-examples)
+9. [Tips & Best Practices](#tips--best-practices)
+10. [Shared Documentation](#shared-documentation)
+11. [Plugin Structure](#plugin-structure)
+12. [Development](#development)
 
 ---
 
@@ -135,7 +136,7 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`. The plugin ships with **16 skills** covering the full integration development lifecycle.
 
 ### generate-import-integration
 
@@ -243,6 +244,104 @@ Quick metadata lookup — no files generated, just displays information.
 /pricefx-integration:list-pricefx-tables CX MyTable
 ```
 
+### generate-rest-outbound-integration
+
+Generates routes that call an external REST API from IM — for example, pushing Pricefx data to a downstream system or triggering a remote workflow.
+
+```
+/pricefx-integration:generate-rest-outbound-integration
+```
+
+Supports: OAuth2 bearer tokens, API key headers, HTTP basic auth, retry/dead-letter patterns, and payload transformation via mapper.
+
+### generate-scheduling-route
+
+Generates a cron- or timer-driven scheduling wrapper around an existing route, including staggered startup, time-zone support, and configurable properties entries.
+
+```
+/pricefx-integration:generate-scheduling-route
+```
+
+Useful when you want to separate the scheduling concern from the core route logic, or when multiple routes share the same schedule.
+
+### generate-kafka-integration
+
+Generates routes that publish to or consume from a Kafka topic, including schema-registry configuration, consumer group settings, and dead-letter topic handling.
+
+```
+/pricefx-integration:generate-kafka-integration
+```
+
+Supports: Avro and JSON serialization, exactly-once semantics, manual offset commit, and header propagation.
+
+### generate-soap-integration
+
+Generates routes that call a SOAP/WSDL web service or expose a Pricefx integration as a SOAP endpoint, with CXF component configuration and JAXB binding.
+
+```
+/pricefx-integration:generate-soap-integration
+```
+
+### generate-s3-integration
+
+Generates routes that read from or write to an AWS S3 bucket — including bucket polling, multi-part upload for large files, and S3-event-triggered processing.
+
+```
+/pricefx-integration:generate-s3-integration
+```
+
+Produces: S3 connection JSON, route XML with streaming download/upload, and properties entries for bucket name and region.
+
+### generate-multi-tenant-route
+
+Generates a parameterized route that fans out to multiple Pricefx partitions from a single IM instance, with per-tenant connection overrides and isolated error handling.
+
+```
+/pricefx-integration:generate-multi-tenant-route
+```
+
+Covers: dynamic partition routing, tenant registry pattern, and per-tenant property namespacing.
+
+### analyze-partner-project
+
+Analyzes an existing IM project (your own or a partner's) and produces a structured assessment: route inventory, identified patterns, anti-patterns, migration opportunities, and a prioritized recommendation list.
+
+```
+/pricefx-integration:analyze-partner-project
+```
+
+Does not modify any files. Output is a markdown report that can be saved to `docs/` or shared directly.
+
+---
+
+## Pattern Catalog
+
+The plugin ships an anonymized **pattern catalog** in `docs/patterns/` — 18 reference integration patterns extracted from real-world IM deployments (all customer names and partition details removed).
+
+Skills reference the catalog automatically to apply proven implementation approaches. You can also browse it directly to understand how a particular scenario is typically built.
+
+### What the catalog covers
+
+| Category | Patterns |
+|---|---|
+| Import | Product master (CSV/SFTP), Customer master, Pricing Parameters (LTV/MLTV2), PA Data Source batch load |
+| Export | Delta sync with timestamp watermark, full extract to SFTP, export-to-REST push |
+| Event-driven | Post-calculation trigger, data-load completion chain, custom event fan-out |
+| Outbound | REST push with OAuth2, SOAP call with JAXB, Kafka publish with Avro |
+| Platform | Multi-tenant fan-out, scheduled wrapper with staggered startup, S3 polling inbound |
+| Testing | WireMock contract test, Spock data-table driven test, integration smoke test |
+
+### Using patterns in conversations
+
+You can reference patterns by name when asking for generation or review:
+
+```
+Generate an export using the delta-sync-with-watermark pattern
+Review my route and check it against the PA batch load pattern
+```
+
+Skills will apply the matching pattern as their baseline and adapt it to your project's metadata.
+
 ---
 
 ## Agents Reference
@@ -251,7 +350,7 @@ Agents run autonomously and are invoked automatically when Claude detects a matc
 
 ### review-integration
 
-**What it does:** Full code review of your IM project — reads every route, mapper, filter, and config file. Checks for connection naming issues, XML syntax errors, hardcoded values, mismatched resource IDs, and best-practice violations. Produces a structured report with findings grouped by severity so you know what to fix first.
+**What it does:** Full code review of your IM project — reads every route, mapper, filter, and config file. Checks for connection naming issues, XML syntax errors, hardcoded values, mismatched resource IDs, and best-practice violations. Now enhanced with **anti-pattern detection**: the agent cross-references all findings against the pattern catalog in `docs/patterns/` to flag known problematic constructs (e.g., missing flush in DMDS routes, unbounded polling without a dead-letter channel, synchronous REST calls without timeout configuration). Produces a structured report with findings grouped by severity so you know what to fix first.
 
 **How to use:**
 
@@ -261,6 +360,10 @@ Review my integration project
 
 ```
 Can you do a code review of all my routes?
+```
+
+```
+Review my project and check for anti-patterns
 ```
 
 ### debug-integration
@@ -549,14 +652,21 @@ Generate test CSV data for my import-products route
 
 Don't manually look up field names. The skills connect to your partition and auto-map fields. Just describe what you need in plain language.
 
-### One skill per object type pattern
+### Choose the right skill
 
-| What you're importing | Skill to use |
+| Scenario | Skill to use |
 |---|---|
-| Products (P), Product Extensions (PX), Customers (C), Customer Extensions (CX) | `generate-import-integration` |
-| Data Sources / PA Data Sources (DS/DMDS) | `generate-pa-import-integration` |
-| Pricing Parameters / Company Parameters (LTV/MLTV2) | `generate-ppv-import-integration` |
+| Products (P), Product Extensions (PX), Customers (C), Customer Extensions (CX) import | `generate-import-integration` |
+| Data Sources / PA Data Sources (DS/DMDS) import | `generate-pa-import-integration` |
+| Pricing Parameters / Company Parameters (LTV/MLTV2) import | `generate-ppv-import-integration` |
 | Any object type for export | `generate-export-integration` |
+| Calling an external REST API | `generate-rest-outbound-integration` |
+| Kafka publish or consume | `generate-kafka-integration` |
+| SOAP/WSDL web service | `generate-soap-integration` |
+| AWS S3 read or write | `generate-s3-integration` |
+| Cron/timer scheduling wrapper | `generate-scheduling-route` |
+| Single IM instance, multiple partitions | `generate-multi-tenant-route` |
+| Assess an existing project | `analyze-partner-project` |
 
 ### Review before deploying
 
@@ -611,6 +721,14 @@ pricefx-integration/
 │   ├── generate-export-integration/
 │   ├── generate-from-requirement/
 │   ├── generate-integration-test/
+│   ├── generate-event-driven-route/
+│   ├── generate-rest-outbound-integration/
+│   ├── generate-scheduling-route/
+│   ├── generate-kafka-integration/
+│   ├── generate-soap-integration/
+│   ├── generate-s3-integration/
+│   ├── generate-multi-tenant-route/
+│   ├── analyze-partner-project/
 │   ├── list-pricefx-tables/
 │   └── new-integration-wizard/
 ├── docs/
@@ -621,6 +739,7 @@ pricefx-integration/
 │   ├── mappers.md
 │   ├── project.md
 │   ├── routes.md
+│   ├── patterns/                         # 18 anonymized reference integration patterns
 │   └── CLAUDE.md.template
 └── tools/
     ├── bin/pfx.mjs
