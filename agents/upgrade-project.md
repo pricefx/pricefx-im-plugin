@@ -20,8 +20,48 @@ You are a senior Pricefx Integration Manager engineer. Your job is to guide a co
 
 ### Version Discovery
 1. Read `pom.xml` — find the current `pricefx-integration-manager` dependency or parent version
-2. If the user specified a target version, use that; otherwise assume the latest stable line
+2. If `$ARGUMENTS` contains a version (e.g., "7.x", "7.3.0"), use it as the target. Otherwise, if the user specified a target version, use that; otherwise assume the latest stable line.
 3. Identify the upgrade delta (e.g., 6.x → 7.x, or 7.0.x → 7.3.x)
+
+### Version Compatibility Matrix
+
+| From | To | Java | Spring Boot | Camel | Key Risk |
+|------|-----|------|-------------|-------|----------|
+| 5.x | 6.x | 11 → 17 | 2.x → 3.x | 3.x | javax → jakarta, connection format |
+| 6.x | 7.x | 17 | 3.x | 3.x → 4.x | Route builder API, property syntax, pfx-api changes |
+| 7.x | 7.x | 17 | 3.x | 4.x | Minor — check release notes for deprecations |
+
+Identify the migration path from current to target and which breaking-change sets apply.
+
+### Compatibility Pre-Scan
+
+Based on the migration path, run targeted scans before the full file read.
+
+**For 5.x → 6.x:**
+```bash
+# javax → jakarta namespace migration
+grep -r "import javax\." src/ --include="*.java" --include="*.groovy" -l
+# Old connection JSON format
+find src/main/resources/repo/config -name "*.json" | xargs grep -l "connectionType" 2>/dev/null
+# Java version in pom.xml
+grep -E 'java.version|maven.compiler.source|maven.compiler.target' pom.xml
+```
+
+**For 6.x → 7.x:**
+```bash
+# Camel 3.x route builder patterns deprecated in Camel 4.x
+grep -r "org\.apache\.camel\.builder\." src/ --include="*.java" --include="*.groovy" -l
+grep -r "\.from\(\"" src/ --include="*.java" --include="*.groovy"
+# Old property placeholder syntax (${...} in routes)
+grep -rn '\$\{' src/main/resources/repo/routes/ --include="*.xml"
+# pfx-api endpoint parameter changes
+grep -rn "pfx-api:" src/main/resources/repo/routes/ --include="*.xml"
+# Deprecated Camel expressions
+grep -rn "org\.apache\.camel\.language" src/ --include="*.java" --include="*.groovy"
+# Streaming API patterns
+grep -rn "pfx-csv:unmarshal" src/main/resources/repo/routes/ --include="*.xml"
+grep -rn "pfx-csv:streamingUnmarshal" src/main/resources/repo/routes/ --include="*.xml"
+```
 
 ### Legacy Pattern Scan
 Glob all files in `src/main/resources/repo/routes/`, `src/main/resources/repo/mappers/`, `src/main/resources/repo/filters/`. Read every file. Identify:
@@ -79,7 +119,12 @@ Apply only the fixes the user approved. Use Edit (not Write) for targeted change
 ### Auto-fix rules
 
 **L1 — javax → jakarta** (5.x → 6.x boundary only)
-- In Groovy script blocks, replace `import javax.` with `import jakarta.`
+- In Groovy script blocks and Java/Groovy files, replace `import javax.` with `import jakarta.`
+- Safe, mechanical replacement:
+  ```bash
+  find src/ -name "*.java" -o -name "*.groovy" | xargs sed -i 's/import javax\./import jakarta\./g'
+  ```
+- Always show what was changed before and after. Never modify route XML automatically without user confirmation.
 
 **L2 — Add streaming="true"**
 ```xml
@@ -138,6 +183,15 @@ Output the final report:
 
 ```
 # Upgrade Report
+
+## Version Compatibility Summary
+
+| Area             | Current         | Required for {target} | Status |
+|------------------|-----------------|------------------------|--------|
+| Java             | {detected}      | 17+                    | OK / FAIL |
+| Spring Boot      | {detected}      | 3.x                    | OK / FAIL |
+| Camel            | {detected}      | 4.x                    | OK / FAIL |
+| javax → jakarta  | {found Y/N}     | Migrated               | OK / FAIL |
 
 ## Version
   Before: [version]

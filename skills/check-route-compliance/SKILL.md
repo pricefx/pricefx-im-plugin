@@ -1,6 +1,6 @@
 ---
-name: check-pattern-compliance
-description: Compare a route against best practice patterns from the pattern catalog. Shows gaps and recommendations. Like a linter for IM routes. Use when the user says "check my route", "compare to best practice", "lint", "compliance check".
+name: check-route-compliance
+description: Compare a route against best practice patterns from the pattern catalog. Shows gaps and recommendations. Like a linter for IM routes. Use when the user says "check my route", "check route compliance", "compare to best practice", "lint", "compliance check".
 ---
 
 # Check Pattern Compliance

@@ -1,6 +1,6 @@
 ---
-name: new-integration-wizard
-description: Interactive step-by-step wizard that guides through setting up a new Pricefx integration. Use this skill when the user says "new integration", "create an integration", "set up import/export", or wants guided help building an integration from scratch. Asks one question at a time, saves a requirement doc, then generates all route/mapper/filter files. Best for users who are unsure about configuration details.
+name: run-integration-wizard
+description: Interactive step-by-step wizard that guides through setting up a new Pricefx integration. Use this skill when the user says "new integration", "run wizard", "create an integration", "set up import/export", or wants guided help building an integration from scratch. Asks one question at a time, saves a requirement doc, then generates all route/mapper/filter files. Best for users who are unsure about configuration details.
 ---
 
 # New Integration Wizard

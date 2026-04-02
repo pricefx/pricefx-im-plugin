@@ -1,5 +1,5 @@
 ---
-name: document-integration
+name: document-project
 description: Generates requirement documentation from existing IM routes. Reverse-engineers route, mapper, and filter files into structured requirement docs. Use for documenting undocumented or legacy projects.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write

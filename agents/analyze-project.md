@@ -1,6 +1,9 @@
 ---
-name: analyze-partner-project
+name: analyze-project
 description: Analyze a Pricefx Integration Manager project — scan routes, mappers, filters, detect patterns and anti-patterns, produce a structured summary with improvement recommendations. Use when the user says "analyze", "review project", "scan integration", or points at a pim-* directory.
+model: sonnet
+tools: Read, Grep, Glob, Bash
+maxTurns: 30
 ---
 
 # Analyze Partner Project

@@ -1,5 +1,5 @@
 ---
-name: onboard-new-project
+name: onboard-project
 description: Onboards a partner onto a new or inherited Pricefx Integration Manager project. Orchestrates project analysis, compliance checking, test coverage, and documentation generation, then delivers a consolidated onboarding report. Use when the user says "onboard this project", "I inherited this project", "help me understand this project", or "new project orientation".
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write

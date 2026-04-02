@@ -1,5 +1,5 @@
 ---
-name: review-integration
+name: review-project
 description: Reviews a Pricefx Integration Manager project implementation and recommends improvements. Use when the user wants a full code review of their IM routes, mappers, filters, and configuration.
 model: sonnet
 tools: Read, Grep, Glob, Bash
