@@ -274,28 +274,109 @@ If auto-detected, skip Steps 6 (Batch Size), 7 (CSV Header) — they are already
 
 ## Step 5: Choose Import Method
 
-Ask the user: **Which import method do you want to use?**
+**IMPORTANT:** This step applies ONLY to P, PX, CX, C, SL, SX imports. For DS/DMDS (PA Data Sources), ALWAYS use the `generate-pa-import-integration` skill which uses the split+tokenize+loaddata+flush pattern. NEVER offer `loaddataFile` for DS/DMDS.
+
+Recommend `loaddataFile` as the default:
+
+> **Recommended: `loaddataFile`** (streaming, server-side batching)
+>
+> This is the simplest and most efficient approach. The file is streamed directly to Pricefx, which handles batching internally. No split/tokenize, no Groovy parser, minimal code.
 
 | Method | Best for | Description |
 |--------|----------|-------------|
-| `pfx-api:loaddataFile` | Default — large files, performance | Streams file directly to Pricefx server, handles batching internally |
-| `pfx-api:loaddata` | Complex transformations | IM parses and maps data, sends via JSON API. Use when Groovy row-level logic is needed |
+| `pfx-api:loaddataFile` | **Default for all P/PX/CX/C/SL/SX** | Streams file to Pricefx server. Server handles batching. Minimal route code (~5 lines). |
+| `pfx-api:loaddata` | Complex row-level transformations | IM parses CSV, applies Groovy per-row logic, sends JSON batches. Use ONLY when you need Groovy expressions in the mapper that access other rows or headers. |
 
-**Default:** Always use `loaddataFile` for P, PX, CX, C imports.
+### loaddataFile Sync Modes
+
+| Mode | Parameter | Behavior |
+|---|---|---|
+| **Synchronous** (default) | _(none)_ | Route waits for Pricefx to finish processing. You get record count in response. |
+| **Asynchronous** | `async=true` | Route returns immediately after upload. Pricefx processes in background. Faster, but no immediate result feedback. |
+
+Use async when:
+- Files are very large (1M+ records) and you don't need immediate confirmation
+- The route triggers a CFS calculation afterward via event (not onCompletion)
+- You want to minimize IM resource usage during processing
+
+### loaddataFile Route Template
+
+```xml
+<route id="import-{{entity}}-from-sftp" autoStartup="{{pfx:autoStartup}}">
+  <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D&amp;streamDownload=true&amp;stepwise=false&amp;sortBy=file:name&amp;delay=10000"/>
+
+  <log message="[${routeId}] Received file ${headers.CamelFileName}"/>
+  <to uri="pfx-io:streamCompressedFile"/>
+  <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
+  <toD uri="pfx-csv:streamingUnmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true&amp;useReusableParser=true"/>
+  <toD uri="pfx-api:loaddataFile?nullValue=NULL&amp;objectType={{pfx:objectType}}&amp;mapper={{pfx:mapper}}&amp;batchSize={{pfx:batch.size}}&amp;connection={{pfx:connection}}"/>
+
+  <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
+</route>
+```
+
+Key: `pfx-csv:streamingUnmarshal` + `useReusableParser=true` + `pfx-api:loaddataFile` — no split, no tokenize, no Groovy.
+
+### loaddata Route Template (only when needed)
+
+Use this ONLY if the user explicitly needs row-level Groovy transformations:
+
+```xml
+<route id="import-{{entity}}-from-sftp" autoStartup="{{pfx:autoStartup}}">
+  <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;move=.archive/%24%7Bdate:now:yyyyMMdd%7D/&amp;moveFailed=.error/%24%7Bdate:now:yyyyMMdd%7D/"/>
+
+  <log message="[${routeId}] Received file ${headers.CamelFileName}"/>
+  <to uri="pfx-io:streamCompressedFile"/>
+  <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
+
+  <!-- API settings parser -->
+  <setHeader name="pfxApiSettings"><constant>{{pfx:api.settings}}</constant></setHeader>
+  <script>
+    <groovy><![CDATA[
+      def pfxApiSettingsMap = [:]
+      headers.pfxApiSettings.split('&').each { setting ->
+        def parts = setting.split('=')
+        def key = parts[0]
+        def value = parts.size() > 1 ? parts[1] : ""
+        pfxApiSettingsMap.put(key, value)
+        headers.put(key, value)
+      }
+      headers.put('parsedPfxApiSettings', pfxApiSettingsMap
+        .findAll { k, v -> k != 'entityName' }
+        .collect { k, v -> k + '=' + v }.join('&'))
+    ]]></groovy>
+  </script>
+
+  <doTry>
+    <split aggregationStrategy="recordsCountAggregation" streaming="true">
+      <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
+      <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
+      <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+      <setBody><constant/></setBody>
+    </split>
+    <doCatch>
+      <exception>java.nio.charset.MalformedInputException</exception>
+      <log loggingLevel="ERROR" message="[${routeId}] Encoding error in ${headers.CamelFileName}"/>
+      <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException" message="File encoding error"/>
+    </doCatch>
+  </doTry>
+
+  <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
+</route>
+```
 
 ## Step 6: Batch Size
 
 Ask the user: **What batch size do you want?**
 
 Provide this guidance:
-- **Few fields (< 10 attributes):** `batchSize=500000` is fine
+
+**For loaddataFile (recommended):**
+- **Few fields (< 10 attributes):** `batchSize=500000`
 - **Medium fields (10–20 attributes):** `batchSize=100000–200000`
-- **Many fields (20+ attributes):** `batchSize=50000` or less
-- More attributes per row = more memory per batch, so use smaller batch sizes
+- **Many fields (20+ attributes):** `batchSize=50000`
 
-Default: `500000` for loaddataFile, `5000` for loaddata.
-
-### Batch Size by Object Type
+**For loaddata (split+tokenize):**
 
 | Object Type | Default Batch Size | Notes |
 |---|---|---|
