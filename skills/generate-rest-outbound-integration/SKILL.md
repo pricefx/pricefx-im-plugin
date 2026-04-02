@@ -35,46 +35,85 @@ Ask the user for the following (or read from `$ARGUMENTS` if already provided):
 
 If the user has already provided some of these in `$ARGUMENTS`, skip those questions.
 
-## Step 2: Design the Route Structure
+## Step 2: Choose Simple or Complex Mode
 
-Based on the answers, plan:
+Evaluate the complexity based on Step 1 answers:
 
-- **One or two route files** to create:
-  - `{route-name}.xml` — the business/caller route (trigger + payload build + delegation)
-  - `rest-outbound-shared.xml` — the shared HTTP call route (if not already present in the project)
-- **Auth sub-route file** (if OAuth 2.0):
-  - `rest-auth-shared.xml` — token-fetch sub-route (if not already present)
-- **Properties** to add to `application.properties`
+| Criteria | Mode |
+|----------|------|
+| Auth = `none` or `apikey`, single route, no dry-run needed | **Simple** — everything in one route file |
+| Auth = `oauth2` or `basic`, OR multiple outbound routes in project, OR dry-run/throttling needed | **Complex** — business route + shared outbound + optional auth sub-route |
 
-Check whether `rest-outbound-shared.xml` and `rest-auth-shared.xml` already exist in `src/main/resources/repo/routes/`. If they do, skip regenerating them and reference the existing `direct:rest_outbound_call` and `direct:rest_auth_get_token` endpoints.
+**Simple mode** generates a single self-contained route file with inline HTTP call and error handling.
+**Complex mode** generates the shared `rest-outbound-shared.xml` + `rest-auth-shared.xml` pattern for reuse across multiple routes.
 
-## Step 3: Generate the Business Route
+Check whether `rest-outbound-shared.xml` already exists in `src/main/resources/repo/routes/`. If it does, use Complex mode and reference the existing `direct:rest_outbound_call`.
 
-File: `src/main/resources/repo/routes/{route-name}.xml`
+## Step 3a: Generate Simple Inline Route
+
+Use this when mode is **Simple**. Everything in one file: `src/main/resources/repo/routes/{route-name}.xml`
 
 ### Trigger options
 
 **Event-driven trigger:**
 ```xml
-<routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="{route-name}">
-    <from uri="direct:{eventName}"/>
-    <!-- event body is the Pricefx event payload map -->
+<from uri="direct:{eventName}"/>
 ```
 
 **Scheduled trigger:**
 ```xml
-<routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="{route-name}">
-    <from uri="quartz://{route-name}?cron={{ext.api.schedule.cron}}&amp;trigger.timeZone={{ext.api.schedule.timezone}}&amp;stateful=true"/>
+<from uri="quartz://{route-name}?cron={{ext.api.schedule.cron}}&amp;trigger.timeZone={{ext.api.schedule.timezone}}&amp;stateful=true"/>
 ```
 
 **Timer (one-shot) trigger:**
 ```xml
-<routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="{route-name}">
-    <from uri="timer://{route-name}?repeatCount=1"/>
+<from uri="timer://{route-name}?repeatCount=1"/>
 ```
+
+### Simple route template (no auth)
+
+```xml
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="{route-name}">
+        <from uri="{trigger-uri}"/>
+
+        <log loggingLevel="INFO" message="[{route-name}] Starting outbound call"/>
+
+        <!-- Build request body if needed (omit for GET) -->
+        <setBody>
+            <groovy>/* transform to target API payload */</groovy>
+        </setBody>
+        <setHeader name="CamelHttpMethod"><constant>{GET|POST|PUT|PATCH}</constant></setHeader>
+        <setHeader name="Content-Type"><constant>application/json</constant></setHeader>
+
+        <doTry>
+            <toD uri="{{ext.api.url}}?bridgeEndpoint=true&amp;throwExceptionOnFailure=true&amp;socketTimeout=60000&amp;connectTimeout=30000&amp;connectionClose=true"/>
+
+            <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+            <log loggingLevel="INFO" message="[{route-name}] Response: ${body}"/>
+
+            <doCatch>
+                <exception>java.lang.Exception</exception>
+                <log loggingLevel="ERROR"
+                     message="[{route-name}] Failed: ${exception.message}"/>
+            </doCatch>
+        </doTry>
+    </route>
+</routes>
+```
+
+### Simple route template (API key auth)
+
+Same as above, but add before the `<toD>`:
+```xml
+<setHeader name="{api-key-header-name}"><simple>{{ext.api.apiKey}}</simple></setHeader>
+```
+
+After generating the simple route, skip to **Step 6: Generate Properties**.
+
+## Step 3b: Generate Complex Business Route
+
+Use this when mode is **Complex**. File: `src/main/resources/repo/routes/{route-name}.xml`
 
 ### Full business route template
 
@@ -97,14 +136,8 @@ File: `src/main/resources/repo/routes/{route-name}.xml`
     <setHeader name="serviceURL"><simple>{{ext.api.url}}</simple></setHeader>
     <setHeader name="call_is_DISABLED"><simple>{{ext.api.call_is_DISABLED}}</simple></setHeader>
     <setHeader name="correlationId">
-      <groovy>/* e.g. a UUID or a field from the source payload */
-        java.util.UUID.randomUUID().toString()</groovy>
+      <groovy>java.util.UUID.randomUUID().toString()</groovy>
     </setHeader>
-
-    <!-- Optional: throttle when sending many requests in a loop -->
-    <!-- <throttle timePeriodMillis="1000">
-           <constant>{{ext.api.maxConcurrentConnections}}</constant>
-         </throttle> -->
 
     <!-- Delegate to the shared REST outbound call route -->
     <to uri="direct:rest_outbound_call"/>
@@ -375,6 +408,7 @@ Fix any issues silently and report what was corrected.
 
 ## Important Rules
 
+- **When a route builds its request body using a FreeMarker template**, store the `.ftl` file in `src/main/resources/repo/resources/` and reference it as `freemarker:file://{{integration.data}}/repository/resources/{filename}.ftl?allowContextMapAll=true`. Do NOT use `classpath:` — templates are not on the classpath after IM startup.
 - NEVER hardcode credentials, URLs, or environment-specific values in route XML — always use `{{property}}` placeholders
 - NEVER use `throwExceptionOnFailure=false` on the business HTTP call — use it only on the OAuth token endpoint
 - ALWAYS set `socketTimeout` and `connectTimeout` on every `<toD>` HTTP call — missing timeouts cause permanent thread blocks
@@ -382,7 +416,8 @@ Fix any issues silently and report what was corrected.
 - When splitting large payloads and sending many requests, add `<throttle>` in the calling route (not inside the shared call route)
 - `call_is_DISABLED=true` must suppress the actual HTTP call — always include the dry-run toggle for safe testing
 - NEVER use `noop=true` — not applicable to HTTP endpoints, but do not carry it over from file patterns
-- The shared `direct:rest_outbound_call` route must be reused across all outbound REST integrations in the project — do not duplicate it per business route
+- **Simple mode (no auth / apikey, single route):** Generate everything in one route file. Do NOT create `rest-outbound-shared.xml` — it's unnecessary overhead for simple cases.
+- **Complex mode (OAuth2, multiple outbound routes):** The shared `direct:rest_outbound_call` route must be reused across all outbound REST integrations in the project — do not duplicate it per business route
 - Route IDs must match file names without `.xml`: file `export-approvals-to-erp.xml` → `id="export-approvals-to-erp"`
 - All `&` in URI parameters must be escaped as `&amp;` in XML attributes
 

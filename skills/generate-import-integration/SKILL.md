@@ -551,6 +551,7 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 
 ## Important Rules
 
+- **When a route needs external template files (FreeMarker, XSLT, Velocity)**, store them in `src/main/resources/repo/resources/` and reference via `file://{{integration.data}}/repository/resources/{filename}`. Do NOT use `classpath:` — resource files are NOT on the Camel classpath after IM startup. Example: `<to uri="freemarker:file://{{integration.data}}/repository/resources/MyTemplate.ftl?allowContextMapAll=true"/>`
 - NEVER hardcode values in route XML — always use `{{property}}` placeholders
 - NEVER use generic/placeholder field names — always fetch real metadata
 - Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID. Example: file `import-product-master.xml` → `id="import-product-master"`

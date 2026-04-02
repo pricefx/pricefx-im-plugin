@@ -41,7 +41,7 @@ Ask the user for the following (or read from `$ARGUMENTS` if already provided):
 Plan the following files to create:
 
 - `src/main/resources/repo/routes/{integration-name}.xml` — the business route
-- `src/main/resources/repo/ftl/{IntegrationName}_SOAP_{Operation}.ftl` — the FreeMarker SOAP envelope template
+- `src/main/resources/repo/resources/{IntegrationName}_SOAP_{Operation}.ftl` — the FreeMarker SOAP envelope template (deployed to `${integration.data}/repository/resources/` at startup)
 - `src/main/resources/repo/routes/soap-call-shared.xml` — the shared SOAP call route (only if not already present)
 - Properties in `application.properties`
 
@@ -106,7 +106,7 @@ File: `src/main/resources/repo/routes/{integration-name}.xml`
       <setBody>
         <groovy>exchange.properties.DATA_ftl_model + [items: body]</groovy>
       </setBody>
-      <to uri="freemarker:ftl/{IntegrationName}_SOAP_{Operation}.ftl"/>
+      <to uri="freemarker:file://{{integration.data}}/repository/resources/{IntegrationName}_SOAP_{Operation}.ftl"/>
 
       <!-- Set routing headers for the shared SOAP call route -->
       <setHeader name="sourceId">
@@ -134,7 +134,7 @@ File: `src/main/resources/repo/routes/{integration-name}.xml`
 
 ## Step 4: Generate the FreeMarker SOAP Envelope Template
 
-File: `src/main/resources/repo/ftl/{IntegrationName}_SOAP_{Operation}.ftl`
+File: `src/main/resources/repo/resources/{IntegrationName}_SOAP_{Operation}.ftl`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -328,6 +328,7 @@ Fix any issues silently and report corrections.
 - The shared `direct:soap_call` route is reused across all SOAP integrations in the project — do not duplicate it per business route
 - `<split streaming="true">` is required for large datasets — without it the entire batch list is held in memory
 - Route IDs must match file names without `.xml`: file `export-contracts-to-erp.xml` → `id="export-contracts-to-erp"`
+- **FreeMarker templates** go to `src/main/resources/repo/resources/` (without `ftl/` subdirectory). IM's `ResourcesService` deploys them to `${integration.data}/repository/resources/` on the filesystem at startup. The route URI MUST use `file://` protocol: `freemarker:file://{{integration.data}}/repository/resources/{TemplateName}.ftl`. Do NOT use classpath resolution — templates are NOT on the classpath.
 
 ## References
 

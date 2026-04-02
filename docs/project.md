@@ -13,7 +13,7 @@ src/main/resources/repo/
   beans/          - Custom Java/Groovy beans
   classes/        - Custom classes
   config/         - application.properties (route configuration)
-  resources/      - Static resources
+  resources/      - Static resource files (FreeMarker templates, XSLT stylesheets, JSON/XML templates). Accessed at runtime via `file://{{integration.data}}/repository/resources/`
 ```
 
 ## pfx CLI — Partition Metadata
