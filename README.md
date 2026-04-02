@@ -136,7 +136,7 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`. The plugin ships with **22 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`. The plugin ships with **23 skills** covering the full integration development lifecycle.
 
 ---
 
@@ -216,6 +216,16 @@ Generates routes that call an external REST API from IM — for example, pushing
 ```
 
 Supports: OAuth2 bearer tokens, API key headers, HTTP basic auth, retry/dead-letter patterns, and payload transformation via mapper.
+
+#### generate-inbound-rest-endpoint
+
+Generates inbound REST API endpoints that external systems can call into IM. Covers GET (health check, data lookup) and POST (formula execution, data submission) endpoints.
+
+```
+/pricefx-integration:generate-inbound-rest-endpoint
+```
+
+Includes: Camel REST DSL setup, mandatory field validation, Pricefx formula execution, structured error responses (400/500), Swagger/OpenAPI doc generation, and REST module configuration (`integration.rest.*` properties).
 
 #### generate-kafka-integration
 
@@ -882,6 +892,7 @@ When inheriting an existing project, run the `onboard-project` agent first. It p
 | Pricing Parameters / Company Parameters (LTV/MLTV2) import | `generate-ppv-import-integration` |
 | Any object type for export | `generate-export-integration` |
 | Calling an external REST API | `generate-rest-outbound-integration` |
+| Exposing a REST endpoint from IM | `generate-inbound-rest-endpoint` |
 | Kafka publish or consume | `generate-kafka-integration` |
 | SOAP/WSDL web service | `generate-soap-integration` |
 | AWS S3 read or write | `generate-s3-integration` |
@@ -983,6 +994,7 @@ pricefx-integration/
 │   ├── generate-multi-tenant-route/
 │   ├── generate-pa-import-integration/
 │   ├── generate-ppv-import-integration/
+│   ├── generate-inbound-rest-endpoint/
 │   ├── generate-rest-outbound-integration/
 │   ├── generate-s3-integration/
 │   ├── generate-scheduling-route/
