@@ -110,7 +110,7 @@ your-im-project/
 The fastest way to get started is the interactive wizard:
 
 ```
-/pricefx-integration:new-integration-wizard
+/pricefx-integration:run-integration-wizard
 ```
 
 It will walk you through:
@@ -136,7 +136,7 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`. The plugin ships with **27 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`. The plugin ships with **22 skills** covering the full integration development lifecycle.
 
 ---
 
@@ -277,53 +277,17 @@ Produces a correctly structured connection JSON file ready for placement in `con
 
 ---
 
-### Analysis & Quality (7 skills)
+### Analysis & Quality (3 skills)
 
-#### analyze-partner-project
-
-Analyzes an existing IM project (your own or a partner's) and produces a structured assessment: route inventory, identified patterns, anti-patterns, migration opportunities, and a prioritized recommendation list.
-
-```
-/pricefx-integration:analyze-partner-project
-```
-
-Does not modify any files. Output is a markdown report that can be saved to `docs/` or shared directly.
-
-#### check-pattern-compliance
+#### check-route-compliance
 
 Lints all routes in the project against the pattern catalog. Flags deviations from established patterns — such as missing flush steps, non-standard naming conventions, or improper error handling — and explains the correct approach.
 
 ```
-/pricefx-integration:check-pattern-compliance
+/pricefx-integration:check-route-compliance
 ```
 
 Useful as a pre-commit or pre-review quality gate.
-
-#### analyze-test-coverage
-
-Scans routes and reports which ones lack corresponding integration tests. Produces a coverage summary with prioritized gaps and the recommended test type for each untested route.
-
-```
-/pricefx-integration:analyze-test-coverage
-```
-
-#### migrate-legacy-to-modern
-
-Analyzes an older IM project for outdated patterns and produces a detailed modernization roadmap with effort estimates. Covers component upgrades, pattern replacements, and configuration changes required by current IM versions.
-
-```
-/pricefx-integration:migrate-legacy-to-modern
-```
-
-Use this for a read-only assessment before committing to migration. To apply changes automatically, use the `migrate-integration` agent.
-
-#### upgrade-assistant
-
-Checks a project for compatibility with a target IM version. Identifies deprecated components, changed URIs, removed parameters, and required configuration updates. Produces a prioritized upgrade checklist.
-
-```
-/pricefx-integration:upgrade-assistant
-```
 
 #### estimate-performance
 
@@ -347,7 +311,7 @@ Example: "Compare develop vs my feature branch."
 
 ---
 
-### Documentation & Visualization (3 skills)
+### Documentation & Visualization (2 skills)
 
 #### explain-route
 
@@ -356,16 +320,6 @@ Produces a plain-language explanation of any route — what it does, where data 
 ```
 /pricefx-integration:explain-route
 ```
-
-#### generate-from-requirement
-
-Reads a business requirement document and generates the complete integration without asking questions.
-
-```
-/pricefx-integration:generate-from-requirement
-```
-
-Place your requirement doc in `docs/requirements/` first. The skill extracts direction, object type, fields, filters, and schedule from the document.
 
 #### generate-flow-diagram
 
@@ -408,12 +362,12 @@ Example: "What would happen if I run this CSV through the import-products route?
 
 ### Workflow (2 skills)
 
-#### new-integration-wizard
+#### run-integration-wizard
 
 Interactive step-by-step wizard for building integrations from scratch. Best for users who are new to IM. Supports event-driven integrations, SL/SX object types, and all scheduling options.
 
 ```
-/pricefx-integration:new-integration-wizard
+/pricefx-integration:run-integration-wizard
 ```
 
 #### git-workflow
@@ -472,9 +426,9 @@ Skills will apply the matching pattern as their baseline and adapt it to your pr
 
 ## Agents Reference
 
-Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally.
+Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **11 agents**.
 
-### review-integration
+### review-project
 
 **What it does:** Full code review of your IM project — reads every route, mapper, filter, and config file. Checks for connection naming issues, XML syntax errors, hardcoded values, mismatched resource IDs, and best-practice violations. Enhanced with anti-pattern detection: cross-references all findings against the pattern catalog to flag known problematic constructs (e.g., missing flush in DMDS routes, unbounded polling without a dead-letter channel, synchronous REST calls without timeout configuration). Produces a structured report with findings grouped by severity.
 
@@ -520,7 +474,7 @@ What would be affected if I rename attribute5 to attribute10 in the Prices PX ta
 I want to remove the sftp.connection — what routes depend on it?
 ```
 
-### document-integration
+### document-project
 
 **What it does:** Reverse-engineers existing routes into structured requirement documents. Great for onboarding new team members or creating documentation for legacy projects.
 
@@ -534,20 +488,25 @@ Generate documentation for all routes in this project
 Document the import-products route
 ```
 
-### migrate-integration
+### migrate-project
 
-**What it does:** Modernizes legacy IM projects. Detects outdated patterns, proposes a migration plan, and applies changes once you approve.
+**What it does:** Modernizes legacy IM projects. Detects outdated patterns, proposes a migration plan, and applies changes once you approve. Incorporates legacy migration analysis to produce a full modernization roadmap with effort estimates before applying any changes.
 
 Detects:
 - `split+tokenize+loaddata` → `loaddataFile` (except DMDS)
 - `pfx-sftp` with `default-sftp-connection` → `file://` component
 - Redundant `connection=pricefx` parameters
 - Route ID `pfx:` prefixes
+- Outdated component versions and deprecated URIs
 
 **How to use:**
 
 ```
 Migrate this project to modern IM patterns
+```
+
+```
+Assess what needs to be migrated, then apply the changes
 ```
 
 ### generate-test-data
@@ -560,7 +519,7 @@ Migrate this project to modern IM patterns
 Generate test data for the import-products route
 ```
 
-### onboard-new-project
+### onboard-project
 
 **What it does:** Complete onboarding workflow for an inherited or unfamiliar IM project. Reads all routes and configuration, produces a structured project summary (what each route does, what tables it touches, what schedule it runs on), flags any immediate risks, and sets up a `CLAUDE.md` with project-specific context to accelerate future AI-assisted work.
 
@@ -574,7 +533,7 @@ Onboard me to this project
 I just inherited this IM project, help me understand it
 ```
 
-### build-integration-from-scratch
+### build-integration
 
 **What it does:** End-to-end integration builder — takes a business requirement (described in natural language or from a doc) and drives the full workflow: requirement clarification, metadata fetch, skill selection, generation, test generation, and a final review pass. Produces a complete, review-ready integration in one session.
 
@@ -586,6 +545,20 @@ Build me an integration from scratch to import products from SFTP
 
 ```
 I need a full end-to-end solution for exporting changed customers daily
+```
+
+### analyze-project
+
+**What it does:** Analyzes an existing IM project (your own or a partner's) and produces a structured assessment: route inventory, identified patterns, anti-patterns, migration opportunities, and a prioritized recommendation list. Does not modify any files. Output is a markdown report that can be saved to `docs/` or shared directly.
+
+**How to use:**
+
+```
+Analyze this project and give me a full assessment
+```
+
+```
+Review a partner project at /path/to/project
 ```
 
 ### health-check
@@ -604,7 +577,7 @@ What's the quality score for this integration project?
 
 ### upgrade-project
 
-**What it does:** Complete upgrade workflow — detects the current IM version, identifies all breaking changes and deprecations for the target version, applies safe automatic fixes, and presents a summary of any remaining manual steps. Combines the analysis of `upgrade-assistant` with automated remediation.
+**What it does:** Complete upgrade workflow — detects the current IM version, identifies all breaking changes and deprecations for the target version, applies safe automatic fixes, and presents a summary of any remaining manual steps. Combines upgrade compatibility analysis with automated remediation.
 
 **How to use:**
 
@@ -764,9 +737,7 @@ Daily at 6 AM EST
 
 **Step 2 — Generate:**
 
-```
-/pricefx-integration:generate-from-requirement
-```
+Ask Claude to build the integration from your requirement document, or describe the requirement conversationally and let the `build-integration` agent handle the rest.
 
 It reads the doc and generates everything without asking questions.
 
@@ -778,7 +749,7 @@ Review my integration project before I deploy it
 ```
 
 **What happens:**
-1. The `review-integration` agent scans all files
+1. The `review-project` agent scans all files
 2. Produces a report with findings grouped by severity:
    - Critical: mismatched resource IDs, missing business keys
    - Warning: hardcoded values that should be in properties
@@ -900,7 +871,7 @@ Don't manually look up field names. The skills connect to your partition and aut
 
 ### Onboard before you build
 
-When inheriting an existing project, run the `onboard-new-project` agent first. It produces a structured summary and sets up `CLAUDE.md` so all subsequent AI sessions have project-specific context.
+When inheriting an existing project, run the `onboard-project` agent first. It produces a structured summary and sets up `CLAUDE.md` so all subsequent AI sessions have project-specific context.
 
 ### Choose the right skill for generation
 
@@ -917,20 +888,20 @@ When inheriting an existing project, run the `onboard-new-project` agent first. 
 | Cron/timer scheduling wrapper | `generate-scheduling-route` |
 | Single IM instance, multiple partitions | `generate-multi-tenant-route` |
 | Connection JSON file | `generate-connection` |
-| Assess an existing project | `analyze-partner-project` |
 
 ### Choose the right agent for analysis
 
 | Scenario | Agent to use |
 |---|---|
-| Full code review before deployment | `review-integration` |
+| Full code review before deployment | `review-project` |
 | Diagnosing a route failure | `debug-integration` |
 | Impact of a field or connection rename | `impact-analysis` |
-| Documenting routes for stakeholders | `document-integration` |
-| Migrating outdated patterns | `migrate-integration` |
+| Documenting routes for stakeholders | `document-project` |
+| Migrating outdated patterns | `migrate-project` |
 | Creating test data | `generate-test-data` |
-| Understanding an inherited project | `onboard-new-project` |
-| End-to-end integration from a requirement | `build-integration-from-scratch` |
+| Understanding an inherited project | `onboard-project` |
+| End-to-end integration from a requirement | `build-integration` |
+| Assessing an existing or partner project | `analyze-project` |
 | Project quality score | `health-check` |
 | Full version upgrade with auto-fix | `upgrade-project` |
 
@@ -938,13 +909,13 @@ When inheriting an existing project, run the `onboard-new-project` agent first. 
 
 Use `simulate-dry-run` to validate mapper and filter logic against real data before you push changes to a live partition. It costs nothing and catches mapping errors early.
 
-### Use `check-pattern-compliance` as a quality gate
+### Use `check-route-compliance` as a quality gate
 
-Run `check-pattern-compliance` before every merge request to catch deviations from established patterns. Combine it with `analyze-test-coverage` to ensure every new route has a test.
+Run `check-route-compliance` before every merge request to catch deviations from established patterns. Combine it with the `health-check` agent to get full coverage and quality insights.
 
 ### Review before deploying
 
-Always run `Review my integration project` before deploying to catch issues early. The review agent checks for common mistakes that cause deployment failures.
+Always run `Review my integration project` before deploying to catch issues early. The `review-project` agent checks for common mistakes that cause deployment failures.
 
 ### Keep .env out of version control
 
@@ -952,7 +923,7 @@ Add `.env` to your `.gitignore`. The `.env` file contains credentials and should
 
 ### Use requirement docs for repeatable generation
 
-For projects with many integrations, write requirement docs first, then batch-generate with `generate-from-requirement`. This ensures consistency and creates documentation as a byproduct.
+For projects with many integrations, write requirement docs in `docs/requirements/` first, then use the `build-integration` agent to generate from them. This ensures consistency and creates documentation as a byproduct.
 
 ### Use `git-workflow` for consistent branching
 
@@ -986,44 +957,40 @@ pricefx-integration/
 │   └── plugin.json
 ├── CLAUDE.md
 ├── agents/
-│   ├── review-integration.md
+│   ├── analyze-project.md
+│   ├── build-integration.md
 │   ├── debug-integration.md
-│   ├── impact-analysis.md
-│   ├── document-integration.md
-│   ├── migrate-integration.md
+│   ├── document-project.md
 │   ├── generate-test-data.md
-│   ├── onboard-new-project.md
-│   ├── build-integration-from-scratch.md
 │   ├── health-check.md
+│   ├── impact-analysis.md
+│   ├── migrate-project.md
+│   ├── onboard-project.md
+│   ├── review-project.md
 │   └── upgrade-project.md
 ├── skills/
+│   ├── check-route-compliance/
+│   ├── compare-environments/
+│   ├── estimate-performance/
+│   ├── explain-route/
+│   ├── generate-connection/
+│   ├── generate-event-driven-route/
+│   ├── generate-export-integration/
+│   ├── generate-flow-diagram/
 │   ├── generate-import-integration/
+│   ├── generate-integration-test/
+│   ├── generate-kafka-integration/
+│   ├── generate-multi-tenant-route/
 │   ├── generate-pa-import-integration/
 │   ├── generate-ppv-import-integration/
-│   ├── generate-export-integration/
-│   ├── generate-event-driven-route/
 │   ├── generate-rest-outbound-integration/
-│   ├── generate-kafka-integration/
-│   ├── generate-soap-integration/
 │   ├── generate-s3-integration/
-│   ├── generate-multi-tenant-route/
 │   ├── generate-scheduling-route/
-│   ├── generate-connection/
-│   ├── generate-from-requirement/
-│   ├── generate-flow-diagram/
-│   ├── generate-integration-test/
-│   ├── analyze-partner-project/
-│   ├── check-pattern-compliance/
-│   ├── analyze-test-coverage/
-│   ├── migrate-legacy-to-modern/
-│   ├── upgrade-assistant/
-│   ├── estimate-performance/
-│   ├── compare-environments/
-│   ├── explain-route/
-│   ├── simulate-dry-run/
-│   ├── new-integration-wizard/
+│   ├── generate-soap-integration/
 │   ├── git-workflow/
-│   └── list-pricefx-tables/
+│   ├── list-pricefx-tables/
+│   ├── run-integration-wizard/
+│   └── simulate-dry-run/
 ├── docs/
 │   ├── components.md
 │   ├── configuration.md
