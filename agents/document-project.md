@@ -307,4 +307,11 @@ List properties shared across multiple routes. Route-specific properties belong 
 1. Scan all routes (Glob `src/main/resources/repo/routes/**/*.xml`).
 2. For each route: generate the technical doc, then the business requirement doc, then the one-page summary.
 3. After all routes: generate the project overview.
-4. Report a summary of what was written to stdout.
+4. Generate visual documentation (Mermaid diagrams):
+   - `docs/diagrams/project-overview.md` — architecture diagram (external systems ↔ Pricefx)
+   - `docs/diagrams/data-flow-overview.md` — chronological flow (imports → events → exports)
+   - `docs/diagrams/routes/{route-name}-flow.md` — per-route detailed diagram
+   - `docs/diagrams/README.md` — index of all diagrams
+   - Use `flowchart LR` for routes, `flowchart TB` for overviews
+   - Colors: green=source, blue=process, orange=target, red=error
+5. Report a summary of what was written to stdout.

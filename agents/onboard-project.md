@@ -82,7 +82,22 @@ For each route that has no existing doc in `docs/requirements/`:
 - Filter: `src/main/resources/repo/filters/{name}.filter.xml`
 ```
 
-### Phase 5 — Consolidated Report
+### Phase 5 — Visual Documentation (visualize-project)
+
+Generate Mermaid flow chart documentation for the project:
+
+1. Create `docs/diagrams/project-overview.md` — high-level architecture diagram showing external systems, Pricefx objects, and routes as edges between them. Use `flowchart LR` with subgraphs for External Systems and Pricefx.
+2. Create `docs/diagrams/data-flow-overview.md` — chronological data flow: imports first, then events/triggers, then exports. Use `flowchart TB`.
+3. For each route, create `docs/diagrams/routes/{route-name}-flow.md` — detailed per-route diagram showing source → processing steps → target, with error paths as dashed arrows.
+4. Create `docs/diagrams/README.md` — index of all diagrams.
+
+Mermaid conventions:
+- Node shapes: `([source])`, `[process]`, `{decision}`, `[[target]]`
+- Colors: green=source, blue=process, orange=target, red=error
+- Dashed arrows `-.->` for error paths
+- Max 15-20 nodes per diagram
+
+### Phase 6 — Consolidated Report
 
 Output the full **Project Onboarding Report** to stdout (do NOT write it to a file):
 
