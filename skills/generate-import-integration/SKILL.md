@@ -182,6 +182,38 @@ When proposing the mapping, also detect and suggest converter expressions based 
 - **No attribute labels set** (all labels empty in metadata) → fall back to sequential mapping + ask user
 - **P, C objects** (no `*-metadata` command available) → fall back to manual mapping
 
+### LLM-Enhanced Mapping Reasoning
+
+When the 4-tier automatic matching produces LOW confidence results, apply semantic reasoning:
+
+1. **Analyze field semantics** — don't just match names, understand meaning:
+   - `Cust_Num`, `Customer_Number`, `KUNNR`, `customer_id`, `cust_no` → all map to `customerId`
+   - `Mat_No`, `Material`, `SKU`, `ItemCode`, `product_code` → all map to `sku`
+   - `Desc`, `Description`, `Label`, `Name`, `Title` → likely maps to `label`
+   - `Cat`, `Category`, `Group`, `Class`, `Segment` → likely maps to an attribute
+
+2. **Analyze data values** — if header matching is ambiguous, sample the data:
+   - Column with values like "PRD-001", "SKU-123" → product identifier → `sku`
+   - Column with values like "C-1001", "CUST-42" → customer identifier → `customerId`
+   - Column with numeric values and 2 decimal places → likely a price/cost → needs `stringToDecimal` converter
+   - Column with dates → needs `stringToDate` converter with detected format
+
+3. **Cross-reference with Pricefx metadata** — if connected to a partition:
+   - Fetch existing field labels and descriptions
+   - Match CSV headers against field descriptions, not just field names
+   - Example: Pricefx field `attribute3` has label "Product Category" → CSV column "Category" maps here
+
+4. **Confidence display with reasoning:**
+   ```
+   CSV Column          → Pricefx Field    Confidence  Reasoning
+   Customer_Number     → customerId       HIGH        Semantic match: customer identifier
+   Mat_Desc            → label            MEDIUM      "Desc" commonly maps to description/label
+   Unit_Price          → attribute1       MEDIUM      Numeric with decimals, likely price field
+   XYZABC              → ???              LOW         No semantic match — ask user
+   ```
+
+5. **Always ask for confirmation** — display the proposed mapping and let user adjust before generating.
+
 ## Step 4: Determine Data Source
 
 Ask the user: **What is the data source?**
