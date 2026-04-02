@@ -1,13 +1,13 @@
 ---
 name: generate-import-integration
-description: Generate a Pricefx import integration (route, mapper, properties) for Product (P), Product Extension (PX), Customer (C), or Customer Extension (CX). Use this skill whenever the user wants to load, import, or push data INTO Pricefx from CSV files, SFTP, database, or REST API. Covers loaddataFile (streaming) and loaddata patterns, smart auto-mapping from CSV headers, and new table creation. For PA/Data Source (DMDS) imports, use generate-pa-import-integration instead. Fetches real metadata from the partition via pfx CLI.
+description: Generate a Pricefx import integration (route, mapper, properties) for Product (P), Product Extension (PX), Customer (C), Customer Extension (CX), Seller (SL), or Seller Extension (SX). Use this skill whenever the user wants to load, import, or push data INTO Pricefx from CSV files, SFTP, database, or REST API. Covers loaddataFile (streaming) and loaddata patterns, smart auto-mapping from CSV headers, and new table creation. For PA/Data Source (DMDS) imports, use generate-pa-import-integration instead. Fetches real metadata from the partition via pfx CLI.
 ---
 
 # Generate Import Integration
 
 You are generating an import integration for a Pricefx Integration Manager project. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
 
-**Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension).
+**Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension), SL (Seller), SX (Seller Extension).
 For PA Data Source (DMDS) imports, use the `/generate-pa-import-integration` skill instead.
 
 ## Step 1: Check Credentials
@@ -25,6 +25,10 @@ Ask the user: **What Pricefx object are you importing into?**
 | PX | Product Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` |
 | C | Customer Master | — | — | — |
 | CX | Customer Extension | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` |
+| SL | Seller Master | — | — | — |
+| SX | Seller Extension | — | — | — |
+
+**Note on SL/SX:** Seller metadata CLI commands may not be available. If metadata cannot be fetched, ask the user to provide the field mapping manually. Key field for SL/SX is `sellerId`.
 
 If the user already specified the object type (e.g., in $ARGUMENTS), skip asking.
 
@@ -178,6 +182,38 @@ When proposing the mapping, also detect and suggest converter expressions based 
 - **No attribute labels set** (all labels empty in metadata) → fall back to sequential mapping + ask user
 - **P, C objects** (no `*-metadata` command available) → fall back to manual mapping
 
+### LLM-Enhanced Mapping Reasoning
+
+When the 4-tier automatic matching produces LOW confidence results, apply semantic reasoning:
+
+1. **Analyze field semantics** — don't just match names, understand meaning:
+   - `Cust_Num`, `Customer_Number`, `KUNNR`, `customer_id`, `cust_no` → all map to `customerId`
+   - `Mat_No`, `Material`, `SKU`, `ItemCode`, `product_code` → all map to `sku`
+   - `Desc`, `Description`, `Label`, `Name`, `Title` → likely maps to `label`
+   - `Cat`, `Category`, `Group`, `Class`, `Segment` → likely maps to an attribute
+
+2. **Analyze data values** — if header matching is ambiguous, sample the data:
+   - Column with values like "PRD-001", "SKU-123" → product identifier → `sku`
+   - Column with values like "C-1001", "CUST-42" → customer identifier → `customerId`
+   - Column with numeric values and 2 decimal places → likely a price/cost → needs `stringToDecimal` converter
+   - Column with dates → needs `stringToDate` converter with detected format
+
+3. **Cross-reference with Pricefx metadata** — if connected to a partition:
+   - Fetch existing field labels and descriptions
+   - Match CSV headers against field descriptions, not just field names
+   - Example: Pricefx field `attribute3` has label "Product Category" → CSV column "Category" maps here
+
+4. **Confidence display with reasoning:**
+   ```
+   CSV Column          → Pricefx Field    Confidence  Reasoning
+   Customer_Number     → customerId       HIGH        Semantic match: customer identifier
+   Mat_Desc            → label            MEDIUM      "Desc" commonly maps to description/label
+   Unit_Price          → attribute1       MEDIUM      Numeric with decimals, likely price field
+   XYZABC              → ???              LOW         No semantic match — ask user
+   ```
+
+5. **Always ask for confirmation** — display the proposed mapping and let user adjust before generating.
+
 ## Step 4: Determine Data Source
 
 Ask the user: **What is the data source?**
@@ -238,26 +274,117 @@ If auto-detected, skip Steps 6 (Batch Size), 7 (CSV Header) — they are already
 
 ## Step 5: Choose Import Method
 
-Ask the user: **Which import method do you want to use?**
+**IMPORTANT:** This step applies ONLY to P, PX, CX, C, SL, SX imports. For DS/DMDS (PA Data Sources), ALWAYS use the `generate-pa-import-integration` skill which uses the split+tokenize+loaddata+flush pattern. NEVER offer `loaddataFile` for DS/DMDS.
+
+Recommend `loaddataFile` as the default:
+
+> **Recommended: `loaddataFile`** (streaming, server-side batching)
+>
+> This is the simplest and most efficient approach. The file is streamed directly to Pricefx, which handles batching internally. No split/tokenize, no Groovy parser, minimal code.
 
 | Method | Best for | Description |
 |--------|----------|-------------|
-| `pfx-api:loaddataFile` | Default — large files, performance | Streams file directly to Pricefx server, handles batching internally |
-| `pfx-api:loaddata` | Complex transformations | IM parses and maps data, sends via JSON API. Use when Groovy row-level logic is needed |
+| `pfx-api:loaddataFile` | **Default for all P/PX/CX/C/SL/SX** | Streams file to Pricefx server. Server handles batching. Minimal route code (~5 lines). |
+| `pfx-api:loaddata` | Complex row-level transformations | IM parses CSV, applies Groovy per-row logic, sends JSON batches. Use ONLY when you need Groovy expressions in the mapper that access other rows or headers. |
 
-**Default:** Always use `loaddataFile` for P, PX, CX, C imports.
+### loaddataFile Sync Modes
+
+| Mode | Parameter | Behavior |
+|---|---|---|
+| **Synchronous** (default) | _(none)_ | Route waits for Pricefx to finish processing. You get record count in response. |
+| **Asynchronous** | `async=true` | Route returns immediately after upload. Pricefx processes in background. Faster, but no immediate result feedback. |
+
+Use async when:
+- Files are very large (1M+ records) and you don't need immediate confirmation
+- The route triggers a CFS calculation afterward via event (not onCompletion)
+- You want to minimize IM resource usage during processing
+
+### loaddataFile Route Template
+
+```xml
+<route id="import-{{entity}}-from-sftp" autoStartup="{{pfx:autoStartup}}">
+  <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D&amp;streamDownload=true&amp;stepwise=false&amp;sortBy=file:name&amp;delay=10000"/>
+
+  <log message="[${routeId}] Received file ${headers.CamelFileName}"/>
+  <to uri="pfx-io:streamCompressedFile"/>
+  <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
+  <toD uri="pfx-csv:streamingUnmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true&amp;useReusableParser=true"/>
+  <toD uri="pfx-api:loaddataFile?nullValue=NULL&amp;objectType={{pfx:objectType}}&amp;mapper={{pfx:mapper}}&amp;batchSize={{pfx:batch.size}}&amp;connection={{pfx:connection}}"/>
+
+  <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
+</route>
+```
+
+Key: `pfx-csv:streamingUnmarshal` + `useReusableParser=true` + `pfx-api:loaddataFile` — no split, no tokenize, no Groovy.
+
+### loaddata Route Template (only when needed)
+
+Use this ONLY if the user explicitly needs row-level Groovy transformations:
+
+```xml
+<route id="import-{{entity}}-from-sftp" autoStartup="{{pfx:autoStartup}}">
+  <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;move=.archive/%24%7Bdate:now:yyyyMMdd%7D/&amp;moveFailed=.error/%24%7Bdate:now:yyyyMMdd%7D/"/>
+
+  <log message="[${routeId}] Received file ${headers.CamelFileName}"/>
+  <to uri="pfx-io:streamCompressedFile"/>
+  <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
+
+  <!-- API settings parser -->
+  <setHeader name="pfxApiSettings"><constant>{{pfx:api.settings}}</constant></setHeader>
+  <script>
+    <groovy><![CDATA[
+      def pfxApiSettingsMap = [:]
+      headers.pfxApiSettings.split('&').each { setting ->
+        def parts = setting.split('=')
+        def key = parts[0]
+        def value = parts.size() > 1 ? parts[1] : ""
+        pfxApiSettingsMap.put(key, value)
+        headers.put(key, value)
+      }
+      headers.put('parsedPfxApiSettings', pfxApiSettingsMap
+        .findAll { k, v -> k != 'entityName' }
+        .collect { k, v -> k + '=' + v }.join('&'))
+    ]]></groovy>
+  </script>
+
+  <doTry>
+    <split aggregationStrategy="recordsCountAggregation" streaming="true">
+      <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
+      <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
+      <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+      <setBody><constant/></setBody>
+    </split>
+    <doCatch>
+      <exception>java.nio.charset.MalformedInputException</exception>
+      <log loggingLevel="ERROR" message="[${routeId}] Encoding error in ${headers.CamelFileName}"/>
+      <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException" message="File encoding error"/>
+    </doCatch>
+  </doTry>
+
+  <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
+</route>
+```
 
 ## Step 6: Batch Size
 
 Ask the user: **What batch size do you want?**
 
 Provide this guidance:
-- **Few fields (< 10 attributes):** `batchSize=500000` is fine
-- **Medium fields (10–20 attributes):** `batchSize=100000–200000`
-- **Many fields (20+ attributes):** `batchSize=50000` or less
-- More attributes per row = more memory per batch, so use smaller batch sizes
 
-Default: `500000` for loaddataFile, `5000` for loaddata.
+**For loaddataFile (recommended):**
+- **Few fields (< 10 attributes):** `batchSize=500000`
+- **Medium fields (10–20 attributes):** `batchSize=100000–200000`
+- **Many fields (20+ attributes):** `batchSize=50000`
+
+**For loaddata (split+tokenize):**
+
+| Object Type | Default Batch Size | Notes |
+|---|---|---|
+| P, C, SL | 20,000 | Standard master data |
+| PX, CX, SX | 20,000 | Extensions |
+| PPV (LTV/MLTV2) | 5,000-10,000 | Heavier records |
+
+If the route uses `loaddata` (not `loaddataFile`), ALWAYS use `streaming="true"` on the `<split>` element.
 
 ## Step 7: CSV Header
 
@@ -424,6 +551,7 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 
 ## Important Rules
 
+- **When a route needs external template files (FreeMarker, XSLT, Velocity)**, store them in `src/main/resources/repo/resources/` and reference via `file://{{integration.data}}/repository/resources/{filename}`. Do NOT use `classpath:` — resource files are NOT on the Camel classpath after IM startup. Example: `<to uri="freemarker:file://{{integration.data}}/repository/resources/MyTemplate.ftl?allowContextMapAll=true"/>`
 - NEVER hardcode values in route XML — always use `{{property}}` placeholders
 - NEVER use generic/placeholder field names — always fetch real metadata
 - Route ID MUST match the route file name (without `.xml`). Do NOT use `pfx:` prefix in route ID. Example: file `import-product-master.xml` → `id="import-product-master"`
@@ -448,4 +576,128 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 - **Key field name depends on object type:**
   - P (Product Master) and PX (Product Extension): key field is `sku`
   - C (Customer Master) and CX (Customer Extension): key field is `customerId`
+  - SL (Seller Master) and SX (Seller Extension): key field is `sellerId`
   - NEVER use `sku` for Customer/CX imports — always use `customerId`
+  - NEVER use `sku` for Seller/SX imports — always use `sellerId`
+- **SX requires table name constant:** Like PX/CX, Seller Extensions require `<constant expression="{TableName}" out="name"/>` in the mapper.
+- When the user specifies a post-import calculation (CFS), use `<onCompletion onCompleteOnly="true">` to trigger it AFTER all batches complete — never inside the split loop
+- Always include `<setBody><constant/></setBody>` after loaddata inside the split to release memory per batch
+
+## Data Source Patterns (Database, REST API)
+
+### Database Import (pfx-sql)
+
+When the user's data source is a database, use this route pattern instead of file consumer:
+
+```xml
+<route id="{name}">
+    <from uri="timer://{name}?repeatCount=1"/>
+    <to uri="pfx-sql:select?sql={{db.query}}&amp;dataSource=externalDb&amp;dialect={{db.dialect}}"/>
+    <to uri="pfx-api:loaddata?objectType={type}&amp;mapper={name}.mapper&amp;businessKeys={key}"/>
+</route>
+```
+
+For large datasets (50k+ rows), use `pfx-sql:selectIterator` with `split`:
+
+```xml
+<to uri="pfx-sql:selectIterator?sql={{db.query}}&amp;dataSource=externalDb&amp;dialect={{db.dialect}}&amp;batchSize=5000"/>
+<split>
+    <simple>${body}</simple>
+    <to uri="pfx-sql:selectIterator?dataSource=externalDb"/>
+    <to uri="pfx-api:loaddata?objectType={type}&amp;mapper={name}.mapper&amp;businessKeys={key}"/>
+</split>
+```
+
+Add database connection properties to application.properties:
+```properties
+integration.connections.externalDb.type=jdbc
+integration.connections.externalDb.url=jdbc:{{db.type}}://{{db.host}}:{{db.port}}/{{db.name}}
+integration.connections.externalDb.username={{db.username}}
+integration.connections.externalDb.password={{db.password}}
+db.dialect=POSTGRESQL
+```
+
+**Important:** Mapper `in` fields must match the exact database column names (typically UPPERCASE).
+
+### REST API Import (pfx-rest)
+
+When the user's data source is a REST API, use this route pattern:
+
+```xml
+<route id="{name}">
+    <from uri="timer://{name}?repeatCount=1"/>
+    <to uri="pfx-rest:get?url={{api.base.url}}/{endpoint}&amp;connection=externalApi"/>
+    <to uri="pfx-json:unmarshal"/>
+    <to uri="pfx-api:loaddata?objectType={type}&amp;mapper={name}.mapper&amp;businessKeys={key}"/>
+</route>
+```
+
+For nested JSON responses, extract the array before loading:
+```xml
+<setBody>
+    <groovy>body.data.items</groovy>
+</setBody>
+```
+
+Use Groovy expressions in the mapper for nested fields:
+```xml
+<groovy expression="body.details?.name" out="label"/>
+```
+
+Add REST connection properties to application.properties:
+```properties
+integration.connections.externalApi.type=rest
+integration.connections.externalApi.url={{api.base.url}}
+integration.connections.externalApi.auth.type=oauth2
+integration.connections.externalApi.auth.tokenUrl={{api.token.url}}
+integration.connections.externalApi.auth.clientId={{api.client.id}}
+integration.connections.externalApi.auth.clientSecret={{api.client.secret}}
+```
+
+## Step 10: Self-Check
+
+After generating all files, run this checklist automatically. Fix any issues BEFORE presenting the result to the user. Do NOT ask — just fix silently and mention what was corrected.
+
+### Checklist
+
+1. **Property placeholders resolved:** Read the generated route XML. For every `{{placeholder}}` used in the route, verify the property exists in `application.properties`. If missing, add it with a sensible default. Common ones:
+   - `{{integration.sftp.root}}` → `integration.sftp.root=/var/pricefx/sftp`
+   - `{{archive.file}}` → the standard archive property
+   - `{{read.lock}}` → `read.lock=readLock=changed`
+   - `{{done.file}}` → `done.file=doneFileName=%24%7Bfile:name%7D.done`
+   - `{{error.file}}` → the standard error.file property
+
+2. **Error handling offered:** If the data source is file-based (CSV, zipped CSV, SFTP) and `{{error.file}}` is NOT on the file URI, add it and ensure the property exists in `application.properties`.
+
+3. **Batch size vs field count:**
+   - < 10 fields → batchSize should be ≤ 500000
+   - 10–20 fields → batchSize should be ≤ 200000 (prefer 100000)
+   - 20+ fields → batchSize should be ≤ 50000
+   If the generated batchSize exceeds the recommendation, reduce it.
+
+4. **ID consistency:**
+   - Route file `{name}.xml` → route `id="{name}"`
+   - Mapper file `{name}.mapper.xml` → loadMapper `id="{name}.mapper"`
+   - `mapper=` parameter in route must reference the mapper ID exactly
+
+5. **PX/CX/SX table name constant:** If objectType is PX, CX, or SX, verify the mapper contains `<constant expression="{TableName}" out="name"/>`. If missing, add it.
+
+6. **Key field correctness:**
+   - P/PX → mapper must map to `sku`
+   - C/CX → mapper must map to `customerId`
+   - SL/SX → mapper must map to `sellerId`
+
+7. **No forbidden patterns:**
+   - No `noop=true` on file component
+   - No `connection=pricefx` (redundant)
+   - No `include=` on file component
+   - No `pfx-sftp` with default-sftp-connection
+   - `&amp;` used for all `&` in XML attributes
+
+8. **Additional quality gates:**
+   - [ ] `streaming="true"` is set on `<split>` (for loaddata routes)
+   - [ ] Batch size matches object type guidelines
+   - [ ] Archive/error folder pattern is configured on file source
+   - [ ] No inline Groovy exceeding 15 lines
+   - [ ] All values that could change per environment use `{{pfx:...}}` properties
+   - [ ] Route references pattern catalog: [CSV/SFTP Import](../../../integration-manager/docs/patterns/import-csv-sftp.md)

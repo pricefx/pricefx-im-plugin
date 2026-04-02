@@ -170,6 +170,14 @@ Provide this guidance:
 
 Default: `50000` for DMDS imports.
 
+### Tokenize Batch Size Guidelines
+
+| Scenario | Recommended group= | Notes |
+|---|---|---|
+| Few fields (<10) | 50,000 | Simple DS records |
+| Many fields (10-30) | 20,000 | More memory per record |
+| Many fields (30+) | 10,000 | Heavy records |
+
 ## Step 6: CSV Header
 
 Skip this step if already auto-detected in Step 4b.
@@ -337,6 +345,26 @@ archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfil
 ```
 
 Other properties are only needed for SFTP connections, etc. Delimiter, skipHeaderRecord, mapper, batch size, and file path are all hardcoded in route XML.
+
+## Scheduling for Long-Running DS Loads
+
+For large data sources that take hours to load, add start/stop scheduling:
+
+```xml
+<!-- Start route at 23:00 UTC -->
+<route id="start-{{ROUTE_ID}}" autoStartup="true">
+  <from uri="quartz://scheduler-start?cron=0+0+23+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
+  <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=start"/>
+</route>
+
+<!-- Stop route at 06:00 UTC -->
+<route id="stop-{{ROUTE_ID}}" autoStartup="true">
+  <from uri="quartz://scheduler-stop?cron=0+0+6+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
+  <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=stop"/>
+</route>
+```
+
+The import route must have `autoStartup="false"`. See [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md).
 
 ## Important Rules
 

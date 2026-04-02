@@ -370,6 +370,42 @@ Nested logic with `<pfx:and>`, `<pfx:or>`, `<pfx:not>`:
 </pfx:filter>
 ```
 
+## Using Resource Files (Templates)
+
+Resource files such as FreeMarker templates (`.ftl`), XSLT stylesheets (`.xsl`), Velocity templates (`.vm`), and static JSON/XML files are stored in the project under `src/main/resources/repo/resources/`. At runtime, IM deploys this directory to `{{integration.data}}/repository/resources/` on the filesystem.
+
+Routes must reference resource files using the `file://` URI scheme — **not** `classpath:`. Templates are NOT on the Camel classpath.
+
+### FreeMarker
+
+```xml
+<to uri="freemarker:file://{{integration.data}}/repository/resources/MyTemplate.ftl?allowContextMapAll=true"/>
+```
+
+- `allowContextMapAll=true` exposes all exchange properties and headers to the template, not just the body.
+- Use `${field!""}` for optional fields to prevent `null` from rendering as the literal string `"null"`.
+- Set `CamelFreemarkerDataModel` header to a Groovy map to pass a structured model to the template.
+
+### XSLT
+
+```xml
+<to uri="xslt:file://{{integration.data}}/repository/resources/Transform.xsl"/>
+```
+
+### Velocity
+
+```xml
+<to uri="velocity:file://{{integration.data}}/repository/resources/email.vm"/>
+```
+
+### Summary
+
+| Store file at | Reference from route |
+|---|---|
+| `src/main/resources/repo/resources/{filename}` | `file://{{integration.data}}/repository/resources/{filename}` |
+
+For a deeper guide including common mistakes and when to use each template engine, see [Resource Templates Pattern](patterns/resource-templates.md).
+
 ## XML Escaping Reminders
 
 In XML attributes, always escape:
