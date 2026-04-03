@@ -97,3 +97,9 @@ Now that you understand the project, useful next steps:
 - **Run onboarding before touching anything.** Get the full picture first, then make changes. The report might reveal dependencies you wouldn't notice from reading individual files.
 - **The generated requirement docs are drafts.** They reverse-engineer the route's behavior, but may miss business context that isn't in the code. Review and enrich them.
 - **Combine with `explain-route`** for routes that are hard to understand from the inventory alone. Ask "explain the import-prices route" for a plain-English walkthrough.
+
+## See Also
+
+- [Review and Debug](06-review-and-debug.md) — ongoing quality checks and troubleshooting
+- [Working with Metadata](07-working-with-metadata.md) — explore the partition your project connects to
+- [All guides](00-what-this-plugin-does.md#where-to-start)

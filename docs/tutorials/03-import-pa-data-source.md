@@ -62,3 +62,9 @@ pfx fetch-sample DMDS --name SalesTransactions --limit 5
 - **Always check that flush is present.** Without the flush step, data stays in the staging area (Data Feed) and won't appear in PA dashboards. The skill always includes it, but if you edit the route manually later, don't remove it.
 - **Truncate-before-load** is useful for full refreshes where you want to replace all data. The skill asks about this — say yes for nightly full loads, no for incremental appends.
 - **Large files (1M+ rows)** work fine — the split/tokenize pattern processes in memory-safe chunks. The skill generates the right pattern regardless of file size.
+
+## See Also
+
+- [Import Data from CSV](02-import-data-from-csv.md) — for P, PX, C, CX, SL, SX imports (simpler pattern)
+- [Export Data to CSV](04-export-data-to-csv.md) — for extracting data from Pricefx
+- [All guides](00-what-this-plugin-does.md#where-to-start)

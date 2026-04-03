@@ -98,3 +98,9 @@ The `debug-integration` agent:
 - **Run review before every MR.** Make it a habit. The agent catches things human reviewers miss — especially cross-file consistency issues.
 - **Critical ≠ warning.** Critical issues will cause runtime failures. Warnings are about maintainability. Fix critical first, warnings when you have time.
 - **The debug agent can fix issues directly.** After it diagnoses a problem, say "fix it" and it applies the change. Review the diff before committing.
+
+## See Also
+
+- [Onboard an Existing Project](05-onboard-existing-project.md) — full project assessment when you're new to a codebase
+- [Working with Metadata](07-working-with-metadata.md) — verify partition state when debugging data issues
+- [All guides](00-what-this-plugin-does.md#where-to-start)

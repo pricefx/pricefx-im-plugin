@@ -64,3 +64,9 @@ Or use `simulate-dry-run` to see what the export would produce without running i
 - **Two timestamp bounds are critical.** The skill generates both `greaterThan` and `lessOrEqual` in the filter. This prevents missing records that change during the export window. Don't simplify this to a single bound.
 - **Test with immediate trigger first.** Run once manually, check the output CSV, then enable the Quartz schedule for production.
 - **Field ordering in the CSV** matches the order of fields in your mapper. Rearrange mapper entries to control column order in the output file.
+
+## See Also
+
+- [Import Data from CSV](02-import-data-from-csv.md) — for loading data into Pricefx
+- [Review and Debug](06-review-and-debug.md) — review your export route before deploying
+- [All guides](00-what-this-plugin-does.md#where-to-start)

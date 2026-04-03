@@ -103,3 +103,9 @@ Or via CLI:
 - **Use `fetch-sample` to see real data.** Useful when you're not sure what values a field contains or what format dates are in.
 - **Labels matter for auto-mapping.** If your PX attribute1 has label "List Price", the plugin maps a CSV column called "listPrice" with HIGH confidence. Unlabeled attributes get MEDIUM or LOW confidence. Ask your Pricefx admin to set labels.
 - **Metadata is cached per session.** If you create a table during the session, run `list-pricefx-tables` again to refresh.
+
+## See Also
+
+- [Your First Integration](01-your-first-integration.md) — see metadata-powered auto-mapping in action
+- [Import Data from CSV](02-import-data-from-csv.md) — generate imports using partition metadata
+- [All guides](00-what-this-plugin-does.md#where-to-start)
