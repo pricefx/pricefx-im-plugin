@@ -13,37 +13,37 @@ Quickly look up available tables and field metadata from the connected Pricefx p
 
 | Command | Description |
 |---------|-------------|
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` | List all Product Extension (PX) tables |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` | List all Customer Extension (CX) tables |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` | List all Data Source (DS/DMDS) tables |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameters` | List all Pricing Parameter (Company Parameter) tables |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extensions` | List all Product Extension (PX) tables |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extensions` | List all Customer Extension (CX) tables |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-sources` | List all Data Source (DS/DMDS) tables |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs pricing-parameters` | List all Pricing Parameter (Company Parameter) tables |
 
 ### Get field names
 
 | Command | Description |
 |---------|-------------|
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-metadata` | Get Product Master (P) field names |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` | Get field names for a specific PX table |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` | Get field names for a specific CX table |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}` | Get field names for a specific DS table |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameter {name}` | Get fields and sample data for a Pricing Parameter table |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-metadata` | Get Product Master (P) field names |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` | Get field names for a specific PX table |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extension {name}` | Get field names for a specific CX table |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-source {name}` | Get field names for a specific DS table |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs pricing-parameter {name}` | Get fields and sample data for a Pricing Parameter table |
 
 ### Get attribute labels, types, and formats
 
 | Command | Description |
 |---------|-------------|
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` | Get PX attribute labels, types, and formats |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` | Get CX attribute labels, types, and formats |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {name}` | Get DS attribute labels, types, and formats |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension-metadata {name}` | Get PX attribute labels, types, and formats |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extension-metadata {name}` | Get CX attribute labels, types, and formats |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-source-metadata {name}` | Get DS attribute labels, types, and formats |
 
 ### Fetch sample data
 
 | Command | Description |
 |---------|-------------|
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample P --limit 5` | Fetch sample Product Master rows |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample PX --name {name} --limit 5` | Fetch sample PX rows |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample CX --name {name} --limit 5` | Fetch sample CX rows |
-| `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample DMDS --name {name} --limit 5` | Fetch sample DS rows |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample P --limit 5` | Fetch sample Product Master rows |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample PX --name {name} --limit 5` | Fetch sample PX rows |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample CX --name {name} --limit 5` | Fetch sample CX rows |
+| `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample DMDS --name {name} --limit 5` | Fetch sample DS rows |
 
 ## Usage
 
@@ -53,11 +53,11 @@ If $ARGUMENTS is provided, use it to determine what to list. Otherwise ask:
 
 | Code | Action | CLI Command |
 |------|--------|-------------|
-| P | Show Product Master fields | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-metadata` |
-| PX | List Product Extension tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` |
-| CX | List Customer Extension tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extensions` |
-| DS | List Data Source (PA) tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` |
-| PPV | List Pricing Parameter (Company Parameter) tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameters` |
+| P | Show Product Master fields | `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-metadata` |
+| PX | List Product Extension tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extensions` |
+| CX | List Customer Extension tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extensions` |
+| DS | List Data Source (PA) tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-sources` |
+| PPV | List Pricing Parameter (Company Parameter) tables | `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs pricing-parameters` |
 
 If the user also specifies a table name, fetch both fields AND metadata (labels/types) in parallel:
 - P → `product-metadata`

@@ -113,9 +113,9 @@ From the requirement filename and content, derive:
 ### Fetch Metadata (if needed)
 
 Run the appropriate `pfx` CLI command to get real field metadata:
-- P: `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-metadata`
-- PX: `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` + `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}`
-- CX: `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` + `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}`
+- P: `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-metadata`
+- PX: `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` + `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension-metadata {name}`
+- CX: `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extension {name}` + `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extension-metadata {name}`
 
 ### Resolve Fields
 

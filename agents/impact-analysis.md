@@ -109,6 +109,6 @@ Always check these paired dependencies:
 ## Metadata Verification
 
 If `.env` exists, use pfx CLI to verify the current state:
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` — verify fields exist
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` — check labels and types
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` — verify fields exist
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension-metadata {name}` — check labels and types
 - Compare current metadata against what the routes/mappers expect

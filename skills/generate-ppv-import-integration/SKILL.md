@@ -111,11 +111,11 @@ If the user already specified the type (e.g., in $ARGUMENTS), skip asking. The `
 
 ## Step 3: Select Pricing Parameter Table
 
-Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameters` to list all available pricing parameter tables.
+Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs pricing-parameters` to list all available pricing parameter tables.
 
 Ask the user to select a table. If the user already specified the name (e.g., in $ARGUMENTS), skip asking.
 
-Then run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs pricing-parameter {name}` to get the table's field structure and sample data. This shows:
+Then run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs pricing-parameter {name}` to get the table's field structure and sample data. This shows:
 - Table type (LTV or MLTV2)
 - Key fields and value fields
 - Sample data rows

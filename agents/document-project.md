@@ -120,7 +120,7 @@ Key configuration properties and their purpose.
 
 ### Metadata enrichment
 If `.env` exists, enrich docs with actual field labels:
-- Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` to get labels
+- Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension-metadata {name}` to get labels
 - Add label information to the field mapping table
 
 ---
