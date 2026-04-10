@@ -23,19 +23,24 @@ Build, review, debug, and maintain Pricefx Integration Manager projects with AI-
 
 ## Installation
 
-### 1. Clone the plugin repository
+### 1. Requirements
+- Claude Code with plugin support
+- Node.js (for the pfx CLI tool) - install from https://nodejs.org/
+- Access to your Pricefx partition with API credentials
+
+### 2. Clone the plugin repository
 
 ```bash
 git clone https://gitlab.pricefx.eu/tools/pricefx-integration.git
 ```
 
-### 2. Install pfx CLI dependencies
+### 3. Install pfx CLI dependencies
 
 ```bash
 cd pricefx-integration/tools && npm install
 ```
 
-### 3. Add the plugin to Claude Code
+### 4. Add the plugin to Claude Code
 
 There are three ways to load the plugin, depending on your use case:
 
@@ -53,7 +58,7 @@ You can load multiple plugins at once:
 claude --plugin-dir /path/to/pricefx-integration --plugin-dir /path/to/another-plugin
 ```
 
-### 4. Verify installation
+### 5. Verify installation
 
 Once loaded, you should see the plugin's skills available when you type `/` in Claude Code. Try `/pricefx-integration:list-pricefx-tables` to confirm it works.
 
