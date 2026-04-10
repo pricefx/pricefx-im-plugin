@@ -1,4 +1,8 @@
 {
+  "name": "Pricefx IM Marketplace",
+  "owner": {
+    "name": "Pricefx"
+  },
   "version": "1.0.0",
   "plugins": [
     {
