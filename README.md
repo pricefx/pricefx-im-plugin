@@ -23,44 +23,41 @@ Build, review, debug, and maintain Pricefx Integration Manager projects with AI-
 
 ## Installation
 
-### 1. Requirements
-- Claude Code with plugin support
-- Node.js (for the pfx CLI tool) - install from https://nodejs.org/
-- Access to your Pricefx partition with API credentials
+### Requirements
 
-### 2. Clone the plugin repository
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) with plugin support
+- [Node.js](https://nodejs.org/) (for the pfx CLI tool)
+- Access to a Pricefx partition with API credentials
 
-```bash
-git clone https://gitlab.pricefx.eu/tools/pricefx-integration.git
-```
-
-### 3. Install pfx CLI dependencies
+### Option A — Install from GitHub (recommended)
 
 ```bash
-cd pricefx-integration/tools && npm install
+# Add the marketplace (one-time)
+/plugin marketplace add pricefx/pricefx-im-plugin
+
+# Install the plugin
+/plugin install pricefx-im
 ```
 
-### 4. Add the plugin to Claude Code
+Or use the interactive UI: type `/plugin` in Claude Code, go to **Discover**, select **pricefx-im**, and install.
 
-There are three ways to load the plugin, depending on your use case:
-
-**Option A — Local development (recommended for trying it out):**
-
-Launch Claude Code with the `--plugin-dir` flag pointing to the cloned plugin:
+After installing, run the pfx CLI dependency setup:
 
 ```bash
-claude --plugin-dir /path/to/pricefx-integration
+cd ~/.claude/plugins/pricefx-im/tools && npm install
 ```
 
-You can load multiple plugins at once:
+### Option B — Install from source
 
 ```bash
-claude --plugin-dir /path/to/pricefx-integration --plugin-dir /path/to/another-plugin
+git clone https://github.com/pricefx/pricefx-im-plugin.git
+cd pricefx-im-plugin/tools && npm install
+claude --plugin-dir /path/to/pricefx-im-plugin
 ```
 
-### 5. Verify installation
+### Verify installation
 
-Once loaded, you should see the plugin's skills available when you type `/` in Claude Code. Try `/pricefx-integration:list-pricefx-tables` to confirm it works.
+Once loaded, you should see the plugin's skills available when you type `/` in Claude Code. Try `/pricefx-im:list-pricefx-tables` to confirm it works.
 
 ---
 
@@ -115,7 +112,7 @@ your-im-project/
 The fastest way to get started is the interactive wizard:
 
 ```
-/pricefx-integration:run-integration-wizard
+/pricefx-im:run-integration-wizard
 ```
 
 It will walk you through:
@@ -132,7 +129,7 @@ Then it generates all the files for you.
 If you already know what you need:
 
 ```
-/pricefx-integration:generate-import-integration
+/pricefx-im:generate-import-integration
 ```
 
 The skill will ask you targeted questions and fetch real metadata from your partition to auto-map fields.
@@ -141,7 +138,7 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-integration:<skill-name>`. The plugin ships with **23 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im:<skill-name>`. The plugin ships with **23 skills** covering the full integration development lifecycle.
 
 ---
 
@@ -152,7 +149,7 @@ Skills are interactive — they ask questions and generate files. Invoke them wi
 Generates import routes for **P** (Product), **PX** (Product Extension), **C** (Customer), **CX** (Customer Extension), **SL** (Seller), or **SX** (Seller Extension).
 
 ```
-/pricefx-integration:generate-import-integration
+/pricefx-im:generate-import-integration
 ```
 
 What it produces:
@@ -168,7 +165,7 @@ Supports: CSV files, zipped CSV, SFTP sources, database (pfx-sql), REST API (pfx
 Generates imports for **PA Data Sources** (DMDS) using the specialized `split+tokenize+loaddata+flush` pattern.
 
 ```
-/pricefx-integration:generate-pa-import-integration
+/pricefx-im:generate-pa-import-integration
 ```
 
 This is different from standard imports — DMDS requires batched processing with a mandatory flush step. Do NOT use `generate-import-integration` for Data Sources.
@@ -180,7 +177,7 @@ Generates imports for **Pricing Parameters** (Company Parameters):
 - **MLTV2** — multi-key matrix tables (e.g., discount matrices, pricing rules)
 
 ```
-/pricefx-integration:generate-ppv-import-integration
+/pricefx-im:generate-ppv-import-integration
 ```
 
 #### generate-export-integration
@@ -188,7 +185,7 @@ Generates imports for **Pricing Parameters** (Company Parameters):
 Generates export routes for any Pricefx object type (P, PX, CX, C, DS/DMDS).
 
 ```
-/pricefx-integration:generate-export-integration
+/pricefx-im:generate-export-integration
 ```
 
 Supports:
@@ -202,7 +199,7 @@ Supports:
 Generates event-driven routes that react to Pricefx events.
 
 ```
-/pricefx-integration:generate-event-driven-route
+/pricefx-im:generate-event-driven-route
 ```
 
 Supports:
@@ -217,7 +214,7 @@ Common events: `PADATALOAD_COMPLETED`, `CALCULATION_COMPLETED_CFS`, `REFRESH_COM
 Generates routes that call an external REST API from IM — for example, pushing Pricefx data to a downstream system or triggering a remote workflow.
 
 ```
-/pricefx-integration:generate-rest-outbound-integration
+/pricefx-im:generate-rest-outbound-integration
 ```
 
 Supports: OAuth2 bearer tokens, API key headers, HTTP basic auth, retry/dead-letter patterns, and payload transformation via mapper.
@@ -227,7 +224,7 @@ Supports: OAuth2 bearer tokens, API key headers, HTTP basic auth, retry/dead-let
 Generates inbound REST API endpoints that external systems can call into IM. Covers GET (health check, data lookup) and POST (formula execution, data submission) endpoints.
 
 ```
-/pricefx-integration:generate-inbound-rest-endpoint
+/pricefx-im:generate-inbound-rest-endpoint
 ```
 
 Includes: Camel REST DSL setup, mandatory field validation, Pricefx formula execution, structured error responses (400/500), Swagger/OpenAPI doc generation, and REST module configuration (`integration.rest.*` properties).
@@ -237,7 +234,7 @@ Includes: Camel REST DSL setup, mandatory field validation, Pricefx formula exec
 Generates routes that publish to or consume from a Kafka topic, including schema-registry configuration, consumer group settings, and dead-letter topic handling.
 
 ```
-/pricefx-integration:generate-kafka-integration
+/pricefx-im:generate-kafka-integration
 ```
 
 Supports: Avro and JSON serialization, exactly-once semantics, manual offset commit, and header propagation.
@@ -247,7 +244,7 @@ Supports: Avro and JSON serialization, exactly-once semantics, manual offset com
 Generates routes that call a SOAP/WSDL web service or expose a Pricefx integration as a SOAP endpoint, with CXF component configuration and JAXB binding.
 
 ```
-/pricefx-integration:generate-soap-integration
+/pricefx-im:generate-soap-integration
 ```
 
 #### generate-s3-integration
@@ -255,7 +252,7 @@ Generates routes that call a SOAP/WSDL web service or expose a Pricefx integrati
 Generates routes that read from or write to an AWS S3 bucket — including bucket polling, multi-part upload for large files, and S3-event-triggered processing.
 
 ```
-/pricefx-integration:generate-s3-integration
+/pricefx-im:generate-s3-integration
 ```
 
 Produces: S3 connection JSON, route XML with streaming download/upload, and properties entries for bucket name and region.
@@ -265,7 +262,7 @@ Produces: S3 connection JSON, route XML with streaming download/upload, and prop
 Generates a parameterized route that fans out to multiple Pricefx partitions from a single IM instance, with per-tenant connection overrides and isolated error handling.
 
 ```
-/pricefx-integration:generate-multi-tenant-route
+/pricefx-im:generate-multi-tenant-route
 ```
 
 Covers: dynamic partition routing, tenant registry pattern, and per-tenant property namespacing.
@@ -275,7 +272,7 @@ Covers: dynamic partition routing, tenant registry pattern, and per-tenant prope
 Generates a cron- or timer-driven scheduling wrapper around an existing route, including staggered startup, time-zone support, and configurable properties entries.
 
 ```
-/pricefx-integration:generate-scheduling-route
+/pricefx-im:generate-scheduling-route
 ```
 
 Useful when you want to separate the scheduling concern from the core route logic, or when multiple routes share the same schedule.
@@ -285,7 +282,7 @@ Useful when you want to separate the scheduling concern from the core route logi
 Interactive generator for connection JSON files — covers all supported connection types (Pricefx, SFTP, OAuth2, S3, database) with field-by-field guidance and validation.
 
 ```
-/pricefx-integration:generate-connection
+/pricefx-im:generate-connection
 ```
 
 Produces a correctly structured connection JSON file ready for placement in `connections/`.
@@ -299,7 +296,7 @@ Produces a correctly structured connection JSON file ready for placement in `con
 Lints all routes in the project against the pattern catalog. Flags deviations from established patterns — such as missing flush steps, non-standard naming conventions, or improper error handling — and explains the correct approach.
 
 ```
-/pricefx-integration:check-route-compliance
+/pricefx-im:check-route-compliance
 ```
 
 Useful as a pre-commit or pre-review quality gate.
@@ -309,7 +306,7 @@ Useful as a pre-commit or pre-review quality gate.
 Estimates processing time for a route based on record volume, batch size, API latency, and scheduling parameters. Highlights likely bottlenecks and suggests tuning options.
 
 ```
-/pricefx-integration:estimate-performance
+/pricefx-im:estimate-performance
 ```
 
 Example: "How long will this import take for 1 million records?"
@@ -319,7 +316,7 @@ Example: "How long will this import take for 1 million records?"
 Diffs routes, mappers, filters, and properties between two branches or environment configurations. Highlights what changed, what was added, and what was removed — formatted for easy review.
 
 ```
-/pricefx-integration:compare-environments
+/pricefx-im:compare-environments
 ```
 
 Example: "Compare develop vs my feature branch."
@@ -333,7 +330,7 @@ Example: "Compare develop vs my feature branch."
 Produces a plain-language explanation of any route — what it does, where data comes from, how it's transformed, where it goes, and when it runs. Suitable for sharing with non-technical stakeholders.
 
 ```
-/pricefx-integration:explain-route
+/pricefx-im:explain-route
 ```
 
 #### generate-flow-diagram
@@ -341,7 +338,7 @@ Produces a plain-language explanation of any route — what it does, where data 
 Generates a Mermaid data flow diagram for a route or the full project, saved as a `.md` file. Shows data sources, transformations, Pricefx endpoints, and error channels.
 
 ```
-/pricefx-integration:generate-flow-diagram
+/pricefx-im:generate-flow-diagram
 ```
 
 Output is a markdown file with an embedded Mermaid diagram, suitable for docs or Confluence.
@@ -355,7 +352,7 @@ Output is a markdown file with an embedded Mermaid diagram, suitable for docs or
 Generates Spock framework tests for your IM routes.
 
 ```
-/pricefx-integration:generate-integration-test
+/pricefx-im:generate-integration-test
 ```
 
 Produces:
@@ -368,7 +365,7 @@ Produces:
 Traces data through a route without making any real API calls. Takes a sample input (CSV row or JSON payload), applies the mapper and filter logic, and shows the exact output that would be sent to Pricefx — including which records would be filtered out and why.
 
 ```
-/pricefx-integration:simulate-dry-run
+/pricefx-im:simulate-dry-run
 ```
 
 Example: "What would happen if I run this CSV through the import-products route?"
@@ -382,7 +379,7 @@ Example: "What would happen if I run this CSV through the import-products route?
 Interactive step-by-step wizard for building integrations from scratch. Best for users who are new to IM. Supports event-driven integrations, SL/SX object types, and all scheduling options.
 
 ```
-/pricefx-integration:run-integration-wizard
+/pricefx-im:run-integration-wizard
 ```
 
 #### git-workflow
@@ -390,7 +387,7 @@ Interactive step-by-step wizard for building integrations from scratch. Best for
 Smart branch, commit, and merge request automation tailored to IM projects. Creates branches with consistent naming, generates descriptive commit messages based on generated files, and prepares MR descriptions with a summary of what was built.
 
 ```
-/pricefx-integration:git-workflow
+/pricefx-im:git-workflow
 ```
 
 ---
@@ -402,9 +399,9 @@ Smart branch, commit, and merge request automation tailored to IM projects. Crea
 Quick metadata lookup — no files generated, just displays information.
 
 ```
-/pricefx-integration:list-pricefx-tables
-/pricefx-integration:list-pricefx-tables PX
-/pricefx-integration:list-pricefx-tables CX MyTable
+/pricefx-im:list-pricefx-tables
+/pricefx-im:list-pricefx-tables PX
+/pricefx-im:list-pricefx-tables CX MyTable
 ```
 
 ---
@@ -714,7 +711,7 @@ I need to load sales transaction data into the SalesHistory data source from CSV
 
 **You say:**
 ```
-/pricefx-integration:list-pricefx-tables PX
+/pricefx-im:list-pricefx-tables PX
 ```
 
 **What happens:**
@@ -877,7 +874,7 @@ How long will this import take for 1 million records?
 
 ### Use skills for generation, agents for analysis
 
-- **Skills** (`/pricefx-integration:...`) create new files — routes, mappers, filters, tests, diagrams
+- **Skills** (`/pricefx-im:...`) create new files — routes, mappers, filters, tests, diagrams
 - **Agents** analyze existing files — review, debug, document, measure impact, run health checks
 
 ### Let the plugin fetch metadata
@@ -968,9 +965,10 @@ Also includes `docs/CLAUDE.md.template` for bootstrapping `CLAUDE.md` in IM proj
 ## Plugin Structure
 
 ```
-pricefx-integration/
+pricefx-im-plugin/
 ├── .claude-plugin/
-│   └── plugin.json
+│   ├── plugin.json
+│   └── marketplace.json
 ├── CLAUDE.md
 ├── agents/
 │   ├── analyze-project.md
@@ -1041,8 +1039,9 @@ pricefx-integration/
 
 ## Repository
 
-- **GitLab**: https://gitlab.pricefx.eu/tools/pricefx-integration
+- **GitHub**: https://github.com/pricefx/pricefx-im-plugin (public, distribution)
+- **GitLab**: https://gitlab.pricefx.eu/tools/pricefx-integration (internal, development)
 
 ## License
 
-Internal - Pricefx
+Apache License 2.0 — see [LICENSE](LICENSE)

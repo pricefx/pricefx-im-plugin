@@ -1,2 +1,4 @@
 .idea/
 tools/node_modules/
+.env
+.claude/settings.local.json

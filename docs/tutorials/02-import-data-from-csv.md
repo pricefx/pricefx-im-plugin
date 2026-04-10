@@ -11,7 +11,7 @@ For PA Data Source (DMDS) imports, see [Import PA Data Source](03-import-pa-data
 **Slash command:**
 
 ```
-/pricefx-integration:generate-import-integration
+/pricefx-im:generate-import-integration
 ```
 
 **Or natural language — any of these work:**
@@ -53,19 +53,19 @@ You don't need to remember IM conventions — the skill handles them:
 
 **Option 1 — Dry run:**
 
-> **You:** `/pricefx-integration:simulate-dry-run`
+> **You:** `/pricefx-im:simulate-dry-run`
 >
 > Point it at the route and a sample CSV. It traces the entire pipeline without calling the Pricefx API.
 
 **Option 2 — Generate test:**
 
-> **You:** `/pricefx-integration:generate-integration-test`
+> **You:** `/pricefx-im:generate-integration-test`
 >
 > Generates a Spock test class with WireMock that validates the route end-to-end.
 
 **Option 3 — Check compliance:**
 
-> **You:** `/pricefx-integration:check-route-compliance`
+> **You:** `/pricefx-im:check-route-compliance`
 >
 > Lints the generated route against best-practice patterns. Flags anything the skill might have missed for your specific use case.
 

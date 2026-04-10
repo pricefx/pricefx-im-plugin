@@ -13,7 +13,7 @@ This walkthrough takes you from zero to a working Product import in about 5 minu
 
 Start the wizard:
 
-> **You:** `/pricefx-integration:run-integration-wizard`
+> **You:** `/pricefx-im:run-integration-wizard`
 
 > **Plugin:** What kind of integration do you need?
 > - Import (load data INTO Pricefx)
@@ -117,7 +117,7 @@ Done. The plugin created a complete, production-ready import integration.
 
 Run a dry run to trace what would happen with sample data:
 
-> **You:** `/pricefx-integration:simulate-dry-run`
+> **You:** `/pricefx-im:simulate-dry-run`
 >
 > **Plugin:** Which route? → `import-products`
 >

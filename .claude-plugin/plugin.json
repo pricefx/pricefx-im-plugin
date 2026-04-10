@@ -1,8 +1,18 @@
 {
-  "name": "pricefx-integration",
-  "description": "Claude plugin for Pricefx platform integration - providing tools and context for working with Pricefx APIs, configuration, and pricing logic",
+  "name": "pricefx-im",
+  "description": "Claude Code plugin for building, reviewing, debugging, and maintaining Pricefx Integration Manager projects",
   "version": "1.0.0",
   "author": {
-    "name": "Pricefx Tools Team"
-  }
+    "name": "Pricefx"
+  },
+  "repository": "https://github.com/pricefx/pricefx-im-plugin",
+  "homepage": "https://github.com/pricefx/pricefx-im-plugin#readme",
+  "license": "Apache-2.0",
+  "keywords": [
+    "pricefx",
+    "integration-manager",
+    "camel",
+    "pricing",
+    "etl"
+  ]
 }

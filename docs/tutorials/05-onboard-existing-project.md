@@ -88,7 +88,7 @@ Critical issues will cause runtime failures. Warnings are about maintainability 
 Now that you understand the project, useful next steps:
 
 - **Fix critical issues:** The report tells you exactly what's wrong and where. Ask the plugin: "Fix the mapper ID mismatch in import-products" — it can apply the fix directly.
-- **Run health check periodically:** `/pricefx-integration:health-check` gives you a scored dashboard. Run it before deployments or after major changes.
+- **Run health check periodically:** `/pricefx-im:health-check` gives you a scored dashboard. Run it before deployments or after major changes.
 - **Generate missing tests:** For each untested route, run `/generate-integration-test` — the plugin creates a Spock test based on the existing route.
 - **Visualize for stakeholders:** The generated Mermaid diagrams are great for stakeholder presentations. Share them in MR descriptions or project documentation.
 
