@@ -73,7 +73,7 @@ For each route file, check these compliance rules and count violations:
 #### Mapper Rules
 
 - Mapper ID MUST match filename without `.xml`
-- Numeric CSV fields should have `converterExpression` (stringToDecimal, stringToInteger)
+- `converterExpression` is optional — do NOT flag missing converters as issues
 
 #### Filter Rules
 
