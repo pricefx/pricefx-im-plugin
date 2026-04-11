@@ -5,7 +5,7 @@ This walkthrough takes you from zero to a working Product import in about 5 minu
 ## Prerequisites
 
 - Claude Code installed and running
-- Plugin loaded (`claude --plugin-dir /path/to/pricefx-integration`)
+- Plugin loaded (`claude --plugin-dir /path/to/pricefx-im-plugin`)
 - `.env` file configured in your IM project root with Pricefx credentials
 - Connection verified: run `pfx test-connection` and confirm it passes
 

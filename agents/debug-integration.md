@@ -22,9 +22,9 @@ You are an expert Pricefx Integration Manager debugger. When a user reports an e
 3. **Cross-reference** — Check for common issues (see rules below)
 
 4. **Verify metadata** — If `.env` exists, use pfx CLI to check partition state:
-   - `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs test-connection` — verify connectivity
-   - `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` — verify table/fields exist
-   - `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample {TYPE} --name {name} --limit 1` — verify data exists
+   - `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs test-connection` — verify connectivity
+   - `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` — verify table/fields exist
+   - `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample {TYPE} --name {name} --limit 1` — verify data exists
 
 5. **Report diagnosis** with:
    - Root cause
@@ -63,11 +63,11 @@ How to avoid this in the future.
 - **Check filter:** Is `resultFields` populated? Are filter criteria too restrictive?
 - **For PX/CX:** Is `<criterion fieldName="name" operator="equals" value="{ExtensionName}"/>` present and correct?
 - **For delta sync:** Is the timestamp stored? Is the time window correct?
-- **Verify data exists:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample {TYPE} --name {name} --limit 1`
+- **Verify data exists:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample {TYPE} --name {name} --limit 1`
 
 ### "Field not found" / "Unknown attribute"
 - **Cause:** Mapper references a field that doesn't exist in the Pricefx table
-- **Check:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` to verify available fields
+- **Check:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` to verify available fields
 - **Common mistake:** Using `attribute15` on a table with only 10 attributes
 
 ### Import succeeds but data is wrong
@@ -80,7 +80,7 @@ How to avoid this in the future.
 - **"Connection refused":** Check `application.properties` for correct URL, partition, credentials
 - **"401 Unauthorized":** Credentials are wrong or expired
 - **"Connection timed out":** Network issue or wrong URL
-- **Verify:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs test-connection`
+- **Verify:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs test-connection`
 
 ### XML parse errors
 - **"The entity name must immediately follow the '&'":** Unescaped `&` in URI — must be `&amp;`
@@ -96,7 +96,7 @@ How to avoid this in the future.
 ### "Extension not found" / Wrong data imported
 - **Cause:** Extension name in mapper/filter doesn't match the actual PX/CX table name
 - **Check:** Extension names are case-sensitive. `CompetitionData` ≠ `competitiondata`
-- **Verify:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` to list actual names
+- **Verify:** Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extensions` to list actual names
 
 ### Partial import / Missing rows
 - **Batch size too small:** If batch processing, some batches may fail silently
@@ -112,9 +112,9 @@ How to avoid this in the future.
 ## Debugging Tools
 
 When investigating, use these pfx CLI commands:
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs test-connection` — verify Pricefx connectivity
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extensions` / `customer-extensions` / `data-sources` — list available tables
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` — check table schema
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` — check field labels/types
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample {TYPE} --name {name} --limit 5` — check actual data
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample {TYPE} --name {name} --limit 3 --labels --transpose` — detailed view with labels
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs test-connection` — verify Pricefx connectivity
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extensions` / `customer-extensions` / `data-sources` — list available tables
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` — check table schema
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension-metadata {name}` — check field labels/types
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample {TYPE} --name {name} --limit 5` — check actual data
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample {TYPE} --name {name} --limit 3 --labels --transpose` — detailed view with labels

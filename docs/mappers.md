@@ -8,7 +8,7 @@ Mappers define how input data fields are mapped to Pricefx object fields.
 >
 > For all new integrations, use the **provisioned IM** format.
 
-**XSD Schema:** `pricefx-integration/src/main/resources/schemas/pfx.xsd`
+**XSD Schema:** `pricefx-im-plugin/src/main/resources/schemas/pfx.xsd`
 
 ## Mapper Types
 

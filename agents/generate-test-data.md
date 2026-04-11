@@ -104,9 +104,9 @@ PROD-003,Service Package,Services,500.00,...
 ## Metadata Commands
 
 Use these pfx CLI commands to fetch field information:
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension {name}` — PX field schema
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension {name}` — CX field schema
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs product-extension-metadata {name}` — PX field labels and types
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs customer-extension-metadata {name}` — CX field labels and types
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {name}` — DS field schema
-- `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs fetch-sample {TYPE} --name {name} --limit 3` — real data examples for reference
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension {name}` — PX field schema
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extension {name}` — CX field schema
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs product-extension-metadata {name}` — PX field labels and types
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs customer-extension-metadata {name}` — CX field labels and types
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-source {name}` — DS field schema
+- `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs fetch-sample {TYPE} --name {name} --limit 3` — real data examples for reference

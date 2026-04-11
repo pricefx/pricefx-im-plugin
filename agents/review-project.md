@@ -16,7 +16,7 @@ You are a senior Pricefx Integration Manager engineer. Review the entire IM proj
 2. Read `src/main/resources/repo/config/application.properties` and any `application-*.properties`
 3. Read every route, mapper, and filter file
 4. Check all rules below
-5. If `.env` exists, run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs test-connection` to verify connectivity, then use pfx CLI to cross-reference metadata where needed
+5. If `.env` exists, run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs test-connection` to verify connectivity, then use pfx CLI to cross-reference metadata where needed
 
 ## Report Format
 

@@ -26,14 +26,14 @@ If not found, ASK the user for: URL, partition, username, password.
 
 ## Step 2: List Available PA Data Sources
 
-Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-sources` to show available data sources.
+Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-sources` to show available data sources.
 
 Ask the user to select a data source. If the user already specified the data source name (e.g., in $ARGUMENTS), skip asking.
 
 ## Step 3: Fetch Data Source Metadata
 
-1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source {selected-name}` to get field names
-2. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/bin/pfx.mjs data-source-metadata {selected-name}` to get attribute labels and types (needed for Smart Auto-Mapping)
+1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-source {selected-name}` to get field names
+2. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs data-source-metadata {selected-name}` to get attribute labels and types (needed for Smart Auto-Mapping)
 
 Present the fields to the user in a clear table.
 

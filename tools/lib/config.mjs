@@ -34,8 +34,12 @@ function loadEnvFile() {
 }
 
 export function getConnectionConfig() {
-  const env = loadEnvFile();
-  const { url, partition, username, password } = env;
+  const fileEnv = loadEnvFile();
+  // process.env takes precedence over .env file
+  const url = process.env.PFX_URL || fileEnv.url;
+  const partition = process.env.PFX_PARTITION || fileEnv.partition;
+  const username = process.env.PFX_USERNAME || fileEnv.username;
+  const password = process.env.PFX_PASSWORD || fileEnv.password;
 
   if (!url || !partition || !username || !password) {
     const missing = [];
