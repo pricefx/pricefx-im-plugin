@@ -48,7 +48,7 @@ The skill handles the complexity that makes DMDS different from regular imports:
 
 ## How to Verify
 
-Same as regular imports — use `simulate-dry-run`, `generate-integration-test`, or `check-route-compliance`.
+Same as regular imports — use `simulate-dry-run`, `generate-integration-test`, or `analyze`.
 
 After a real run, verify data with:
 

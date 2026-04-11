@@ -250,7 +250,7 @@ Do NOT auto-rename files (LM-9) without listing all changes and asking for confi
 
 After applying changes:
 1. List all modified files
-2. Suggest running the `review-project` agent to verify the migrated project
+2. Suggest running the `analyze-project` agent to verify the migrated project
 3. Remind the user to test the routes before deploying
 
 ## Important Rules
