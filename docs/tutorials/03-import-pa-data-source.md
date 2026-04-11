@@ -9,7 +9,7 @@ You need to load data into a Pricefx **Data Source (DMDS)** for Price Analyser d
 **Slash command:**
 
 ```
-/pricefx-im:generate-pa-import-integration
+/pricefx-im-plugin:generate-pa-import-integration
 ```
 
 **Or natural language:**
