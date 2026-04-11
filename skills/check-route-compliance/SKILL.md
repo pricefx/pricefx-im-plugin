@@ -55,17 +55,14 @@ Check each criterion below. For each one, record the result as PASS, FAIL, or WA
 | Check | How to Detect | Pass Condition |
 |---|---|---|
 | Streaming on split | `<split` has `streaming="true"` | Present |
-| Batch size | `<tokenize group=` value or `{{pfx:batch.size}}` placeholder | Placeholder used OR value matches pattern guideline |
-| Error handling (encoding) | `<doCatch>` wrapping the split block, catches `MalformedInputException` | Present |
-| Archive folder | `move=.archive/` or `{{archive.file}}` or `move={{...}}` on the `from` URI | Present |
-| Error folder | `moveFailed=.error/` or `moveFailed={{...}}` on the `from` URI | Present |
-| Charset handling | `pfx-io:setupCharset` step present | Present |
-| CSV settings header | `pfxCsvSettings` header set before unmarshal | Present |
-| API settings header | `pfxApiSettings` header set and parsed | Present |
-| Properties externalized | No hardcoded hostnames, IPs, batch sizes, or cron strings as literals | All values in `{{...}}` |
-| Route ID naming | Route ID follows `import-[entity]-[source]` kebab-case pattern | Follows convention |
+| Archive folder | `{{archive.file}}` or `move=.archive/` on the `from` URI | Present |
+| Error folder | `{{error.file}}` or `moveFailed=.error/` on the `from` URI | Present (optional but recommended) |
+| Read lock | `{{read.lock}}` or `{{done.file}}` or `readLock=` or `doneFileName=` on the `from` URI | One of the two present |
+| Route ID naming | Route ID is descriptive kebab-case (e.g. `import-products`, `import-cx-prices`) | Follows convention |
+| Mapper ID matches file | Mapper `id` matches file name without `.xml` | Match |
+| Filter ID matches file | Filter `id` matches file name without `.xml` | Match |
 | Flush (DMDS only) | `pfx-api:flush` step after split block | Present and OUTSIDE split |
-| pricingParameterName (PPV only) | Groovy settings parser maps `entityName` → `pricingParameterName` for LTV/MLTV | Present |
+| pricingParameterName (PPV only) | `pricingParameterName` set on `pfx-api:loaddata` or `pfx-api:loaddataFile` URI | Present |
 
 ### Export Routes (Scheduled, Incremental)
 
@@ -78,8 +75,7 @@ Check each criterion below. For each one, record the result as PASS, FAIL, or WA
 | Timestamp tracking (incremental) | `pfx-config:get` before fetch, `pfx-config:set` after export | Both present |
 | First-run null handling (incremental) | `<choice>` block that handles null/empty previous timestamp | Present |
 | Timestamp in UTC (incremental) | Groovy timestamp uses `TimeZone.getTimeZone('UTC')` | Present |
-| Properties externalized | Cron, timezone, objectType, query all in `{{...}}` | All values externalized |
-| Route ID naming | Route ID follows `export-[entity]` kebab-case pattern | Follows convention |
+| Route ID naming | Route ID is descriptive kebab-case (e.g. `export-products`, `export-cx-prices`) | Follows convention |
 
 ### Event-Driven Routes
 
@@ -110,13 +106,11 @@ COMPLIANCE REPORT
 Criterion                    | Status  | Detail
 -----------------------------|---------|-----------------------------------------------
 Streaming on split           | OK      | streaming="true" found on split
-Error handling (encoding)    | MISSING | Add doCatch for MalformedInputException
-Archive folder               | OK      | move=.archive/${date:now:yyyyMMdd}/
-Error folder                 | MISSING | Add moveFailed=.error/${date:now:yyyyMMdd}/
-Batch size                   | WARN    | Hardcoded 50000 — use {{pfx:batch.size:20000}}
-Charset handling             | OK      | pfx-io:setupCharset present
-Properties externalized      | OK      | All values use {{...}} placeholders
-Route ID naming              | OK      | Follows import-[entity]-[source] pattern
+Archive folder               | OK      | {{archive.file}} present
+Error folder                 | OK      | {{error.file}} present
+Read lock                    | OK      | {{read.lock}} present
+Route ID naming              | OK      | Follows kebab-case convention
+Mapper ID matches file       | OK      | import-products.mapper matches file name
 Flush (DMDS)                 | N/A     | Not a DMDS route
 
 SUMMARY: X passed, Y missing, Z warnings
@@ -129,11 +123,9 @@ For every MISSING or WARN item, provide the exact XML snippet to add or change. 
 Example fix format:
 
 ```
-FIX: Error folder — add moveFailed parameter to the <from> URI:
+FIX: Error folder — add {{error.file}} to the <from> URI:
 
-  <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}
-    &amp;move=.archive/${date:now:yyyyMMdd}/
-    &amp;moveFailed=.error/${date:now:yyyyMMdd}/"/>
+  <from uri="file://{{integration.sftp.root}}/my-path?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;{{error.file}}"/>
 ```
 
 After presenting fixes, ask: **Would you like me to apply these fixes to the route file?**
