@@ -1,7 +1,7 @@
 {
   "name": "pricefx-im-plugin",
   "description": "Claude Code plugin for building, reviewing, debugging, and maintaining Pricefx Integration Manager projects",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": {
     "name": "Pricefx"
   },
