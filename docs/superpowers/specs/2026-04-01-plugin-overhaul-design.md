@@ -37,7 +37,7 @@ Split between two repos:
 - Docs revisions and new docs (`docs/`)
 - Troubleshooting, anti-patterns, best practices
 
-**Plugin repo (`pricefx-integration/`)** — plugin-specific, for Claude Code users:
+**Plugin repo (`pricefx-im-plugin/`)** — plugin-specific, for Claude Code users:
 - Skills (generation logic, wizard flows)
 - Quality gates (embedded in skills + review agent)
 - Plugin docs reference IM docs, no duplication
@@ -193,7 +193,7 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 | Docs updates | 7 files | Updated |
 | Docs new | 3 files | New |
 
-### Plugin repo (`pricefx-integration/`)
+### Plugin repo (`pricefx-im-plugin/`)
 
 | Workstream | Count | New/Updated |
 |---|---|---|

@@ -29,22 +29,22 @@ Build, review, debug, and maintain Pricefx Integration Manager projects with AI-
 - [Node.js](https://nodejs.org/) (for the pfx CLI tool)
 - Access to a Pricefx partition with API credentials
 
-### Option A — Install from GitHub (recommended)
+### Option A — Install from marketplace (recommended)
 
 ```bash
-# Add the marketplace (one-time)
-/plugin marketplace add pricefx/pricefx-im-plugin
+# Add the Pricefx marketplace (one-time)
+/plugin marketplace add pricefx/pricefx-plugins
 
 # Install the plugin
-/plugin install pricefx-im
+/plugin install pricefx-im-plugin@pricefx-plugins
 ```
 
-Or use the interactive UI: type `/plugin` in Claude Code, go to **Discover**, select **pricefx-im**, and install.
+Or use the interactive UI: type `/plugin` in Claude Code, go to **Discover**, select **pricefx-im-plugin**, and install.
 
 After installing, run the pfx CLI dependency setup:
 
 ```bash
-cd ~/.claude/plugins/pricefx-im/tools && npm install
+cd ~/.claude/plugins/pricefx-im-plugin/tools && npm install
 ```
 
 ### Option B — Install from source
