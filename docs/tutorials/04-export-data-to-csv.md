@@ -9,7 +9,7 @@ You need to extract data from Pricefx and write it to a CSV file — for downstr
 **Slash command:**
 
 ```
-/pricefx-im:generate-export-integration
+/pricefx-im-plugin:generate-export-integration
 ```
 
 **Or natural language:**

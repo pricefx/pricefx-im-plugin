@@ -9,7 +9,7 @@ You want to know what tables and fields exist in your Pricefx partition — befo
 **Slash command:**
 
 ```
-/pricefx-im:list-pricefx-tables
+/pricefx-im-plugin:list-pricefx-tables
 ```
 
 **Or natural language:**

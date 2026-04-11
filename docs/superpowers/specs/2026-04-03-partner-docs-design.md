@@ -80,7 +80,7 @@ Pricefx partners and implementors who:
 2. **Prerequisites** — Claude Code installed, plugin loaded, .env configured, `pfx test-connection` passes
 3. **The session** — formatted as a chat log:
    ```
-   You: /pricefx-im:run-integration-wizard
+   You: /pricefx-im-plugin:run-integration-wizard
 
    Plugin: What kind of integration do you need?
    - Import (load data INTO Pricefx)
@@ -106,7 +106,7 @@ Pricefx partners and implementors who:
 **Structure (same for all how-to guides):**
 
 1. **When you need this** — "You have CSV files (from SAP, flat file exports, manual uploads) and need to load them into Pricefx Product, Product Extension, Customer, or Customer Extension tables."
-2. **Which skill to use** — `/pricefx-im:generate-import-integration` or natural language: "I need to import products from CSV"
+2. **Which skill to use** — `/pricefx-im-plugin:generate-import-integration` or natural language: "I need to import products from CSV"
 3. **What happens** — what questions the skill asks (object type, table, fields, source, scheduling) and how it fetches metadata from partition
 4. **What you get** — list of generated files: route XML, mapper, properties entries; brief explanation of each
 5. **How to verify** — `simulate-dry-run` with sample CSV, check pfx CLI for loaded data
@@ -148,7 +148,7 @@ Covers two agents:
 ### 07 — Working with Metadata (~100 lines)
 
 Covers:
-- `/pricefx-im:list-pricefx-tables` — browse tables and fields interactively
+- `/pricefx-im-plugin:list-pricefx-tables` — browse tables and fields interactively
 - pfx CLI commands for direct access (`pfx product-extensions`, `pfx data-source-metadata`)
 - How metadata feeds into skills (auto-mapping, field validation)
 - Tips: "Always check metadata before generating — stale partition = wrong mappings"

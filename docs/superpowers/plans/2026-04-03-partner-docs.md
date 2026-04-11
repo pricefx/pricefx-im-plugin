@@ -209,7 +209,7 @@ This walkthrough takes you from zero to a working Product import in about 5 minu
 
 Start the wizard:
 
-> **You:** `/pricefx-im:run-integration-wizard`
+> **You:** `/pricefx-im-plugin:run-integration-wizard`
 
 > **Plugin:** What kind of integration do you need?
 > - Import (load data INTO Pricefx)
@@ -313,7 +313,7 @@ Done. The plugin created a complete, production-ready import integration.
 
 Run a dry run to trace what would happen with sample data:
 
-> **You:** `/pricefx-im:simulate-dry-run`
+> **You:** `/pricefx-im-plugin:simulate-dry-run`
 >
 > **Plugin:** Which route? → `import-products`
 >
@@ -367,7 +367,7 @@ For PA Data Source (DMDS) imports, see [Import PA Data Source](03-import-pa-data
 **Slash command:**
 
 ```
-/pricefx-im:generate-import-integration
+/pricefx-im-plugin:generate-import-integration
 ```
 
 **Or natural language — any of these work:**
@@ -409,19 +409,19 @@ You don't need to remember IM conventions — the skill handles them:
 
 **Option 1 — Dry run:**
 
-> **You:** `/pricefx-im:simulate-dry-run`
+> **You:** `/pricefx-im-plugin:simulate-dry-run`
 >
 > Point it at the route and a sample CSV. It traces the entire pipeline without calling the Pricefx API.
 
 **Option 2 — Generate test:**
 
-> **You:** `/pricefx-im:generate-integration-test`
+> **You:** `/pricefx-im-plugin:generate-integration-test`
 >
 > Generates a Spock test class with WireMock that validates the route end-to-end.
 
 **Option 3 — Check compliance:**
 
-> **You:** `/pricefx-im:check-route-compliance`
+> **You:** `/pricefx-im-plugin:check-route-compliance`
 >
 > Lints the generated route against best-practice patterns. Flags anything the skill might have missed for your specific use case.
 
@@ -462,7 +462,7 @@ You need to load data into a Pricefx **Data Source (DMDS)** for Price Analyser d
 **Slash command:**
 
 ```
-/pricefx-im:generate-pa-import-integration
+/pricefx-im-plugin:generate-pa-import-integration
 ```
 
 **Or natural language:**
@@ -545,7 +545,7 @@ You need to extract data from Pricefx and write it to a CSV file — for downstr
 **Slash command:**
 
 ```
-/pricefx-im:generate-export-integration
+/pricefx-im-plugin:generate-export-integration
 ```
 
 **Or natural language:**
@@ -709,7 +709,7 @@ Critical issues will cause runtime failures. Warnings are about maintainability 
 Now that you understand the project, useful next steps:
 
 - **Fix critical issues:** The report tells you exactly what's wrong and where. Ask the plugin: "Fix the mapper ID mismatch in import-products" — it can apply the fix directly.
-- **Run health check periodically:** `/pricefx-im:health-check` gives you a scored dashboard. Run it before deployments or after major changes.
+- **Run health check periodically:** `/pricefx-im-plugin:health-check` gives you a scored dashboard. Run it before deployments or after major changes.
 - **Generate missing tests:** For each untested route, run `/generate-integration-test` — the plugin creates a Spock test based on the existing route.
 - **Visualize for stakeholders:** The generated Mermaid diagrams are great for stakeholder presentations. Share them in MR descriptions or project documentation.
 
@@ -867,7 +867,7 @@ You want to know what tables and fields exist in your Pricefx partition — befo
 **Slash command:**
 
 ```
-/pricefx-im:list-pricefx-tables
+/pricefx-im-plugin:list-pricefx-tables
 ```
 
 **Or natural language:**
