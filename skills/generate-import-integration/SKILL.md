@@ -329,29 +329,11 @@ Use this ONLY if the user explicitly needs row-level Groovy transformations:
   <to uri="pfx-io:streamCompressedFile"/>
   <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
-  <!-- API settings parser -->
-  <setHeader name="pfxApiSettings"><constant>{{pfx:api.settings}}</constant></setHeader>
-  <script>
-    <groovy><![CDATA[
-      def pfxApiSettingsMap = [:]
-      headers.pfxApiSettings.split('&').each { setting ->
-        def parts = setting.split('=')
-        def key = parts[0]
-        def value = parts.size() > 1 ? parts[1] : ""
-        pfxApiSettingsMap.put(key, value)
-        headers.put(key, value)
-      }
-      headers.put('parsedPfxApiSettings', pfxApiSettingsMap
-        .findAll { k, v -> k != 'entityName' }
-        .collect { k, v -> k + '=' + v }.join('&'))
-    ]]></groovy>
-  </script>
-
   <doTry>
     <split aggregationStrategy="recordsCountAggregation" streaming="true">
       <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
-      <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
-      <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+      <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+      <toD uri="pfx-api:loaddata?objectType=P&amp;mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
       <setBody><constant/></setBody>
     </split>
     <doCatch>

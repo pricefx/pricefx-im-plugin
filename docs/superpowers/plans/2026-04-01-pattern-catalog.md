@@ -95,33 +95,6 @@ Sellers (SL), Seller Extensions (SX). This is the most common integration patter
     <!-- Decompress if needed (gz, zip) -->
     <to uri="pfx-io:streamCompressedFile"/>
 
-    <!-- Load CSV and API settings from properties -->
-    <setHeader name="pfxCsvSettings">
-      <constant>{{pfx:csv.settings}}</constant>
-    </setHeader>
-    <setHeader name="pfxApiSettings">
-      <constant>{{pfx:api.settings}}</constant>
-    </setHeader>
-
-    <!-- Parse API settings into individual headers -->
-    <script>
-      <groovy><![CDATA[
-        def pfxApiSettingsMap = [:]
-        headers.pfxApiSettings.split('&').each { setting ->
-          def parts = setting.split('=')
-          def key = parts[0]
-          def value = parts.size() > 1 ? parts[1] : ""
-          pfxApiSettingsMap.put(key, value)
-          headers.put(key, value)
-        }
-        def parsed = pfxApiSettingsMap
-          .findAll { k, v -> k != 'entityName' }
-          .collect { k, v -> k + '=' + v }
-          .join('&')
-        headers.put('parsedPfxApiSettings', parsed)
-      ]]></groovy>
-    </script>
-
     <!-- Charset handling -->
     <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
@@ -131,10 +104,10 @@ Sellers (SL), Seller Extensions (SX). This is the most common integration patter
         <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
 
         <!-- Unmarshal CSV -->
-        <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
+        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
 
         <!-- Load to Pricefx -->
-        <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+        <to uri="pfx-api:loaddata?objectType={{OBJECT_TYPE}}&amp;mapper={{pfx:mapper}}"/>
 
         <setBody><constant/></setBody>
       </split>
@@ -303,33 +276,6 @@ to make data available for analytics.
     <log message="[${routeId}] Processing ${headers.CamelFileName}"/>
     <to uri="pfx-io:streamCompressedFile"/>
 
-    <!-- CSV and API settings -->
-    <setHeader name="pfxCsvSettings">
-      <constant>{{pfx:csv.settings}}</constant>
-    </setHeader>
-    <setHeader name="pfxApiSettings">
-      <constant>{{pfx:api.settings}}</constant>
-    </setHeader>
-
-    <!-- Parse API settings -->
-    <script>
-      <groovy><![CDATA[
-        def pfxApiSettingsMap = [:]
-        headers.pfxApiSettings.split('&').each { setting ->
-          def parts = setting.split('=')
-          def key = parts[0]
-          def value = parts.size() > 1 ? parts[1] : ""
-          pfxApiSettingsMap.put(key, value)
-          headers.put(key, value)
-        }
-        def parsed = pfxApiSettingsMap
-          .findAll { k, v -> k != 'entityName' }
-          .collect { k, v -> k + '=' + v }
-          .join('&')
-        headers.put('parsedPfxApiSettings', parsed)
-      ]]></groovy>
-    </script>
-
     <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
     <!-- SPLIT/TOKENIZE/LOADDATA -->
@@ -340,9 +286,9 @@ to make data available for analytics.
         <log loggingLevel="DEBUG"
              message="[${routeId}][batch ${header.CamelSplitIndex}] processing"/>
 
-        <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
+        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
 
-        <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+        <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{{DATASOURCE}}&amp;mapper={{pfx:mapper}}"/>
 
         <setBody><constant/></setBody>
       </split>
@@ -432,45 +378,13 @@ Importing pricing parameters (Company Parameters) — lookup tables used in pric
     <log message="[${routeId}] Processing ${headers.CamelFileName}"/>
     <to uri="pfx-io:streamCompressedFile"/>
 
-    <setHeader name="pfxCsvSettings">
-      <constant>{{pfx:csv.settings}}</constant>
-    </setHeader>
-    <setHeader name="pfxApiSettings">
-      <constant>{{pfx:api.settings}}</constant>
-    </setHeader>
-
-    <!-- Parse settings — note LTV/MLTV routing for pricingParameterName -->
-    <script>
-      <groovy><![CDATA[
-        def pfxApiSettingsMap = [:]
-        headers.pfxApiSettings.split('&').each { setting ->
-          def parts = setting.split('=')
-          def key = parts[0]
-          def value = parts.size() > 1 ? parts[1] : ""
-          pfxApiSettingsMap.put(key, value)
-          headers.put(key, value)
-        }
-        def parsed = ""
-        pfxApiSettingsMap.each { k, v ->
-          if (k == 'entityName') {
-            if (pfxApiSettingsMap['objectType']?.contains('LTV')) {
-              parsed += 'pricingParameterName=' + v + '&'
-            }
-          } else {
-            parsed += k + '=' + v + '&'
-          }
-        }
-        headers.put('parsedPfxApiSettings', parsed)
-      ]]></groovy>
-    </script>
-
     <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
     <doTry>
       <split aggregationStrategy="recordsCountAggregation" streaming="true">
         <tokenize group="{{pfx:batch.size:5000}}" token="\n"/>
-        <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
-        <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+        <to uri="pfx-api:loaddata?objectType=LTV&amp;pricingParameterName={{PARAMETER_NAME}}&amp;mapper={{pfx:mapper}}"/>
         <setBody><constant/></setBody>
       </split>
 
@@ -958,8 +872,8 @@ For encoding errors, malformed data, validation failures:
 <doTry>
   <split aggregationStrategy="recordsCountAggregation" streaming="true">
     <tokenize group="20000" token="\n"/>
-    <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
-    <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}"/>
+    <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+    <to uri="pfx-api:loaddata?objectType={{OBJECT_TYPE}}&amp;mapper={{pfx:mapper}}"/>
     <setBody><constant/></setBody>
   </split>
 
@@ -1133,36 +1047,6 @@ Do NOT use inline Groovy for:
 - Data transformation — use mappers
 - Complex iteration/aggregation — use Camel EIPs (split, aggregate)
 
-## The Standard API Settings Parser
-
-This block appears in nearly every import route. Keep it consistent:
-
-~~~groovy
-def pfxApiSettingsMap = [:]
-headers.pfxApiSettings.split('&').each { setting ->
-  def parts = setting.split('=')
-  def key = parts[0]
-  def value = parts.size() > 1 ? parts[1] : ""
-  pfxApiSettingsMap.put(key, value)
-  headers.put(key, value)
-}
-def parsed = pfxApiSettingsMap
-  .findAll { k, v -> k != 'entityName' }
-  .collect { k, v -> k + '=' + v }
-  .join('&')
-headers.put('parsedPfxApiSettings', parsed)
-~~~
-
-For LTV/MLTV routes, add the pricingParameterName mapping:
-
-~~~groovy
-pfxApiSettingsMap.each { k, v ->
-  if (k == 'entityName' && pfxApiSettingsMap['objectType']?.contains('LTV')) {
-    parsed += 'pricingParameterName=' + v + '&'
-  }
-}
-~~~
-
 ## Good: Short Inline Groovy
 
 ~~~groovy
@@ -1206,10 +1090,9 @@ public class MyProcessor {
 
 ## Common Mistakes
 
-1. **Copy-pasting the API settings parser** with slight variations across routes
-2. **Complex date math inline** — use a utility bean
-3. **Debugging inline Groovy** — no stack traces, no IDE support, no tests
-4. **Accessing exchange internals** — use `headers.*` and `body.*`, not `exchange.in.getHeader()`
+1. **Complex date math inline** — use a utility bean
+2. **Debugging inline Groovy** — no stack traces, no IDE support, no tests
+3. **Accessing exchange internals** — use `headers.*` and `body.*`, not `exchange.in.getHeader()`
 ```
 
 - [ ] **Step 2: Create naming-conventions.md**
