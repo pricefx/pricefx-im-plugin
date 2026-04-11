@@ -323,25 +323,17 @@ Example: "Compare develop vs my feature branch."
 
 ---
 
-### Documentation & Visualization (2 skills)
+### Documentation & Visualization (1 skill)
 
-#### explain-route
+#### document
 
-Produces a plain-language explanation of any route — what it does, where data comes from, how it's transformed, where it goes, and when it runs. Suitable for sharing with non-technical stakeholders.
-
-```
-/pricefx-im-plugin:explain-route
-```
-
-#### generate-flow-diagram
-
-Generates a Mermaid data flow diagram for a route or the full project, saved as a `.md` file. Shows data sources, transformations, Pricefx endpoints, and error channels.
+Produces a combined plain-language explanation and Mermaid data flow diagram for any route — what it does, where data comes from, how it's transformed, where it goes, and when it runs. Saves a single markdown file with both a summary section and an embedded diagram. Supports single route, all routes, or full project documentation.
 
 ```
-/pricefx-im-plugin:generate-flow-diagram
+/pricefx-im-plugin:document
 ```
 
-Output is a markdown file with an embedded Mermaid diagram, suitable for docs or Confluence.
+Output is a markdown file with a business summary and Mermaid diagram, suitable for docs or Confluence.
 
 ---
 
@@ -824,10 +816,10 @@ Visualize the data flow for import-products
 ```
 
 **What happens:**
-1. Claude invokes `generate-flow-diagram`
+1. Claude invokes `document`
 2. Reads the route, mapper, and filter files
-3. Generates a Mermaid diagram showing: SFTP source → CSV parse → field mapping → filter → Pricefx loaddata
-4. Saves it as a `.md` file in `docs/`
+3. Generates a plain-language summary and Mermaid diagram showing: SFTP source → CSV parse → field mapping → filter → Pricefx loaddata
+4. Saves it as a `.md` file in `docs/routes/`
 
 ### Example 13: Simulate a dry run
 
@@ -986,11 +978,10 @@ pricefx-im-plugin/
 │   ├── check-route-compliance/
 │   ├── compare-environments/
 │   ├── estimate-performance/
-│   ├── explain-route/
+│   ├── document/
 │   ├── generate-connection/
 │   ├── generate-event-driven-route/
 │   ├── generate-export-integration/
-│   ├── generate-flow-diagram/
 │   ├── generate-import-integration/
 │   ├── generate-integration-test/
 │   ├── generate-kafka-integration/
