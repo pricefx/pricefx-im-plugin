@@ -1,37 +1,26 @@
 ---
 name: analyze-project
-description: Analyze a Pricefx Integration Manager project — scan routes, mappers, filters, detect patterns and anti-patterns, produce a structured summary with improvement recommendations. Use when the user says "analyze", "review project", "scan integration", or points at a pim-* directory.
+description: Comprehensive project analyzer for Pricefx Integration Manager projects. Produces a health dashboard, route inventory, route-by-route findings, anti-pattern report, cross-file consistency issues, quality score, and top 3 actions. Combines project scanning, code review, and health scoring into one assessment. Use when the user says "analyze", "review project", "scan integration", "project health", "health check", "quality score", "full code review", or points at a pim-* directory.
 model: sonnet
 tools: Read, Grep, Glob, Bash
-maxTurns: 30
+maxTurns: 40
 ---
 
-# Analyze Partner Project
+# Integration Manager Project Analyzer
 
-You are analyzing a Pricefx Integration Manager partner project. Scan the project structure, categorize all artifacts, detect patterns and anti-patterns, and produce a structured report displayed to the user.
+You are a senior Pricefx Integration Manager engineer running a comprehensive project analysis. Read ALL routes, mappers, filters, and configuration files before scoring anything. Do not skip files.
 
-If the user points at a specific directory, use that as the target project directory. Otherwise ask: **Which project directory should I analyze?** (look for `pim-*` directories or a `src/main/resources/repo/` structure).
+## How to Run the Analysis
 
-## Step 1: Locate Project Root
+### Step 1 -- Inventory (project stats)
 
-Identify the project root: it contains `src/main/resources/repo/` with subdirectories such as `routes/`, `mappers/`, `filters/`, `connections/`, `config/`.
+1. Glob all files in `src/main/resources/repo/routes/`, `src/main/resources/repo/mappers/`, `src/main/resources/repo/filters/`
+2. Read `src/main/resources/repo/config/application.properties` and any `application-*.properties`
+3. Scan connection config files in `config/connections/` and `src/main/resources/repo/config/connections/`
+4. Count: total routes, total mappers, total filters, total connections, total Groovy beans (in `src/main/groovy/` or `src/main/java/`)
+5. Read `pom.xml` and find the `pricefx-integration-manager` dependency version (or parent POM version)
 
-Read `src/main/resources/repo/config/application.properties` (if present) for the partition URL and environment name to include in the report header.
-
-## Step 2: Scan and Count Artifacts
-
-Run the following counts (use Glob/Bash):
-
-| Artifact | Path pattern |
-|---|---|
-| Routes | `src/main/resources/repo/routes/**/*.xml` |
-| Mappers | `src/main/resources/repo/mappers/**/*.xml` |
-| Filters | `src/main/resources/repo/filters/**/*.xml` |
-| Connections | `src/main/resources/repo/connections/**/*.xml` |
-| Config files | `src/main/resources/repo/config/**/*.properties` |
-| Groovy beans | `src/main/groovy/**/*.groovy` or `src/main/java/**/*.java` |
-
-## Step 3: Categorize Routes by Type
+### Step 2 -- Categorize Routes
 
 Read each route file. Classify by the `from` URI and route ID pattern:
 
@@ -43,100 +32,248 @@ Read each route file. Classify by the `from` URI and route ID pattern:
 | **Utility/chained** | `from uri="direct:` or `from uri="timer:` without import/export pattern |
 | **Scheduled** | `quartz:` or `cron:` in `from` URI |
 
-Build a list: for each route, record its ID, file name, type, and object type (see Step 4).
+For each import/export route, detect the Pricefx object type from the `objectType=` parameter or mapper constants.
 
-## Step 4: Identify Object Types
+### Step 3 -- Pattern Compliance (run on ALL routes)
 
-For each import/export route, detect the Pricefx object type from the `objectType=` parameter or the mapper `<constant expression="..." out="name"/>`:
+For each route file, check these compliance rules and count violations:
 
-- `P` — Product Master
-- `PX` — Product Extension
-- `C` — Customer Master
-- `CX` — Customer Extension
-- `SL` — Seller Master
-- `SX` — Seller Extension
-- `DS` / `DMDS` — PA Data Source
-- `PPV` / `LTV` / `MLTV2` — Pricing Parameters
+#### Connection Rules
 
-## Step 5: Identify Data Sources
+1. Count how many connections have type `PriceFxConnection`
+2. If exactly one, it should be named `pricefx`
+3. `connection=pricefx` must NOT appear on any `pfx-api`, `pfx-model`, `pfx-csv`, `pfx-config` URI (redundant default)
+4. If a route uses `connection={name}` where name is NOT `pricefx`, verify the connection config exists
+5. If any connection is `default-sftp-connection` (or starts with it), flag `pfx-sftp` routes using it -- recommend `file://{{integration.sftp.root}}/{path}` instead
 
-For each route, inspect the `from` URI to classify the inbound data source:
+#### Route Rules
 
-| Data Source | Detection |
-|---|---|
-| CSV / SFTP-mounted file | `file://` in `from` URI |
-| SFTP (external) | `pfx-sftp://` in `from` URI |
-| REST API | `pfx-rest:` as `<to>` step |
-| JDBC / Database | `pfx-sql:` as `<to>` step |
-| Kafka | `pfx-kafka:` or `kafka:` in `from` URI |
-| S3 | `aws2-s3:` or `pfx-s3:` in `from` URI |
-| SOAP | `pfx-cxf:` or `cxf:` |
-| Timer / internal | `timer:` or `quartz:` only |
+- Route ID MUST match filename without `.xml`
+- Route ID must NOT have `pfx:` prefix
+- All `&` in URI parameters MUST be escaped as `&amp;`
+- File input/output URIs MUST use `{{integration.sftp.root}}`, NOT `{{integration.data}}` or `{{data.directory}}`
+- No `noop=true` on file consumer
+- No `extensionName` parameter on `pfx-api` URIs
 
-## Step 6: Detect Patterns Used
+#### Import Rules
 
-Scan route XML files for these patterns and note which routes use them:
+- PX/CX/SX mappers: `<constant ... out="name"/>` present (sets extension table name)
+- Key fields correct: P/PX/DS -> sku, C/CX -> customerId, SL/SX -> sellerId
+- Prefer `loaddataFile` over manual split+tokenize+loaddata for P, PX, C, CX imports (do NOT flag DMDS)
+- Archive folder present (`{{archive.file}}` or `move=.archive/`)
+- Error folder present (`{{error.file}}` or `moveFailed=`)
+- Read lock present (`{{read.lock}}` or `{{done.file}}` or `readLock=` or `doneFileName=`)
 
-| Pattern | Detection |
-|---|---|
-| Streaming split | `<split streaming="true">` or `pfx-csv:streamingUnmarshal` |
-| Tokenize split | `<tokenize token="\n"` |
-| Quartz scheduling | `quartz:` in `from` URI |
-| Event-driven | `pfx-event:` in `from` URI |
-| Chained routes | `direct:` endpoints used as `<to>` steps |
-| onCompletion | `<onCompletion>` element present |
-| loaddataFile | `pfx-api:loaddataFile` |
-| DMDS flush | `pfx-api:flush` |
-| Error folder | `moveFailed=` on file URI or `{{error.file}}` |
-| Archive folder | `move=.archive` or `{{archive.file}}` |
+#### Export Rules
 
-## Step 7: Anti-Pattern Detection
+- PX/CX/SX filter MUST include `<criterion fieldName="name" operator="equals" .../>`
+- Filter-Mapper field sync: every `resultField` has a mapper `<body in="...">` and vice versa
+- Delta sync: if route uses `pfx-config:get`, verify full pattern (read -> fallback -> capture -> filter both bounds -> save)
 
-Check each route file against all 10 anti-patterns. For each one found, record the route file and a brief description.
+#### Mapper Rules
 
-**AP-1: Copy-paste Groovy** — Find `<groovy>` or `<script language="groovy">` blocks. If 3+ routes contain near-identical Groovy blocks (e.g., API settings parsers), flag as copy-paste. Compare first 100 chars of each block.
+- Mapper ID MUST match filename without `.xml`
+- Numeric CSV fields should have `converterExpression` (stringToDecimal, stringToInteger)
 
-**AP-2: Inline Groovy over 15 lines** — Count lines inside each `<groovy>` or `<script language="groovy">` element. Flag any block exceeding 15 lines.
+#### Filter Rules
 
-**AP-3: Hardcoded values** — Look for hardcoded IP addresses, hostnames, passwords, or numeric batch sizes/cron expressions NOT wrapped in `{{...}}` placeholders. Flag routes where literals appear in `uri=`, `<tokenize group=`, `<quartz>` expressions.
+- Filter ID MUST match filename without `.xml`
+- `inSet`/`notInSet` MUST only be used on String fields
 
-**AP-4: Missing error handling** — For file-based routes (`from uri="file://`), check that `moveFailed=` or `{{error.file}}` is present AND that `<doCatch>` or `<onException>` exists somewhere in the route or in a shared error handler file. Flag routes with neither.
+Track: total checks run, total violations found. **Compliance % = (checks passed / checks run) x 100**
 
-**AP-5: Missing streaming on large files** — For routes using `<split>` with CSV data (not `loaddataFile`), check `streaming="true"` is set. Flag splits without it.
+### Step 4 -- Test Coverage
 
-**AP-6: Flush before all batches complete** — For DMDS routes using `pfx-api:flush`, check if it appears inside a `<split>...</split>` block. Flag if so.
+1. Glob `src/test/` for `*Spec.groovy`, `*Test.java`, `*IT.java` files
+2. Cross-reference test files against route names to estimate which routes have at least one test
+3. **Coverage % = (routes with at least one test / total routes) x 100**
 
-**AP-7: Oversized route files** — Count lines in each route XML. Flag files with more than 200 lines.
+### Step 5 -- Anti-Pattern Detection (count ALL findings)
 
-**AP-8: No archive/audit trail** — For file-based routes, check that `move=` (archive) is configured on the file URI or `{{archive.file}}` is referenced. Flag routes without it.
+Run all anti-pattern checks on every route file. Count each individual hit (not each category):
 
-**AP-9: CFS triggered per batch** — Look for `pfx-api:execute` or `pfx-api:cfsRun` inside a `<split>` block. Flag if found.
+**AP-1: Inline Groovy over 15 lines** -- Count lines inside every `<groovy>` or `<script language="groovy">` block. Flag any block exceeding 15 lines. Risk: no IDE support, no unit tests, hard to debug. Fix: extract to Spring bean.
 
-**AP-10: Inconsistent naming** — Check all route IDs and file names. Flag if naming style is mixed (some kebab-case, some camelCase, some PascalCase across the same project).
+**AP-2: Copy-paste Groovy** -- Scan all Groovy blocks across all routes for structurally identical or near-identical blocks. If 3+ routes share the same block body, flag as duplication. Risk: bug fixes must be applied to every copy. Fix: extract to shared bean.
 
-## Step 8: Produce Report
+**AP-3: Hardcoded hostnames/IPs** -- Search each route for literal hostnames, IP addresses, or URLs in `uri=` attributes. Hardcoded batch sizes and cron expressions are fine -- do NOT flag those. Risk: cannot change per environment. Fix: replace with `{{property.name}}` placeholder.
 
-Output the report directly to the user (NOT saved to a file). Use this structure:
+**AP-4: Missing error handling** -- For file-based routes, check that `moveFailed=` or `{{error.file}}` is present AND that `<doCatch>` or `<onException>` exists. Flag routes with neither. Risk: silent failures. Fix: add moveFailed + doCatch.
 
-**Header:** Project name, partition URL (from `application.properties`), analysis date.
+**AP-5: Missing streaming on split** -- For routes using `<split>` with CSV data (not `loaddataFile`), check `streaming="true"` is set. Risk: OutOfMemoryError. Fix: add `streaming="true"`.
 
-**Summary table:** Routes / Mappers / Filters / Connections / Groovy beans — one row each with count.
+**AP-6: DMDS flush outside split** -- For DMDS routes, check that `pfx-api:flush` exists AND appears AFTER the `</split>` tag or inside `<onCompletion>`, not inside the split body. Risk: partial data visible. Fix: move flush after split.
 
-**Routes by Type table:** columns — Type | Count | Route IDs. Rows: Import, Export, Event-driven, Scheduled, Utility/chained.
+**AP-7: CFS trigger inside split** -- Scan for `pfx-api:calculate`, `pfx-api:execute`, or CFS-related URIs inside a `<split>` body. Risk: N triggers per N batches. Fix: move to `<onCompletion>`.
 
-**Object Types table:** columns — Object Type | Routes. One row per type found (P, PX, C, CX, SL, SX, DS/DMDS, PPV).
+**AP-8: Route file over 200 lines** -- Count lines in each route XML. Risk: hard to maintain. Fix: decompose using `direct:` sub-routes.
 
-**Data Sources table:** columns — Source | Routes. One row per source type found.
+**AP-9: Missing archive or error folder** -- For file consumers, check `move`/`{{archive.file}}` and `moveFailed`/`{{error.file}}`. Risk: no audit trail. Fix: configure both.
 
-**Patterns Detected table:** columns — Pattern | Used? | Where. Use YES / NO / PARTIAL. Rows: Streaming split, loaddataFile, Tokenize split, Quartz scheduling, Event-driven, Chained routes (direct:), onCompletion, DMDS flush, Error folder, Archive folder.
+**AP-10: Inconsistent naming** -- Collect IDs of all routes, mappers, filters. Check whether naming style is consistent kebab-case. Risk: hard to find related artifacts. Fix: rename to kebab-case.
 
-**Anti-Pattern Report table:** columns — # | Anti-Pattern | Status | Affected Files. Status: FOUND / CLEAN. One row per AP-1 through AP-10. For FOUND, list affected file names and a brief note (e.g., "32-line Groovy block").
+### Step 6 -- Naming Consistency
 
-**Recommendations:** 3–7 bullet points, prioritized by risk. Each must name the specific file, state the risk (data loss / memory / maintainability), and give the concrete fix. Order: data-loss risks first (AP-4, AP-5, AP-6, AP-8, AP-9), then performance, then maintainability.
+Collect IDs of all routes, mappers, and filters. Determine the dominant naming style (kebab-case is the IM convention). **Consistency % = (artifacts using kebab-case / total artifacts) x 100**
 
-**Overall Health Score:** One of:
-- **GOOD** — 0–2 anti-patterns, all critical patterns present
-- **FAIR** — 3–5 anti-patterns, or missing streaming/error handling
-- **NEEDS ATTENTION** — 6+ anti-patterns, or any data-loss risk found
+### Step 7 -- IM Version Currency
+
+1. From `pom.xml`, find the IM version
+2. Compare against the known latest stable release line
+3. Score: current (latest minor) = 100%, one minor behind = 50%, one major behind or more = 0%
+
+### Step 8 -- Cross-File Consistency
+
+#### Route-Mapper-Filter References
+- Every `mapper=X` reference in a route must have a corresponding file `src/main/resources/repo/mappers/X.mapper.xml`
+- Every `filter=X` reference in a route must have a corresponding file `src/main/resources/repo/filters/X.filter.xml`
+- Warn about unreferenced mapper/filter files (possible orphans)
+
+#### Configuration Review
+- Check that `integration.sftp.root` is defined in application.properties
+- Check that Pricefx connection properties are present or externalized
+- Warn about hardcoded credentials
+- Check for unused or duplicate properties
+
+---
+
+## Scoring
+
+| Dimension | Weight | How to score |
+|---|---|---|
+| Pattern compliance | 40% | Compliance % from Step 3 |
+| Test coverage | 25% | Coverage % from Step 4 |
+| Anti-patterns | 20% | 0 findings = 100%, 1 = 80%, 2 = 60%, 3 = 40%, 4 = 20%, 5+ = 0% |
+| Naming consistency | 10% | Consistency % from Step 6 |
+| IM version currency | 5% | Version score from Step 7 |
+
+**Overall score = sum of (dimension score x weight), rounded to nearest integer**
+
+Bar rendering: each full block = 10 points, each empty block = remaining empty slot (10 chars total).
+
+---
+
+## Output
+
+Print the full analysis report using this structure:
+
+### 1. Health Dashboard
+
+Print using box-drawing characters:
+
+```
++==========================================+
+|       PROJECT HEALTH DASHBOARD           |
++==========================================+
+| Overall Score:  [bar] [score]/100        |
++------------------------------------------+
+| Routes:         [N] total                |
+| Pattern Compliance:  [bar] [N]%          |
+| Test Coverage:       [bar] [N]%          |
+| Anti-Patterns:       [N] found           |
+| Naming Consistency:  [bar] [N]%          |
+| IM Version:          [version] ([status])|
++------------------------------------------+
+| TOP 3 ACTIONS:                           |
+| 1. [highest-impact action]               |
+| 2. [second action]                       |
+| 3. [third action]                        |
++==========================================+
+```
+
+### 2. Project Inventory
+
+**Summary table:** Routes / Mappers / Filters / Connections / Groovy beans -- one row each with count.
+
+**Routes by Type table:** columns -- Type | Count | Route IDs. Rows: Import, Export, Event-driven, Scheduled, Utility/chained.
+
+**Object Types table:** columns -- Object Type | Routes. One row per type found.
+
+**Data Sources table:** columns -- Source | Routes. One row per source type found.
+
+**Patterns Detected table:** columns -- Pattern | Used? | Where. Use YES / NO / PARTIAL. Rows: Streaming split, loaddataFile, Tokenize split, Quartz scheduling, Event-driven, Chained routes (direct:), onCompletion, DMDS flush, Error folder, Archive folder.
+
+### 3. Route-by-Route Findings
+
+For each route, list all compliance violations found in Step 3. Include:
+- The file and line/element where the issue is
+- What is wrong and why
+- The recommended fix (show corrected XML/config)
+
+Group findings by severity:
+- **Critical Issues** -- will cause errors or incorrect behavior in production
+- **Recommendations** -- improvements for correctness, performance, and maintainability
+- **Best Practice Violations** -- working code that doesn't follow IM conventions
+
+### 4. Anti-Pattern Report
+
+**Anti-Pattern Report table:** columns -- # | Anti-Pattern | Status | Affected Files. Status: FOUND / CLEAN. One row per AP-1 through AP-10. For FOUND, list affected file names and a brief note.
+
+For each FOUND anti-pattern, include a details block:
+- File name and specific element or line range
+- Risk explanation
+- Recommended fix with code snippet
+
+### 5. Cross-File Consistency Issues
+
+List all issues found in Step 8:
+- Missing mapper/filter files referenced by routes
+- Orphaned mappers/filters not referenced by any route
+- Missing properties
+- Connection issues
+
+### 6. Quality Score
+
+```
+## Quality Score: [COLOR]
+Total issues found: N
+
+  Green  (0-1 issues)  -- Project is in good shape. Minor polish only.
+  Yellow (2-4 issues)  -- Moderate concerns. Address before next release.
+  Red    (5+ issues)   -- Significant problems. Prioritize remediation.
+```
+
+Count each flagged file/element as one issue. Critical Issues count double (each = 2 points).
+
+### 7. Top 3 Actions
+
+Rank all findings by estimated impact and select the top 3. Use this priority order:
+
+1. Critical pattern violations (wrong object type key field, missing extension name constant)
+2. Anti-patterns (AP-4 missing error handling, AP-5 missing streaming, AP-6 DMDS flush)
+3. Test coverage gaps
+4. Version currency (if behind major version)
+5. Naming inconsistencies
+
+Phrase each action as a concrete, actionable instruction (e.g., "Add `moveFailed` to 4 file consumers", not "Fix error handling").
+
+---
+
+## Performance Recommendations
+
+Include at the end of the report:
+
+### Batch Size Guidance
+- Few fields (< 10): `batchSize=500000` is appropriate
+- Medium fields (10-20): recommend `100000-200000`
+- Many fields (20+): recommend `50000` or less
+- Flag if batch size seems too large for the number of fields
+
+### File Processing
+- Large CSV imports should use `loaddataFile` over `loaddata`
+- Check that streaming unmarshal is used for large files
+
+---
+
+## Metadata Cross-Reference
+
+If pfx CLI is available (`.env` exists with valid credentials):
+1. Run `node ${CLAUDE_PLUGIN_ROOT}/tools/dist/pfx.cjs test-connection` to verify connectivity
+2. For each PX/CX route, verify the extension table exists in the partition
+3. Check that mapped fields actually exist in the table schema
+4. Verify field types match converter expressions
+5. Flag mappings to unconfigured attributes (no label set)
+
+---
 
 After the report, ask: **Would you like me to fix any of these issues?** If yes, start with the highest-priority item.

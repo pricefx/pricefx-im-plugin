@@ -65,9 +65,9 @@ You don't need to remember IM conventions — the skill handles them:
 
 **Option 3 — Check compliance:**
 
-> **You:** `/pricefx-im-plugin:check-route-compliance`
+> **You:** `/pricefx-im-plugin:analyze`
 >
-> Lints the generated route against best-practice patterns. Flags anything the skill might have missed for your specific use case.
+> Analyzes the generated route for quality issues and anti-patterns. Flags anything the skill might have missed for your specific use case.
 
 ## Tips
 

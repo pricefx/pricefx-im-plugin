@@ -33,7 +33,7 @@ Pricefx partners and implementors who:
 | 3 | `03-import-pa-data-source.md` | How-to | Generate DMDS imports via `generate-pa-import-integration` |
 | 4 | `04-export-data-to-csv.md` | How-to | Generate exports via `generate-export-integration` |
 | 5 | `05-onboard-existing-project.md` | How-to | Take over an inherited project via `onboard-project` agent |
-| 6 | `06-review-and-debug.md` | How-to | Review and debug routes via `review-project` and `debug-integration` agents |
+| 6 | `06-review-and-debug.md` | How-to | Review and debug routes via `analyze-project` and `debug-integration` agents |
 | 7 | `07-working-with-metadata.md` | How-to | Explore partition metadata via `list-pricefx-tables` and pfx CLI |
 
 ## Document Specs
@@ -51,7 +51,7 @@ Pricefx partners and implementors who:
 | New import integration | 2-4h: study docs, write route XML, mapper, properties, test | 5 min: answer wizard questions, plugin generates everything |
 | Take over someone's project | 1-2 days: read every file, understand what it does | 2 min: `onboard-project` → complete report + diagrams |
 | Debug a failing route | Hours: log, search XML, trial and error | Minutes: describe the error, agent finds root cause and proposes fix |
-| Check quality before deploy | Manual review, easy to miss issues | `review-project` → scored report with critical/warning/info |
+| Check quality before deploy | Manual review, easy to miss issues | `analyze-project` → scored report with critical/warning/info |
 | Understand a route | Read XML, trace references manually | `document` → plain English explanation + data flow diagram |
 | Generate test data | Write CSV by hand, guess field formats | `generate-test-data` → realistic CSV from mapper + partition metadata |
 
@@ -136,12 +136,12 @@ Focuses on the `onboard-project` agent:
 - When: "You inherited a project from another partner or team"
 - What it produces: route inventory, compliance report, quality score, diagrams, generated docs
 - How to interpret the report (RED/YELLOW/GREEN scoring)
-- Tips: run `health-check` periodically, not just at onboarding
+- Tips: run `analyze-project` periodically, not just at onboarding
 
 ### 06 — Review and Debug (~130 lines)
 
 Covers two agents:
-- `review-project` — when to run, what the report contains, how to act on findings
+- `analyze-project` — when to run, what the report contains, how to act on findings
 - `debug-integration` — how to describe an error, what the agent investigates, example session
 - Tips: "Paste the full error message", "Run review before every MR"
 

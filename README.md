@@ -291,12 +291,12 @@ Produces a correctly structured connection JSON file ready for placement in `con
 
 ### Analysis & Quality (3 skills)
 
-#### check-route-compliance
+#### analyze
 
-Lints all routes in the project against the pattern catalog. Flags deviations from established patterns — such as missing flush steps, non-standard naming conventions, or improper error handling — and explains the correct approach.
+Analyzes a single route for quality issues, anti-patterns, and naming convention violations. Flags deviations from established patterns — such as missing flush steps, non-standard naming conventions, or improper error handling — and explains the correct approach.
 
 ```
-/pricefx-im-plugin:check-route-compliance
+/pricefx-im-plugin:analyze
 ```
 
 Useful as a pre-commit or pre-review quality gate.
@@ -430,25 +430,7 @@ Skills will apply the matching pattern as their baseline and adapt it to your pr
 
 ## Agents Reference
 
-Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **11 agents**.
-
-### review-project
-
-**What it does:** Full code review of your IM project — reads every route, mapper, filter, and config file. Checks for connection naming issues, XML syntax errors, hardcoded values, mismatched resource IDs, and best-practice violations. Enhanced with anti-pattern detection: cross-references all findings against the pattern catalog to flag known problematic constructs (e.g., missing flush in DMDS routes, unbounded polling without a dead-letter channel, synchronous REST calls without timeout configuration). Produces a structured report with findings grouped by severity.
-
-**How to use:**
-
-```
-Review my integration project
-```
-
-```
-Can you do a code review of all my routes?
-```
-
-```
-Review my project and check for anti-patterns
-```
+Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **9 agents**.
 
 ### debug-integration
 
@@ -553,7 +535,7 @@ I need a full end-to-end solution for exporting changed customers daily
 
 ### analyze-project
 
-**What it does:** Analyzes an existing IM project (your own or a partner's) and produces a structured assessment: route inventory, identified patterns, anti-patterns, migration opportunities, and a prioritized recommendation list. Does not modify any files. Output is a markdown report that can be saved to `docs/` or shared directly.
+**What it does:** Comprehensive project analyzer that produces a health dashboard, route inventory, route-by-route findings, anti-pattern report, cross-file consistency issues, quality score, and top 3 actions. Combines project scanning, code review, and health scoring into one assessment. Does not modify any files.
 
 **How to use:**
 
@@ -565,18 +547,16 @@ Analyze this project and give me a full assessment
 Review a partner project at /path/to/project
 ```
 
-### health-check
-
-**What it does:** Generates a project health dashboard with a quality score. Evaluates route coverage, test coverage, documentation completeness, pattern compliance, naming conventions, and configuration hygiene. Produces a structured scorecard with actionable recommendations.
-
-**How to use:**
-
 ```
 Run a health check on my project
 ```
 
 ```
 What's the quality score for this integration project?
+```
+
+```
+Review my project and check for anti-patterns
 ```
 
 ### upgrade-project
@@ -753,8 +733,8 @@ Review my integration project before I deploy it
 ```
 
 **What happens:**
-1. The `review-project` agent scans all files
-2. Produces a report with findings grouped by severity:
+1. The `analyze-project` agent scans all files
+2. Produces a health dashboard with quality score and findings grouped by severity:
    - Critical: mismatched resource IDs, missing business keys
    - Warning: hardcoded values that should be in properties
    - Info: style improvements, missing logging
@@ -804,8 +784,8 @@ Run a health check on my project
 ```
 
 **What happens:**
-1. The `health-check` agent scans routes, tests, docs, and configuration
-2. Produces a scorecard covering coverage, compliance, naming, and hygiene
+1. The `analyze-project` agent scans routes, tests, docs, and configuration
+2. Produces a health dashboard covering coverage, compliance, naming, and hygiene
 3. Returns a quality score with a prioritized list of improvements
 
 ### Example 12: Visualize data flow
@@ -898,7 +878,7 @@ When inheriting an existing project, run the `onboard-project` agent first. It p
 
 | Scenario | Agent to use |
 |---|---|
-| Full code review before deployment | `review-project` |
+| Full code review before deployment | `analyze-project` |
 | Diagnosing a route failure | `debug-integration` |
 | Impact of a field or connection rename | `impact-analysis` |
 | Documenting routes for stakeholders | `document-project` |
@@ -907,20 +887,20 @@ When inheriting an existing project, run the `onboard-project` agent first. It p
 | Understanding an inherited project | `onboard-project` |
 | End-to-end integration from a requirement | `build-integration` |
 | Assessing an existing or partner project | `analyze-project` |
-| Project quality score | `health-check` |
+| Project quality score | `analyze-project` |
 | Full version upgrade with auto-fix | `upgrade-project` |
 
 ### Dry-run before deploying unfamiliar routes
 
 Use `simulate-dry-run` to validate mapper and filter logic against real data before you push changes to a live partition. It costs nothing and catches mapping errors early.
 
-### Use `check-route-compliance` as a quality gate
+### Use `analyze` as a quality gate
 
-Run `check-route-compliance` before every merge request to catch deviations from established patterns. Combine it with the `health-check` agent to get full coverage and quality insights.
+Run `analyze` before every merge request to catch deviations from established patterns. Combine it with the `analyze-project` agent to get full coverage and quality insights.
 
 ### Review before deploying
 
-Always run `Review my integration project` before deploying to catch issues early. The `review-project` agent checks for common mistakes that cause deployment failures.
+Always run `Review my integration project` before deploying to catch issues early. The `analyze-project` agent checks for common mistakes that cause deployment failures.
 
 ### Keep .env out of version control
 
@@ -968,14 +948,12 @@ pricefx-im-plugin/
 │   ├── debug-integration.md
 │   ├── document-project.md
 │   ├── generate-test-data.md
-│   ├── health-check.md
 │   ├── impact-analysis.md
 │   ├── migrate-project.md
 │   ├── onboard-project.md
-│   ├── review-project.md
 │   └── upgrade-project.md
 ├── skills/
-│   ├── check-route-compliance/
+│   ├── analyze/
 │   ├── compare-environments/
 │   ├── estimate-performance/
 │   ├── document/

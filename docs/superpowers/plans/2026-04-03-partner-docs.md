@@ -22,7 +22,7 @@ All files created in `docs/tutorials/`:
 | `03-import-pa-data-source.md` | How-to: generate-pa-import-integration skill | 120 |
 | `04-export-data-to-csv.md` | How-to: generate-export-integration skill | 120 |
 | `05-onboard-existing-project.md` | How-to: onboard-project agent | 130 |
-| `06-review-and-debug.md` | How-to: review-project + debug-integration agents | 130 |
+| `06-review-and-debug.md` | How-to: analyze-project + debug-integration agents | 130 |
 | `07-working-with-metadata.md` | How-to: list-pricefx-tables + pfx CLI | 100 |
 
 ---
@@ -68,7 +68,7 @@ You describe what you need. The plugin asks targeted questions, fetches metadata
 | New export with delta sync | 1–2 hours: write route with Quartz cron, pfx-config timestamps, filter with two bounds, batched fetch | 5 minutes: say "export products with delta sync", plugin handles the complexity |
 | Take over someone's project | 1–2 days: read every XML file, figure out what each route does | 2 minutes: run `onboard-project` → get a complete report with route inventory, quality score, and diagrams |
 | Debug a failing route | Hours: add log statements, search XML for typos, trial and error | Minutes: paste the error message, agent traces the root cause and suggests the exact fix |
-| Check quality before deploy | Manual review, easy to miss issues | Run `review-project` → scored report with critical issues, warnings, and best-practice violations |
+| Check quality before deploy | Manual review, easy to miss issues | Run `analyze-project` → scored report with critical issues, warnings, and best-practice violations |
 | Understand what a route does | Read XML, trace mapper/filter references, mentally simulate the flow | Run `document` → plain English explanation + Mermaid data flow diagram |
 | Generate test data | Write CSV by hand, guess field formats and valid values | Run `generate-test-data` → realistic CSV based on your mapper and partition metadata |
 
@@ -103,7 +103,7 @@ Skills are interactive generators. You invoke them, answer questions, and they c
 
 | Skill | What It Does | Trigger |
 |-------|-------------|---------|
-| `check-route-compliance` | Lint route against best-practice patterns | `/check-route-compliance` or "check my route" |
+| `analyze` | Analyze route quality, detect anti-patterns | `/analyze` or "check my route" |
 | `estimate-performance` | Estimate processing time for a route | `/estimate-performance` or "how long will this take?" |
 | `compare-environments` | Diff routes/mappers/filters between branches | `/compare-environments` or "what changed since develop?" |
 
@@ -129,10 +129,8 @@ Agents are autonomous analyzers. They scan your project, read files, and produce
 | Agent | What It Does | Trigger |
 |-------|-------------|---------|
 | `onboard-project` | Complete project assessment for new team members | "onboard this project" or "I inherited this project" |
-| `review-project` | Code review with anti-pattern detection | "review my project" or "full code review" |
+| `analyze-project` | Health dashboard, code review, quality score, anti-pattern detection | "analyze this project" or "review my project" or "health check" |
 | `debug-integration` | Diagnose route failures and errors | "my route is failing" or paste an error message |
-| `health-check` | Scored quality dashboard (0–100) | "run health check" or "project score" |
-| `analyze-project` | Route inventory, patterns, recommendations | "analyze this project" |
 | `build-integration` | End-to-end: requirement → route → test → docs | "build an integration from this doc" |
 | `document-project` | Reverse-engineer routes into requirement docs | "document my routes" |
 | `generate-test-data` | Realistic CSV test data from mapper + metadata | "generate test data for import-products" |
@@ -419,9 +417,9 @@ You don't need to remember IM conventions — the skill handles them:
 
 **Option 3 — Check compliance:**
 
-> **You:** `/pricefx-im-plugin:check-route-compliance`
+> **You:** `/pricefx-im-plugin:analyze`
 >
-> Lints the generated route against best-practice patterns. Flags anything the skill might have missed for your specific use case.
+> Analyzes the generated route for quality issues and anti-patterns. Flags anything the skill might have missed for your specific use case.
 
 ## Tips
 
@@ -499,7 +497,7 @@ The skill handles the complexity that makes DMDS different from regular imports:
 
 ## How to Verify
 
-Same as regular imports — use `simulate-dry-run`, `generate-integration-test`, or `check-route-compliance`.
+Same as regular imports — use `simulate-dry-run`, `generate-integration-test`, or `analyze`.
 
 After a real run, verify data with:
 
@@ -707,7 +705,7 @@ Critical issues will cause runtime failures. Warnings are about maintainability 
 Now that you understand the project, useful next steps:
 
 - **Fix critical issues:** The report tells you exactly what's wrong and where. Ask the plugin: "Fix the mapper ID mismatch in import-products" — it can apply the fix directly.
-- **Run health check periodically:** `/pricefx-im-plugin:health-check` gives you a scored dashboard. Run it before deployments or after major changes.
+- **Run project analysis periodically:** The `analyze-project` agent gives you a scored health dashboard. Run it before deployments or after major changes.
 - **Generate missing tests:** For each untested route, run `/generate-integration-test` — the plugin creates a Spock test based on the existing route.
 - **Visualize for stakeholders:** The generated Mermaid diagrams are great for stakeholder presentations. Share them in MR descriptions or project documentation.
 
@@ -751,7 +749,7 @@ Two scenarios:
 - "Run a full code review"
 - "Check for issues before I deploy"
 
-The `review-project` agent reads all routes, mappers, filters, and config files, then checks 10+ rule categories:
+The `analyze-project` agent reads all routes, mappers, filters, and config files, then checks 10+ rule categories:
 
 - Connection configuration (redundant `connection=pricefx`?)
 - Route structure (proper archiving, read lock, error handling?)
@@ -822,12 +820,12 @@ The `debug-integration` agent:
 
 | Situation | What to Run |
 |-----------|------------|
-| Before deploying | `review-project` — catches issues proactively |
-| After major changes | `review-project` — verify nothing broke |
+| Before deploying | `analyze-project` — catches issues proactively |
+| After major changes | `analyze-project` — verify nothing broke |
 | Route is failing | `debug-integration` — paste the error message |
 | Data looks wrong | `debug-integration` — describe what's wrong vs expected |
-| Regular maintenance | `health-check` — scored dashboard with trends |
-| Before MR/merge | `review-project` + `check-route-compliance` on changed routes |
+| Regular maintenance | `analyze-project` — scored dashboard with trends |
+| Before MR/merge | `analyze-project` + `analyze` on changed routes |
 
 ## Tips
 
@@ -996,8 +994,8 @@ Check that all links between documents point to correct file names:
 - 02 links to 03
 - 03 — no forward link needed
 - 04 — no forward link needed
-- 05 references `/generate-integration-test`, `/health-check`, `document`
-- 06 references `health-check`, `check-route-compliance`
+- 05 references `/generate-integration-test`, `analyze-project`, `document`
+- 06 references `analyze-project`, `analyze`
 - 07 — standalone
 
 - [ ] **Step 4: Verify no raw XML authoring instructions**

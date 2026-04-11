@@ -221,7 +221,7 @@ Run the `document` skill (or apply the `document-project` agent logic) on the ne
 
 ## Step 7 — Quality Check
 
-Run the `check-route-compliance` skill on all generated files. Address any **Critical** findings before presenting the summary. For **Warnings**, include them in the output but leave the decision to the user.
+Run the `analyze` skill on all generated files. Address any **Critical** findings before presenting the summary. For **Warnings**, include them in the output but leave the decision to the user.
 
 Anti-patterns to verify automatically before reporting done:
 - `streaming="true"` present on any `<split>` over a file body

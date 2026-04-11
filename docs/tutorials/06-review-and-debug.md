@@ -14,7 +14,7 @@ Two scenarios:
 - "Run a full code review"
 - "Check for issues before I deploy"
 
-The `review-project` agent reads all routes, mappers, filters, and config files, then checks 10+ rule categories:
+The `analyze-project` agent reads all routes, mappers, filters, and config files, then checks 10+ rule categories:
 
 - Connection configuration (redundant `connection=pricefx`?)
 - Route structure (proper archiving, read lock, error handling?)
@@ -85,12 +85,12 @@ The `debug-integration` agent:
 
 | Situation | What to Run |
 |-----------|------------|
-| Before deploying | `review-project` — catches issues proactively |
-| After major changes | `review-project` — verify nothing broke |
+| Before deploying | `analyze-project` — catches issues proactively |
+| After major changes | `analyze-project` — verify nothing broke |
 | Route is failing | `debug-integration` — paste the error message |
 | Data looks wrong | `debug-integration` — describe what's wrong vs expected |
-| Regular maintenance | `health-check` — scored dashboard with trends |
-| Before MR/merge | `review-project` + `check-route-compliance` on changed routes |
+| Regular maintenance | `analyze-project` — scored dashboard with trends |
+| Before MR/merge | `analyze-project` + `analyze` on changed routes |
 
 ## Tips
 

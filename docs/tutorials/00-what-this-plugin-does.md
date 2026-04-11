@@ -12,7 +12,7 @@ You describe what you need. The plugin asks targeted questions, fetches metadata
 | New export with delta sync | 1–2 hours: write route with Quartz cron, pfx-config timestamps, filter with two bounds, batched fetch | 5 minutes: say "export products with delta sync", plugin handles the complexity |
 | Take over someone's project | 1–2 days: read every XML file, figure out what each route does | 2 minutes: run `onboard-project` → get a complete report with route inventory, quality score, and diagrams |
 | Debug a failing route | Hours: add log statements, search XML for typos, trial and error | Minutes: paste the error message, agent traces the root cause and suggests the exact fix |
-| Check quality before deploy | Manual review, easy to miss issues | Run `review-project` → scored report with critical issues, warnings, and best-practice violations |
+| Check quality before deploy | Manual review, easy to miss issues | Run `analyze-project` → scored report with critical issues, warnings, and best-practice violations |
 | Understand what a route does | Read XML, trace mapper/filter references, mentally simulate the flow | Run `document` → plain English explanation + Mermaid data flow diagram |
 | Generate test data | Write CSV by hand, guess field formats and valid values | Run `generate-test-data` → realistic CSV based on your mapper and partition metadata |
 
@@ -47,7 +47,7 @@ Skills are interactive generators. You invoke them, answer questions, and they c
 
 | Skill | What It Does | Trigger |
 |-------|-------------|---------|
-| `check-route-compliance` | Lint route against best-practice patterns | `/check-route-compliance` or "check my route" |
+| `analyze` | Analyze route quality, detect anti-patterns | `/analyze` or "check my route" |
 | `estimate-performance` | Estimate processing time for a route | `/estimate-performance` or "how long will this take?" |
 | `compare-environments` | Diff routes/mappers/filters between branches | `/compare-environments` or "what changed since develop?" |
 
@@ -68,15 +68,13 @@ Skills are interactive generators. You invoke them, answer questions, and they c
 
 ### Agents
 
-Agents are autonomous analyzers. They scan your project, read files, and produce reports or make changes. There are 11 agents.
+Agents are autonomous analyzers. They scan your project, read files, and produce reports or make changes. There are 9 agents.
 
 | Agent | What It Does | Trigger |
 |-------|-------------|---------|
 | `onboard-project` | Complete project assessment for new team members | "onboard this project" or "I inherited this project" |
-| `review-project` | Code review with anti-pattern detection | "review my project" or "full code review" |
+| `analyze-project` | Health dashboard, code review, quality score, anti-pattern detection | "analyze this project" or "review my project" or "health check" |
 | `debug-integration` | Diagnose route failures and errors | "my route is failing" or paste an error message |
-| `health-check` | Scored quality dashboard (0–100) | "run health check" or "project score" |
-| `analyze-project` | Route inventory, patterns, recommendations | "analyze this project" |
 | `build-integration` | End-to-end: requirement → route → test → docs | "build an integration from this doc" |
 | `document-project` | Reverse-engineer routes into requirement docs | "document my routes" |
 | `generate-test-data` | Realistic CSV test data from mapper + metadata | "generate test data for import-products" |
