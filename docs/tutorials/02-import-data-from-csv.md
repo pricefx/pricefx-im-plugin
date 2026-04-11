@@ -74,5 +74,5 @@ You don't need to remember IM conventions — the skill handles them:
 - **Paste your CSV header** when the skill asks about fields. Auto-detection saves time and catches delimiter/quoting issues early.
 - **Say "use all fields"** if you want the skill to map every attribute from your partition metadata. Useful for full data syncs.
 - **For PX/CX imports**, you don't need to remember the `constant out="name"` trick — the skill adds it automatically when you pick an extension table.
-- **Combine skills**: after generating the import, run `/generate-integration-test` to get a test, and `/generate-flow-diagram` to get a visual diagram.
+- **Combine skills**: after generating the import, run `/generate-integration-test` to get a test, and `/document` to get a visual diagram and summary.
 - **Multiple CSV formats?** Run the skill once per format. Each generates its own route and mapper.

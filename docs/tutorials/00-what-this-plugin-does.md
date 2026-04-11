@@ -13,9 +13,8 @@ You describe what you need. The plugin asks targeted questions, fetches metadata
 | Take over someone's project | 1–2 days: read every XML file, figure out what each route does | 2 minutes: run `onboard-project` → get a complete report with route inventory, quality score, and diagrams |
 | Debug a failing route | Hours: add log statements, search XML for typos, trial and error | Minutes: paste the error message, agent traces the root cause and suggests the exact fix |
 | Check quality before deploy | Manual review, easy to miss issues | Run `review-project` → scored report with critical issues, warnings, and best-practice violations |
-| Understand what a route does | Read XML, trace mapper/filter references, mentally simulate the flow | Run `explain-route` → plain English explanation of the business logic |
+| Understand what a route does | Read XML, trace mapper/filter references, mentally simulate the flow | Run `document` → plain English explanation + Mermaid data flow diagram |
 | Generate test data | Write CSV by hand, guess field formats and valid values | Run `generate-test-data` → realistic CSV based on your mapper and partition metadata |
-| Visualize data flow | Draw diagrams manually in Visio or Mermaid | Run `generate-flow-diagram` → Mermaid diagrams auto-generated from route XML |
 
 ## What's Inside
 
@@ -56,8 +55,7 @@ Skills are interactive generators. You invoke them, answer questions, and they c
 
 | Skill | What It Does | Trigger |
 |-------|-------------|---------|
-| `explain-route` | Plain English explanation of a route | `/explain-route` or "what does this route do?" |
-| `generate-flow-diagram` | Mermaid data flow diagrams | `/generate-flow-diagram` or "visualize this route" |
+| `document` | Plain English explanation + Mermaid data flow diagram | `/document` or "what does this route do?" or "visualize this route" |
 | `generate-integration-test` | Spock test with WireMock | `/generate-integration-test` or "write tests for this route" |
 | `simulate-dry-run` | Trace data through a route without API calls | `/simulate-dry-run` or "dry run with this CSV" |
 | `list-pricefx-tables` | Browse partition metadata | `/list-pricefx-tables` or "what PX tables exist?" |

@@ -212,7 +212,7 @@ python3 scripts/generate-test-data.py {OBJECT_TYPE} {TABLE_NAME} --rows 10
 
 ## Step 6 — Generate Documentation
 
-Run the `explain-route` skill (or apply the `document-project` agent logic) on the newly generated route to produce:
+Run the `document` skill (or apply the `document-project` agent logic) on the newly generated route to produce:
 
 - `docs/requirements/{route-name}.md` — technical requirement doc (update if it already exists from Step 1)
 - `docs/summaries/{route-name}-summary.md` — one-page route summary

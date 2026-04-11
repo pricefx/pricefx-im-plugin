@@ -52,7 +52,7 @@ Pricefx partners and implementors who:
 | Take over someone's project | 1-2 days: read every file, understand what it does | 2 min: `onboard-project` → complete report + diagrams |
 | Debug a failing route | Hours: log, search XML, trial and error | Minutes: describe the error, agent finds root cause and proposes fix |
 | Check quality before deploy | Manual review, easy to miss issues | `review-project` → scored report with critical/warning/info |
-| Understand a route | Read XML, trace references manually | `explain-route` → plain English explanation |
+| Understand a route | Read XML, trace references manually | `document` → plain English explanation + data flow diagram |
 | Generate test data | Write CSV by hand, guess field formats | `generate-test-data` → realistic CSV from mapper + partition metadata |
 
 3. **What the plugin contains** — capability map:
