@@ -54,7 +54,7 @@ Check each criterion below. For each one, record the result as PASS, FAIL, or WA
 
 | Check | How to Detect | Pass Condition |
 |---|---|---|
-| Streaming on split | `<split` has `streaming="true"` | Present |
+| Streaming on split | If `<split` is used, check for `streaming="true"` | Present when split is used; N/A if no split |
 | Archive folder | `{{archive.file}}` or `move=.archive/` on the `from` URI | Present |
 | Error folder | `{{error.file}}` or `moveFailed=.error/` on the `from` URI | Present (optional but recommended) |
 | Read lock | `{{read.lock}}` or `{{done.file}}` or `readLock=` or `doneFileName=` on the `from` URI | One of the two present |
