@@ -21,7 +21,7 @@ Classify the route by inspecting the `from` URI and route ID:
 |---|---|
 | **CSV/SFTP Import** | `pfx-sftp:` or `file://` in `from`, route ID starts with `import-`, object type P/PX/C/CX/SL/SX |
 | **DMDS/DS Import** | `pfx-api:loaddata` with `objectType=DMDS` or `objectType=DS`, or route ID contains `-ds` |
-| **PPV Import** | `objectType=LTV` or `objectType=MLTV2` or `objectType=MLTV3` in `pfx:api.settings` or `pfxApiSettings` |
+| **PPV Import** | `objectType=LTV` or `objectType=MLTV2` or `objectType=MLTV3` in `pfx-api:loaddata` or `pfx-api:loaddataFile` URI |
 | **Scheduled Export** | `quartz:` in `from`, route ID starts with `export-`, no `pfx-config:get` for timestamp |
 | **Incremental Export** | `quartz:` in `from`, uses `pfx-config:get` and `pfx-config:set` for timestamp tracking |
 | **Event-Driven** | `from uri="direct:event` or `pfx-event:` in `from`, route ID starts with `event-` |

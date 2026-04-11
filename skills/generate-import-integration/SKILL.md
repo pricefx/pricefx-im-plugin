@@ -329,37 +329,12 @@ Use this ONLY if the user explicitly needs row-level Groovy transformations:
   <to uri="pfx-io:streamCompressedFile"/>
   <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
-  <!-- API settings parser -->
-  <setHeader name="pfxApiSettings"><constant>{{pfx:api.settings}}</constant></setHeader>
-  <script>
-    <groovy><![CDATA[
-      def pfxApiSettingsMap = [:]
-      headers.pfxApiSettings.split('&').each { setting ->
-        def parts = setting.split('=')
-        def key = parts[0]
-        def value = parts.size() > 1 ? parts[1] : ""
-        pfxApiSettingsMap.put(key, value)
-        headers.put(key, value)
-      }
-      headers.put('parsedPfxApiSettings', pfxApiSettingsMap
-        .findAll { k, v -> k != 'entityName' }
-        .collect { k, v -> k + '=' + v }.join('&'))
-    ]]></groovy>
-  </script>
-
-  <doTry>
-    <split aggregationStrategy="recordsCountAggregation" streaming="true">
-      <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
-      <toD uri="pfx-csv:unmarshal?{{pfx:csv.settings}}&amp;skipHeaderRecord=true"/>
-      <toD uri="pfx-api:loaddata?${headers.parsedPfxApiSettings}mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
-      <setBody><constant/></setBody>
-    </split>
-    <doCatch>
-      <exception>java.nio.charset.MalformedInputException</exception>
-      <log loggingLevel="ERROR" message="[${routeId}] Encoding error in ${headers.CamelFileName}"/>
-      <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException" message="File encoding error"/>
-    </doCatch>
-  </doTry>
+  <split aggregationStrategy="recordsCountAggregation" streaming="true">
+    <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
+    <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+    <toD uri="pfx-api:loaddata?objectType=P&amp;mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+    <setBody><constant/></setBody>
+  </split>
 
   <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
 </route>
