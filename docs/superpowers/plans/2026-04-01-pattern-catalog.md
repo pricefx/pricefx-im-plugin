@@ -99,26 +99,17 @@ Sellers (SL), Seller Extensions (SX). This is the most common integration patter
     <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
     <!-- Batch processing: split file into chunks -->
-    <doTry>
-      <split aggregationStrategy="recordsCountAggregation" streaming="true">
-        <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
+    <split aggregationStrategy="recordsCountAggregation" streaming="true">
+      <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
 
-        <!-- Unmarshal CSV -->
-        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+      <!-- Unmarshal CSV -->
+      <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
 
-        <!-- Load to Pricefx -->
-        <to uri="pfx-api:loaddata?objectType={{OBJECT_TYPE}}&amp;mapper={{pfx:mapper}}"/>
+      <!-- Load to Pricefx -->
+      <to uri="pfx-api:loaddata?objectType={{OBJECT_TYPE}}&amp;mapper={{pfx:mapper}}"/>
 
-        <setBody><constant/></setBody>
-      </split>
-
-      <doCatch>
-        <exception>java.nio.charset.MalformedInputException</exception>
-        <log loggingLevel="ERROR" message="[${routeId}] Encoding error in file ${headers.CamelFileName}"/>
-        <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException"
-                        message="File encoding error — check charset setting"/>
-      </doCatch>
-    </doTry>
+      <setBody><constant/></setBody>
+    </split>
 
     <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
   </route>
@@ -279,27 +270,18 @@ to make data available for analytics.
     <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
     <!-- SPLIT/TOKENIZE/LOADDATA -->
-    <doTry>
-      <split aggregationStrategy="recordsCountAggregation" streaming="true">
-        <tokenize group="{{pfx:batch.size:50000}}" token="\n"/>
+    <split aggregationStrategy="recordsCountAggregation" streaming="true">
+      <tokenize group="{{pfx:batch.size:50000}}" token="\n"/>
 
-        <log loggingLevel="DEBUG"
-             message="[${routeId}][batch ${header.CamelSplitIndex}] processing"/>
+      <log loggingLevel="DEBUG"
+           message="[${routeId}][batch ${header.CamelSplitIndex}] processing"/>
 
-        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+      <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
 
-        <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{{DATASOURCE}}&amp;mapper={{pfx:mapper}}"/>
+      <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{{DATASOURCE}}&amp;mapper={{pfx:mapper}}"/>
 
-        <setBody><constant/></setBody>
-      </split>
-
-      <doCatch>
-        <exception>java.nio.charset.MalformedInputException</exception>
-        <log loggingLevel="ERROR" message="[${routeId}] Encoding error"/>
-        <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException"
-                        message="File encoding error"/>
-      </doCatch>
-    </doTry>
+      <setBody><constant/></setBody>
+    </split>
 
     <!-- FLUSH: make loaded data available -->
     <log message="[${routeId}] Flushing ${headers.dsUniqueName}"/>
@@ -380,21 +362,12 @@ Importing pricing parameters (Company Parameters) — lookup tables used in pric
 
     <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
-    <doTry>
-      <split aggregationStrategy="recordsCountAggregation" streaming="true">
-        <tokenize group="{{pfx:batch.size:5000}}" token="\n"/>
-        <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
-        <to uri="pfx-api:loaddata?objectType=LTV&amp;pricingParameterName={{PARAMETER_NAME}}&amp;mapper={{pfx:mapper}}"/>
-        <setBody><constant/></setBody>
-      </split>
-
-      <doCatch>
-        <exception>java.nio.charset.MalformedInputException</exception>
-        <log loggingLevel="ERROR" message="[${routeId}] Encoding error"/>
-        <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException"
-                        message="File encoding error"/>
-      </doCatch>
-    </doTry>
+    <split aggregationStrategy="recordsCountAggregation" streaming="true">
+      <tokenize group="{{pfx:batch.size:5000}}" token="\n"/>
+      <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+      <to uri="pfx-api:loaddata?objectType=LTV&amp;pricingParameterName={{PARAMETER_NAME}}&amp;mapper={{pfx:mapper}}"/>
+      <setBody><constant/></setBody>
+    </split>
 
     <log message="[${routeId}] Complete. Records: ${header.PfxTotalInputRecordsCount}"/>
   </route>
@@ -869,28 +842,12 @@ For network errors, API timeouts, temporary unavailability:
 For encoding errors, malformed data, validation failures:
 
 ~~~xml
-<doTry>
-  <split aggregationStrategy="recordsCountAggregation" streaming="true">
-    <tokenize group="20000" token="\n"/>
-    <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
-    <to uri="pfx-api:loaddata?objectType={{OBJECT_TYPE}}&amp;mapper={{pfx:mapper}}"/>
-    <setBody><constant/></setBody>
-  </split>
-
-  <doCatch>
-    <exception>java.nio.charset.MalformedInputException</exception>
-    <log loggingLevel="ERROR" message="[${routeId}] Encoding error in ${headers.CamelFileName}"/>
-    <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException"
-                    message="File encoding error — check charset setting"/>
-  </doCatch>
-
-  <doCatch>
-    <exception>java.lang.Exception</exception>
-    <log loggingLevel="ERROR" message="[${routeId}] Unexpected error: ${exception.message}"/>
-    <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException"
-                    message="Import failed: ${exception.message}"/>
-  </doCatch>
-</doTry>
+<split aggregationStrategy="recordsCountAggregation" streaming="true">
+  <tokenize group="20000" token="\n"/>
+  <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+  <to uri="pfx-api:loaddata?objectType={{OBJECT_TYPE}}&amp;mapper={{pfx:mapper}}"/>
+  <setBody><constant/></setBody>
+</split>
 ~~~
 
 ## Pattern 3: Error File Archival

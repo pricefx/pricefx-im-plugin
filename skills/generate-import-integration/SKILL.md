@@ -329,19 +329,12 @@ Use this ONLY if the user explicitly needs row-level Groovy transformations:
   <to uri="pfx-io:streamCompressedFile"/>
   <toD uri="pfx-io:setupCharset?specifiedCharset={{pfx:charset:UTF-8}}"/>
 
-  <doTry>
-    <split aggregationStrategy="recordsCountAggregation" streaming="true">
-      <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
-      <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
-      <toD uri="pfx-api:loaddata?objectType=P&amp;mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
-      <setBody><constant/></setBody>
-    </split>
-    <doCatch>
-      <exception>java.nio.charset.MalformedInputException</exception>
-      <log loggingLevel="ERROR" message="[${routeId}] Encoding error in ${headers.CamelFileName}"/>
-      <throwException exceptionType="net.pricefx.integration.api.NonRecoverableException" message="File encoding error"/>
-    </doCatch>
-  </doTry>
+  <split aggregationStrategy="recordsCountAggregation" streaming="true">
+    <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
+    <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+    <toD uri="pfx-api:loaddata?objectType=P&amp;mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
+    <setBody><constant/></setBody>
+  </split>
 
   <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}"/>
 </route>

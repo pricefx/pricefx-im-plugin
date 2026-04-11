@@ -597,14 +597,6 @@ Common errors and solutions for Pricefx Integration Manager routes.
 2. Reduce batch size: `<tokenize group="10000">`
 3. Add `<setBody><constant/></setBody>` after loaddata (releases memory per batch)
 
-### MalformedInputException / Encoding error
-
-**Cause:** File encoding doesn't match configured charset.
-
-**Fix:**
-1. Check actual file encoding: `file -I filename.csv`
-2. Set charset in route: `<toD uri="pfx-io:setupCharset?specifiedCharset=ISO-8859-1"/>`
-3. Add doCatch to fail cleanly (see [Error Handling Pattern](patterns/error-handling.md))
 
 ### Records loaded but not visible in Pricefx
 
