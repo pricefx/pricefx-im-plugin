@@ -200,13 +200,6 @@ Let's break this down:
 
 Add these lines to `application.properties`:
 
-```properties
-# Product import
-pfx\:import-products.autoStartup=true
-```
-
-The `pfx\:` prefix and route ID tell IM which route this property applies to. `autoStartup=true` means the route starts polling immediately when IM boots.
-
 ### Step 5: Register the route
 
 If your project uses `camel-context.xml` with explicit imports, add:
@@ -379,11 +372,6 @@ Differences from the Product import:
 
 In `application.properties`:
 
-```properties
-# Price import
-pfx\:import-prices.autoStartup=true
-```
-
 ## How It Works
 
 The flow is identical to the Product import:
@@ -529,11 +517,6 @@ Two new things here:
 ### Step 4: Add route properties
 
 In `application.properties`:
-
-```properties
-# Exchange rates import
-pfx\:import-exchange-rates.autoStartup=true
-```
 
 ## How It Works
 
@@ -705,11 +688,6 @@ This route is more complex than the previous tutorials. Let's break it down:
 ### Step 4: Add route properties
 
 In `application.properties`:
-
-```properties
-# Sales transactions import
-pfx\:import-sales-transactions.autoStartup=true
-```
 
 ## How It Works
 
@@ -924,11 +902,6 @@ This is the most complex route in the series. Let's walk through each section:
 ### Step 4: Add route properties
 
 In `application.properties`:
-
-```properties
-# Product export (daily at midnight UTC)
-pfx\:export-products.autoStartup=true
-```
 
 ## How It Works
 

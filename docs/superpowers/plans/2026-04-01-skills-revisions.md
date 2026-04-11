@@ -156,19 +156,19 @@ For large data sources that take hours to load, add start/stop scheduling:
 
 ```xml
 <!-- Start route at 23:00 UTC -->
-<route id="start-{{ROUTE_ID}}" autoStartup="true">
+<route id="start-{{ROUTE_ID}}">
   <from uri="quartz://scheduler-start?cron=0+0+23+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
   <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=start"/>
 </route>
 
 <!-- Stop route at 06:00 UTC -->
-<route id="stop-{{ROUTE_ID}}" autoStartup="true">
+<route id="stop-{{ROUTE_ID}}">
   <from uri="quartz://scheduler-stop?cron=0+0+6+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
   <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=stop"/>
 </route>
 ```
 
-The import route must have `autoStartup="false"`. See [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md).
+See [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md).
 ```
 
 - [ ] **Step 4: Commit**
@@ -532,7 +532,7 @@ Read the scheduling pattern at `{IM_REPO}/docs/patterns/scheduling-start-stop.md
 
 The skill should:
 1. Ask: which route to schedule, start time, stop time, timezone
-2. Generate: start route XML, stop route XML, update original route autoStartup=false
+2. Generate: start route XML, stop route XML
 3. Include: Quartz cron helper, timezone reference
 4. Reference: [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md)
 

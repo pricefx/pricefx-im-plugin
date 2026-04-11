@@ -302,7 +302,7 @@ Use async when:
 ### loaddataFile Route Template
 
 ```xml
-<route id="import-{{entity}}-from-sftp" autoStartup="{{pfx:autoStartup}}">
+<route id="import-{{entity}}-from-sftp">
   <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D&amp;streamDownload=true&amp;stepwise=false&amp;sortBy=file:name&amp;delay=10000"/>
 
   <log message="[${routeId}] Received file ${headers.CamelFileName}"/>
@@ -322,7 +322,7 @@ Key: `pfx-csv:streamingUnmarshal` + `useReusableParser=true` + `pfx-api:loaddata
 Use this ONLY if the user explicitly needs row-level Groovy transformations:
 
 ```xml
-<route id="import-{{entity}}-from-sftp" autoStartup="{{pfx:autoStartup}}">
+<route id="import-{{entity}}-from-sftp">
   <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;move=.archive/%24%7Bdate:now:yyyyMMdd%7D/&amp;moveFailed=.error/%24%7Bdate:now:yyyyMMdd%7D/"/>
 
   <log message="[${routeId}] Received file ${headers.CamelFileName}"/>
