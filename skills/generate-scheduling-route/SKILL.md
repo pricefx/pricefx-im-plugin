@@ -5,7 +5,7 @@ description: Add Quartz-based start/stop scheduling to an existing Pricefx Integ
 
 # Generate Scheduling Route (Start/Stop Time Window)
 
-You are adding time-window scheduling to a Pricefx Integration Manager route. Follow the steps below. The target route will be set to `autoStartup="false"` and controlled by two new Quartz scheduler routes.
+You are adding time-window scheduling to a Pricefx Integration Manager route. Follow the steps below. The target route will be controlled by two new Quartz scheduler routes.
 
 ## Step 1: Gather Information
 
@@ -38,24 +38,7 @@ Present the derived cron expressions to the user for confirmation before generat
 
 1. Read the existing route file for `{ROUTE_ID}`.
 2. Find the `<route id="{ROUTE_ID}"` element.
-3. Change `autoStartup="true"` to `autoStartup="false"`, or add `autoStartup="false"` if not present.
-4. Write the updated file back.
-
-**Before:**
-```xml
-<route id="import-products">
-  <from uri="file://{{integration.sftp.root}}/products?..."/>
-  ...
-</route>
-```
-
-**After:**
-```xml
-<route id="import-products" autoStartup="false">
-  <from uri="file://{{integration.sftp.root}}/products?..."/>
-  ...
-</route>
-```
+3. Write the updated file back.
 
 ## Step 4: Generate the Scheduler Routes
 
@@ -65,14 +48,14 @@ Create file: `src/main/resources/repo/routes/schedule-{ROUTE_ID}.xml`
 <routes xmlns="http://camel.apache.org/schema/spring">
 
   <!-- Start {ROUTE_ID} at {{schedule.{ROUTE_ID}.start.cron}} -->
-  <route id="start-{ROUTE_ID}" autoStartup="true">
+  <route id="start-{ROUTE_ID}">
     <from uri="quartz://scheduler-start-{ROUTE_ID}?cron={{schedule.{ROUTE_ID}.start.cron}}&amp;trigger.timeZone={{schedule.{ROUTE_ID}.timezone}}&amp;stateful=true"/>
     <log message="[start-{ROUTE_ID}] Starting {ROUTE_ID} at ${date:now:HH:mm z}" loggingLevel="INFO"/>
     <toD uri="controlbus:route?routeId={ROUTE_ID}&amp;action=start"/>
   </route>
 
   <!-- Stop {ROUTE_ID} at {{schedule.{ROUTE_ID}.stop.cron}} -->
-  <route id="stop-{ROUTE_ID}" autoStartup="true">
+  <route id="stop-{ROUTE_ID}">
     <from uri="quartz://scheduler-stop-{ROUTE_ID}?cron={{schedule.{ROUTE_ID}.stop.cron}}&amp;trigger.timeZone={{schedule.{ROUTE_ID}.timezone}}&amp;stateful=true"/>
     <log message="[stop-{ROUTE_ID}] Stopping {ROUTE_ID} at ${date:now:HH:mm z}" loggingLevel="INFO"/>
     <toD uri="controlbus:route?routeId={ROUTE_ID}&amp;action=stop"/>
@@ -101,10 +84,8 @@ Replace the cron values with those confirmed in Step 2.
 
 After generating, confirm:
 
-1. The target route file now has `autoStartup="false"`.
-2. The scheduler file `schedule-{ROUTE_ID}.xml` has two routes: `start-{ROUTE_ID}` and `stop-{ROUTE_ID}`.
-3. Both scheduler routes have `autoStartup="true"` (they must always be running to activate/deactivate the data route).
-4. Both scheduler routes use `stateful=true` on the Quartz URI.
+1. The scheduler file `schedule-{ROUTE_ID}.xml` has two routes: `start-{ROUTE_ID}` and `stop-{ROUTE_ID}`.
+2. Both scheduler routes use `stateful=true` on the Quartz URI.
 5. `trigger.timeZone` is set on both Quartz URIs.
 6. Properties are present in `application.properties`.
 7. Route IDs match file names:
@@ -127,8 +108,6 @@ Report any issues found and fix them.
 - ALWAYS set `stateful=true` on both Quartz URIs — without it, overlapping scheduler firings can start or stop the route multiple times simultaneously
 - ALWAYS set `trigger.timeZone` explicitly — omitting it causes cron to fire in the JVM default timezone, which may differ between environments
 - Use `+` instead of spaces in cron expressions within XML URI attributes — spaces in URIs cause parse errors
-- The data route MUST have `autoStartup="false"` — if it starts automatically, the time window is ignored
-- The scheduler routes MUST have `autoStartup="true"` — they need to be running at all times to manage the data route
 - `controlbus:route?routeId=...&action=start/stop` is graceful — in-progress exchanges complete before the route is stopped; no data loss occurs
 - Use `<toD>` not `<to>` for the controlbus URI — the routeId is a literal string but `toD` allows future dynamic use
 - NEVER put the `routeId` in a property placeholder for the controlbus call — it must be the literal route ID

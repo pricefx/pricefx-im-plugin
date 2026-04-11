@@ -42,7 +42,7 @@ File: `src/main/resources/repo/routes/{route-name}.xml`
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="{route-name}" autoStartup="true">
+  <route id="{route-name}">
     <from uri="aws2-s3://{{s3.bucket.name}}?prefix={{s3.prefix}}&amp;{{pfx:s3.inbound.common}}&amp;secretKey=RAW({{s3.secretKey}})"/>
 
     <log message="[{route-name}] Received S3 object: ${header.CamelAwsS3Key}" loggingLevel="INFO"/>
@@ -68,7 +68,7 @@ File: `src/main/resources/repo/routes/{route-name}.xml`
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="{route-name}" autoStartup="true">
+  <route id="{route-name}">
     <from uri="direct:{route-name}"/>
 
     <!-- Build the S3 producer endpoint URI and store in a header.
@@ -96,7 +96,7 @@ File: `src/main/resources/repo/routes/{route-name}.xml`
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="{route-name}" autoStartup="true">
+  <route id="{route-name}">
     <from uri="aws2-s3://{{s3.bucket.name}}?prefix={{s3.prefix}}&amp;{{pfx:s3.inbound.common}}&amp;secretKey=RAW({{s3.secretKey}})"/>
 
     <log message="[{route-name}] Received from S3: ${header.CamelAwsS3Key}" loggingLevel="INFO"/>

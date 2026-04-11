@@ -64,7 +64,6 @@ Check each criterion below. For each one, record the result as PASS, FAIL, or WA
 | API settings header | `pfxApiSettings` header set and parsed | Present |
 | Properties externalized | No hardcoded hostnames, IPs, batch sizes, or cron strings as literals | All values in `{{...}}` |
 | Route ID naming | Route ID follows `import-[entity]-[source]` kebab-case pattern | Follows convention |
-| autoStartup | `autoStartup="{{pfx:autoStartup}}"` on route | Present |
 | Flush (DMDS only) | `pfx-api:flush` step after split block | Present and OUTSIDE split |
 | pricingParameterName (PPV only) | Groovy settings parser maps `entityName` → `pricingParameterName` for LTV/MLTV | Present |
 
@@ -118,7 +117,6 @@ Batch size                   | WARN    | Hardcoded 50000 — use {{pfx:batch.siz
 Charset handling             | OK      | pfx-io:setupCharset present
 Properties externalized      | OK      | All values use {{...}} placeholders
 Route ID naming              | OK      | Follows import-[entity]-[source] pattern
-autoStartup externalized     | MISSING | Add autoStartup="{{pfx:autoStartup}}"
 Flush (DMDS)                 | N/A     | Not a DMDS route
 
 SUMMARY: X passed, Y missing, Z warnings

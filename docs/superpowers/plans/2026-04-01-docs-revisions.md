@@ -909,7 +909,7 @@ Pattern: per-partition entry routes (set partition context) → shared handler r
 
 For long-running imports that should only run during off-peak hours, see [Scheduling Start/Stop](patterns/scheduling-start-stop.md).
 
-Pattern: Quartz scheduler starts/stops data routes via Camel `controlbus`. The data route has `autoStartup="false"`.
+Pattern: Quartz scheduler starts/stops data routes via Camel `controlbus`.
 
 ## Error Handling Strategy
 

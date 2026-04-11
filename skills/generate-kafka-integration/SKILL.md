@@ -42,7 +42,7 @@ File: `src/main/resources/repo/routes/import-kafka-ds-{entity}-route.xml`
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="import-kafka-ds-{entity}-route" autoStartup="true">
+  <route id="import-kafka-ds-{entity}-route">
     <from uri="kafka:{{import-kafka-ds-{entity}-route.kafka.topic}}?{{import-kafka-ds-{entity}-route.kafka-general-parameters}}{{import-kafka-ds-{entity}-route.kafka.performance-parameters}}{{pfx:general-kafka-error-connectivity-parameters}}{{pfx:general-kafka-security-parameters}}"/>
 
     <onCompletion onCompleteOnly="true">

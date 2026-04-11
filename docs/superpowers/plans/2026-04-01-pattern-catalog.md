@@ -85,7 +85,7 @@ Sellers (SL), Seller Extensions (SX). This is the most common integration patter
 
 ~~~xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="import-{{ENTITY}}-from-{{SOURCE}}" autoStartup="{{pfx:autoStartup}}">
+  <route id="import-{{ENTITY}}-from-{{SOURCE}}">
 
     <!-- FILE SOURCE: SFTP pickup with archive/error handling -->
     <from uri="pfx-sftp:parameters?connection={{pfx:sftp.connection}}&amp;directory={{pfx:sftp.directory}}&amp;antInclude={{pfx:file.pattern}}&amp;move=.archive/${date:now:yyyyMMdd}/&amp;moveFailed=.error/${date:now:yyyyMMdd}/"/>
@@ -297,7 +297,7 @@ to make data available for analytics.
 
 ~~~xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="import-{{DATASOURCE}}-ds" autoStartup="{{pfx:autoStartup}}">
+  <route id="import-{{DATASOURCE}}-ds">
     <from uri="{{pfx:source.endpoint}}"/>
 
     <log message="[${routeId}] Processing ${headers.CamelFileName}"/>
@@ -426,7 +426,7 @@ Importing pricing parameters (Company Parameters) — lookup tables used in pric
 
 ~~~xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="import-{{PARAMETER_NAME}}-pp" autoStartup="{{pfx:autoStartup}}">
+  <route id="import-{{PARAMETER_NAME}}-pp">
     <from uri="{{pfx:source.endpoint}}"/>
 
     <log message="[${routeId}] Processing ${headers.CamelFileName}"/>
@@ -579,7 +579,7 @@ Supports export to CSV files via SFTP, S3, or local filesystem.
 
 ~~~xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="export-{{ENTITY}}" autoStartup="{{pfx:autoStartup}}">
+  <route id="export-{{ENTITY}}">
     <!-- Quartz scheduler with configurable cron and timezone -->
     <from uri="quartz://pfxExport-{{ENTITY}}?cron={{pfx:export.cron}}&amp;trigger.timeZone={{pfx:export.timezone}}&amp;stateful=true"/>
 
@@ -647,7 +647,7 @@ the last export timestamp between runs. Combines with Quartz scheduling.
 
 ~~~xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="export-{{ENTITY}}-incremental" autoStartup="{{pfx:autoStartup}}">
+  <route id="export-{{ENTITY}}-incremental">
     <from uri="quartz://pfxExport-{{ENTITY}}?cron={{pfx:export.cron}}&amp;trigger.timeZone={{pfx:export.timezone}}&amp;stateful=true"/>
 
     <!-- Capture current timestamp -->
@@ -1325,21 +1325,21 @@ off-peak hours (e.g., 23:00-06:00 UTC). Uses Quartz to start and stop routes on 
 
 ~~~xml
 <!-- Start the data load route at 23:00 UTC -->
-<route id="start-{{ROUTE_ID}}" autoStartup="true">
+<route id="start-{{ROUTE_ID}}">
   <from uri="quartz://scheduler-start-{{ROUTE_ID}}?cron={{pfx:schedule.start.cron}}&amp;trigger.timeZone={{pfx:schedule.timezone}}&amp;stateful=true"/>
   <log message="[${routeId}] Starting {{ROUTE_ID}}"/>
   <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=start"/>
 </route>
 
 <!-- Stop the data load route at 06:00 UTC -->
-<route id="stop-{{ROUTE_ID}}" autoStartup="true">
+<route id="stop-{{ROUTE_ID}}">
   <from uri="quartz://scheduler-stop-{{ROUTE_ID}}?cron={{pfx:schedule.stop.cron}}&amp;trigger.timeZone={{pfx:schedule.timezone}}&amp;stateful=true"/>
   <log message="[${routeId}] Stopping {{ROUTE_ID}}"/>
   <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=stop"/>
 </route>
 
-<!-- The actual data load route: autoStartup=false (controlled by scheduler) -->
-<route id="{{ROUTE_ID}}" autoStartup="false">
+<!-- The actual data load route (controlled by scheduler) -->
+<route id="{{ROUTE_ID}}">
   <from uri="{{pfx:source.endpoint}}"/>
   <!-- ... import logic ... -->
 </route>
@@ -1355,16 +1355,14 @@ off-peak hours (e.g., 23:00-06:00 UTC). Uses Quartz to start and stop routes on 
 
 ## How It Works
 
-1. Data load route has `autoStartup="false"` — does not run on IM startup
-2. Start scheduler activates the route via Camel `controlbus` at scheduled time
+1. Start scheduler activates the route via Camel `controlbus` at scheduled time
 3. Route processes files/data during the time window
 4. Stop scheduler deactivates the route at end of window
 5. Any in-progress file completes; no new files picked up after stop
 
 ## Common Mistakes
 
-1. **autoStartup="true" on the data route** — runs immediately, ignoring schedule
-2. **Missing stateful=true on Quartz** — scheduler fires multiple times if previous still running
+1. **Missing stateful=true on Quartz** — scheduler fires multiple times if previous still running
 3. **Stop kills in-progress work** — controlbus stop is graceful by default; in-flight exchanges complete
 4. **No timezone** — start/stop at wrong times in different environments
 ```
