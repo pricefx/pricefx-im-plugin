@@ -116,6 +116,12 @@ Run all anti-pattern checks on every route file. Count each individual hit (not 
 
 Collect IDs of all routes, mappers, and filters. Determine the dominant naming style (kebab-case is the IM convention). **Consistency % = (artifacts using kebab-case / total artifacts) x 100**
 
+**AP-11: Direct2ds flag usage** -- Find usage of `direct2ds=true` for `pfx-api:loaddata`. It was deprecated long time ago and creates significant performance issues in Pricefx Core. Risk: severe performance degradation. Fix: remove `direct2ds=true` parameter.
+
+**AP-12: ${body} within split loop** -- Check for any occurrence of Simple language `${body}` within `<split>`. There is an Apache Camel issue — it keeps all data in memory until the split is done. Risk: OutOfMemoryError. Fix: avoid referencing `${body}` inside split, use headers or properties instead.
+
+**AP-13: Missing removeHeaders before HTTP/JMS** -- Check for `<removeHeaders>` before sending data to HTTP or JMS endpoints. All Camel headers are sent by default and may create issues. Risk: unexpected headers sent to external systems. Fix: add `<removeHeaders pattern="*" excludePattern="..."/>` before HTTP/JMS endpoints.
+
 ### Step 7 -- IM Version Currency
 
 1. From `pom.xml`, find the IM version
