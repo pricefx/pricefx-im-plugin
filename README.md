@@ -1005,7 +1005,7 @@ pricefx-im-plugin/
 ## Repository
 
 - **GitHub**: https://github.com/pricefx/pricefx-im-plugin (public, distribution)
-- **GitLab**: https://gitlab.pricefx.eu/tools/pricefx-integration (internal, development)
+- **GitLab**: https://gitlab.pricefx.eu/tools/pricefx-im-plugin (internal, development)
 
 ## License
 
