@@ -1,39 +1,8 @@
 # XML Route Authoring Guide
 
-## Route File Formats
+## Route File Format
 
-There are two XML formats for defining routes:
-
-### Format 1: Routes with Beans (most common)
-
-Used when routes need mapper or filter bean definitions. Uses Spring `<beans>` as root with `<routeContext>` inside.
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:util="http://www.springframework.org/schema/util"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
-       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
-
-    <!-- Bean definitions (mappers, filters) go here -->
-    <loadMapper id="myMapper">
-        <body in="sku" out="sku"/>
-    </loadMapper>
-
-    <routeContext id="myRoutes" xmlns="http://camel.apache.org/schema/spring">
-        <route id="myRoute">
-            <from uri="..."/>
-            <to uri="..."/>
-        </route>
-    </routeContext>
-</beans>
-```
-
-### Format 2: Standalone Routes
-
-Used for simple routes without bean definitions. Uses `<routes>` as root.
+Routes use `<routes>` as the root element:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
