@@ -1,20 +1,21 @@
 # Connection Configuration Guide
 
-Connections define how IM connects to external systems (Pricefx, SFTP servers, REST APIs, databases). They are stored as JSON files in `config/connections/` or defined as XML beans.
+Connections define how IM connects to external systems (Pricefx, SFTP servers, REST APIs, databases). They are stored as JSON files in `config/connections/`.
 
-## Pricefx Connection
+## Pricefx Connection (JSON)
 
-The primary Pricefx connection is configured in `application.properties` (not as a JSON connection file):
-
-```properties
-integration.pfx.url=https://your-cluster.pricefx.eu/pricefx
-integration.pfx.username=admin
-integration.pfx.partition=your-partition
-integration.pfx.password=your-password
-integration.pfx.debug=false
+```json
+{
+  "id": "pricefx",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.PriceFxConnection",
+  "partition": "your-partition",
+  "username": "admin",
+  "password": "your-password",
+  "uri": "https://your-cluster.pricefx.eu/pricefx"
+}
 ```
 
-### Additional Pricefx Connections (JSON)
+### Additional Pricefx Connections
 
 For connecting to multiple Pricefx instances:
 
@@ -25,40 +26,11 @@ For connecting to multiple Pricefx instances:
   "partition": "other-partition",
   "username": "admin",
   "password": "password",
-  "uri": "https://other-cluster.pricefx.eu/pricefx",
-  "connectTimeout": 6000
+  "uri": "https://other-cluster.pricefx.eu/pricefx"
 }
 ```
 
 Reference in routes: `connection=secondary-pfx`
-
-## Pricefx Connection (XML Bean)
-
-Connections can also be defined as XML beans in route files:
-
-```xml
-<connection id="secondaryPfx"
-                uri="https://other-cluster.pricefx.eu/pricefx"
-                partition="other-partition"
-                username="admin"
-                password="{{secondary.pfx.password}}"
-                debug="false"
-                connectTimeout="6000"/>
-```
-
-### `<connection>` Attributes
-
-| Attribute | Description | Required |
-|-----------|-------------|----------|
-| `id` | Connection bean ID | yes |
-| `uri` | Server URL | yes |
-| `partition` | Pricefx partition | yes |
-| `username` | Username | yes |
-| `password` | Password | yes |
-| `twoFactorAuthSecurityToken` | 2FA security token | no |
-| `debug` | Enable debug logging | no |
-| `connectTimeout` | Connection timeout (ms) | no |
-| `useJsonWebToken` | Use JWT authentication | no |
 
 ## REST/OAuth2 Connections
 
