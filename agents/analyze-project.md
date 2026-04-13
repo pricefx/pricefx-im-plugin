@@ -114,6 +114,12 @@ Check each route file against all 10 anti-patterns. For each one found, record t
 
 **AP-10: Inconsistent naming** — Check all route IDs and file names. Flag if naming style is mixed (some kebab-case, some camelCase, some PascalCase across the same project).
 
+**AP-11**: Direct2ds flag usage - Find usage of direct2ds=true for `pfx-api:loaddata`. It was deprecated long time ago and creates significant performance issues in Pricefx Core.
+
+**AP-12**: Find \${body} within `split` loop - Check for any occurrence of Simple language ${body} within `<split>`. There is an Apache Camel issue. It keeps all data in memory until the split is done.
+
+**AP-13**: Remove all unnecessary headers before sending data to HTTP or a JMS endpoint - Check for `<removeHeaders >` before sending data to http or jms endpoints. All headers are sent and may create issues.
+
 ## Step 8: Produce Report
 
 Output the report directly to the user (NOT saved to a file). Use this structure:
@@ -135,6 +141,7 @@ Output the report directly to the user (NOT saved to a file). Use this structure
 **Recommendations:** 3–7 bullet points, prioritized by risk. Each must name the specific file, state the risk (data loss / memory / maintainability), and give the concrete fix. Order: data-loss risks first (AP-4, AP-5, AP-6, AP-8, AP-9), then performance, then maintainability.
 
 **Overall Health Score:** One of:
+
 - **GOOD** — 0–2 anti-patterns, all critical patterns present
 - **FAIR** — 3–5 anti-patterns, or missing streaming/error handling
 - **NEEDS ATTENTION** — 6+ anti-patterns, or any data-loss risk found
