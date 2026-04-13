@@ -925,7 +925,6 @@ Reference docs loaded into context for all skills via `CLAUDE.md`:
 | `docs/mappers.md` | Field mapping, converters, load vs integrate mappers |
 | `docs/filters.md` | Filter operators, logic, delta sync patterns |
 | `docs/connections.md` | Connection types (PriceFx, OAuth2, SFTP, S3), best practices |
-| `docs/configuration.md` | Properties, deployment, scheduling |
 | `docs/project.md` | IM project structure and conventions |
 
 Also includes `docs/CLAUDE.md.template` for bootstrapping `CLAUDE.md` in IM projects.
@@ -975,7 +974,6 @@ pricefx-im-plugin/
 │   └── simulate-dry-run/
 ├── docs/
 │   ├── components.md
-│   ├── configuration.md
 │   ├── connections.md
 │   ├── filters.md
 │   ├── mappers.md

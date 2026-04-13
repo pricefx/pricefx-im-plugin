@@ -110,7 +110,6 @@ Structured catalog of anonymized, generalized patterns extracted from partner pr
 | `filters.md` | Truncate filters, date-range filters, composite AND/OR logic, fetchLatest pattern |
 | `components.md` | pfx-config for timestamp tracking, pfx-event consumer patterns, seda queues, pfx-io:streamCompressedFile |
 | `connections.md` | S3 connection config, Kafka connection config, SOAP endpoint config, Azure FileShare |
-| `configuration.md` | Multi-environment properties, scheduling cron patterns, batch size tuning guidelines, timezone handling |
 | `project.md` | Naming conventions reference, directory organization best practices, .properties file structure |
 
 ### New files:

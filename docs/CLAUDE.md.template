@@ -42,7 +42,6 @@ Detailed documentation in `.claude/docs/`:
 - [components.md](.claude/docs/components.md) — All `pfx-*` component parameters
 - [mappers.md](.claude/docs/mappers.md) — Field mapping and converters
 - [connections.md](.claude/docs/connections.md) — Connection types and configuration
-- [configuration.md](.claude/docs/configuration.md) — Properties, deployment, scheduling
 
 ## Knowledge Base
 
