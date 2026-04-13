@@ -220,24 +220,24 @@ Beyond mappers, the PFX XSD defines reusable beans for data operations:
 
 | Element | Description | Key Attributes |
 |---------|-------------|----------------|
-| `<pfx:dsLoad>` | Load to data source | objectType, mapper, businessKeys |
-| `<pfx:dsIntegrate>` | Integrate to data source | objectType, mapper, businessKeys, condition |
-| `<pfx:dsFetch>` | Fetch from data source | objectType, filter |
-| `<pfx:dsDelete>` | Delete from data source | objectType, filter |
-| `<pfx:dmLoad>` | Load to data mart | dsUniqueName, mapper, businessKeys |
-| `<pfx:dmCalculate>` | Calculate data mart | typedId, targetName |
-| `<pfx:dmFlush>` | Flush data feed | dataSourceName, dataFeedName |
-| `<pfx:dmTruncate>` | Truncate data mart | targetName |
-| `<pfx:dmRefresh>` | Refresh data mart | dataMartName |
-| `<pfx:dmCustomers>` | Load customers to DM | — |
-| `<pfx:dmProducts>` | Load products to DM | — |
-| `<pfx:ppvLoad>` | Load pricing parameters | mapper, tableType, pricingParameterName |
-| `<pfx:ppvIntegrate>` | Integrate pricing params | mapper, tableType, pricingParameterName |
-| `<pfx:ppvFetch>` | Fetch pricing params | pricingParameterName, filter |
-| `<pfx:ppvDelete>` | Delete pricing params | pricingParameterName, filter |
-| `<pfx:csvExport>` | CSV export pipeline | dataFormat, outputUri, batchSize |
-| `<pfx:xmlExport>` | XML export pipeline | elementName, outputUri |
-| `<pfx:dbExport>` | Database export pipeline | tableOrView, sqlDialect, dataSource |
-| `<pfx:listToCsv>` | Convert list to CSV | outputUri, mapper, delimiter |
-| `<pfx:filter>` | Reusable filter definition | resultFields, sortBy |
-| `<pfx:connection>` | PFX connection bean | uri, partition, username, password |
+| `<dsLoad>` | Load to data source | objectType, mapper, businessKeys |
+| `<dsIntegrate>` | Integrate to data source | objectType, mapper, businessKeys, condition |
+| `<dsFetch>` | Fetch from data source | objectType, filter |
+| `<dsDelete>` | Delete from data source | objectType, filter |
+| `<dmLoad>` | Load to data mart | dsUniqueName, mapper, businessKeys |
+| `<dmCalculate>` | Calculate data mart | typedId, targetName |
+| `<dmFlush>` | Flush data feed | dataSourceName, dataFeedName |
+| `<dmTruncate>` | Truncate data mart | targetName |
+| `<dmRefresh>` | Refresh data mart | dataMartName |
+| `<dmCustomers>` | Load customers to DM | — |
+| `<dmProducts>` | Load products to DM | — |
+| `<ppvLoad>` | Load pricing parameters | mapper, tableType, pricingParameterName |
+| `<ppvIntegrate>` | Integrate pricing params | mapper, tableType, pricingParameterName |
+| `<ppvFetch>` | Fetch pricing params | pricingParameterName, filter |
+| `<ppvDelete>` | Delete pricing params | pricingParameterName, filter |
+| `<csvExport>` | CSV export pipeline | dataFormat, outputUri, batchSize |
+| `<xmlExport>` | XML export pipeline | elementName, outputUri |
+| `<dbExport>` | Database export pipeline | tableOrView, sqlDialect, dataSource |
+| `<listToCsv>` | Convert list to CSV | outputUri, mapper, delimiter |
+| `<filter>` | Reusable filter definition | resultFields, sortBy |
+| `<connection>` | PFX connection bean | uri, partition, username, password |

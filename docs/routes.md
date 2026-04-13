@@ -12,17 +12,15 @@ Used when routes need mapper or filter bean definitions. Uses Spring `<beans>` a
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:pfx="http://www.pricefx.eu/schema/pfx"
        xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
-       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-       http://www.pricefx.eu/schema/pfx http://www.pricefx.eu/schema/pfx.xsd">
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 
     <!-- Bean definitions (mappers, filters) go here -->
-    <pfx:loadMapper id="myMapper">
-        <pfx:body in="sku" out="sku"/>
-    </pfx:loadMapper>
+    <loadMapper id="myMapper">
+        <body in="sku" out="sku"/>
+    </loadMapper>
 
     <routeContext id="myRoutes" xmlns="http://camel.apache.org/schema/spring">
         <route id="myRoute">
@@ -54,12 +52,12 @@ Used for simple routes without bean definitions. Uses `<routes>` as root.
 The most common pattern — read a CSV file, unmarshal it, and load into Pricefx.
 
 ```xml
-<pfx:loadMapper id="productMapper">
-    <pfx:body in="partNumber"  out="sku"/>
-    <pfx:body in="description" out="label"/>
-    <pfx:body in="uom"         out="attribute1"/>
-    <pfx:body in="price"       out="attribute2" converterExpression="stringToInteger"/>
-</pfx:loadMapper>
+<loadMapper id="productMapper">
+    <body in="partNumber"  out="sku"/>
+    <body in="description" out="label"/>
+    <body in="uom"         out="attribute1"/>
+    <body in="price"       out="attribute2" converterExpression="stringToInteger"/>
+</loadMapper>
 
 <routeContext id="productRoutes" xmlns="http://camel.apache.org/schema/spring">
     <route id="importProducts">
@@ -98,9 +96,9 @@ For large files, use `tokenize` to split into chunks and `recordsCountAggregatio
 Fetch data from Pricefx, transform, and write to CSV file.
 
 ```xml
-<pfx:filter id="fetchFilter" sortBy="id" resultFields="field1,field2,field3">
-    <pfx:and/>
-</pfx:filter>
+<filter id="fetchFilter" sortBy="id" resultFields="field1,field2,field3">
+    <and/>
+</filter>
 
 <route id="exportData">
     <from uri="direct:exportData"/>
@@ -123,11 +121,11 @@ Fetch data from Pricefx, transform, and write to CSV file.
 Call an external REST API, unmarshal JSON, and load into Pricefx.
 
 ```xml
-<pfx:loadMapper id="customerMapper">
-    <pfx:groovy expression="body.Name"       out="name"/>
-    <pfx:groovy expression="body.Id"         out="customerId"/>
-    <pfx:groovy expression="body.Segment__c" out="attribute1"/>
-</pfx:loadMapper>
+<loadMapper id="customerMapper">
+    <groovy expression="body.Name"       out="name"/>
+    <groovy expression="body.Id"         out="customerId"/>
+    <groovy expression="body.Segment__c" out="attribute1"/>
+</loadMapper>
 
 <route id="importFromAPI">
     <from uri="timer:runOnce?repeatCount=1"/>
@@ -152,10 +150,10 @@ Call an external REST API, unmarshal JSON, and load into Pricefx.
 Use `integrate` instead of `loaddata` when you need to update existing records.
 
 ```xml
-<pfx:integrateMapper id="currencyMapper">
-    <pfx:body in="name"/>
-    <pfx:body in="value"/>
-</pfx:integrateMapper>
+<integrateMapper id="currencyMapper">
+    <body in="name"/>
+    <body in="value"/>
+</integrateMapper>
 
 <route id="updateCurrencies">
     <from uri="quartz://currencyTimer?cron=0+0/30+*+*+*+?+*&amp;stateful=true"/>
@@ -169,10 +167,10 @@ Use `integrate` instead of `loaddata` when you need to update existing records.
 
 ```xml
 <!-- Single-key lookup table (LTV) -->
-<pfx:loadMapper id="ltvMapper">
-    <pfx:body in="code" out="name"/>
-    <pfx:body in="value" out="value"/>
-</pfx:loadMapper>
+<loadMapper id="ltvMapper">
+    <body in="code" out="name"/>
+    <body in="value" out="value"/>
+</loadMapper>
 
 <route id="importLTV">
     <from uri="file:{{data.directory}}/import/ppv/currency?noop=true"/>
@@ -181,11 +179,11 @@ Use `integrate` instead of `loaddata` when you need to update existing records.
 </route>
 
 <!-- Multi-key matrix table (MLTV2) -->
-<pfx:loadMapper id="mltvMapper">
-    <pfx:body in="key1" out="key1"/>
-    <pfx:body in="key2" out="key2"/>
-    <pfx:body in="attribute1" out="attribute1"/>
-</pfx:loadMapper>
+<loadMapper id="mltvMapper">
+    <body in="key1" out="key1"/>
+    <body in="key2" out="key2"/>
+    <body in="attribute1" out="attribute1"/>
+</loadMapper>
 
 <route id="importMLTV2">
     <from uri="file:{{data.directory}}/import/ppv/matrix?noop=true"/>
@@ -219,19 +217,19 @@ Listen for Pricefx system events and react.
 ### Pattern 9: Condition Records
 
 ```xml
-<pfx:filter id="crFilter">
-    <pfx:and>
-        <pfx:criterion fieldName="conditionRecordSetId" operator="equals" value="8"/>
-    </pfx:and>
-</pfx:filter>
+<filter id="crFilter">
+    <and>
+        <criterion fieldName="conditionRecordSetId" operator="equals" value="8"/>
+    </and>
+</filter>
 
-<pfx:loadMapper id="crMapper">
-    <pfx:constant expression="myConditionSet" out="conditionRecordSetName"/>
-    <pfx:body in="key1" out="key1"/>
-    <pfx:body in="validFrom" out="validFrom"/>
-    <pfx:body in="validTo" out="validTo"/>
-    <pfx:body in="conditionValue" out="conditionValue"/>
-</pfx:loadMapper>
+<loadMapper id="crMapper">
+    <constant expression="myConditionSet" out="conditionRecordSetName"/>
+    <body in="key1" out="key1"/>
+    <body in="validFrom" out="validFrom"/>
+    <body in="validTo" out="validTo"/>
+    <body in="conditionValue" out="conditionValue"/>
+</loadMapper>
 
 <route id="loadConditionRecords">
     <from uri="file:{{data.directory}}/import/condition-records?noop=true"/>
@@ -323,28 +321,28 @@ Use `{{property.name}}` to reference values from `application.properties`:
 Define reusable filters for fetch and delete operations:
 
 ```xml
-<pfx:filter id="myFilter" sortBy="id" resultFields="field1,field2,field3">
-    <pfx:and>
-        <pfx:criterion fieldName="status" operator="equals" value="Active"/>
-        <pfx:criterion fieldName="name" operator="notNull"/>
-    </pfx:and>
-</pfx:filter>
+<filter id="myFilter" sortBy="id" resultFields="field1,field2,field3">
+    <and>
+        <criterion fieldName="status" operator="equals" value="Active"/>
+        <criterion fieldName="name" operator="notNull"/>
+    </and>
+</filter>
 ```
 
 **Available operators:** `equals`, `notEqual`, `greaterThan`, `lessThan`, `greaterOrEqual`, `lessOrEqual`, `contains`, `startsWith`, `endsWith`, `isNull`, `notNull`, `inSet`, `notInSet`, `iContains`, `iStartsWith`, `iEndsWith`, `iNotContains`, `notContains`, `custom`
 
-Nested logic with `<pfx:and>`, `<pfx:or>`, `<pfx:not>`:
+Nested logic with `<and>`, `<or>`, `<not>`:
 
 ```xml
-<pfx:filter id="complexFilter">
-    <pfx:or>
-        <pfx:and>
-            <pfx:criterion fieldName="status" operator="equals" value="Active"/>
-            <pfx:criterion fieldName="region" operator="equals" value="US"/>
-        </pfx:and>
-        <pfx:criterion fieldName="priority" operator="equals" value="High"/>
-    </pfx:or>
-</pfx:filter>
+<filter id="complexFilter">
+    <or>
+        <and>
+            <criterion fieldName="status" operator="equals" value="Active"/>
+            <criterion fieldName="region" operator="equals" value="US"/>
+        </and>
+        <criterion fieldName="priority" operator="equals" value="High"/>
+    </or>
+</filter>
 ```
 
 ## Using Resource Files (Templates)

@@ -37,7 +37,7 @@ Reference in routes: `connection=secondary-pfx`
 Connections can also be defined as XML beans in route files:
 
 ```xml
-<pfx:connection id="secondaryPfx"
+<connection id="secondaryPfx"
                 uri="https://other-cluster.pricefx.eu/pricefx"
                 partition="other-partition"
                 username="admin"
@@ -46,7 +46,7 @@ Connections can also be defined as XML beans in route files:
                 connectTimeout="6000"/>
 ```
 
-### `<pfx:connection>` Attributes
+### `<connection>` Attributes
 
 | Attribute | Description | Required |
 |-----------|-------------|----------|
