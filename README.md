@@ -156,7 +156,6 @@ What it produces:
 - Route XML file with `loaddataFile` pattern (streaming, recommended)
 - Mapper with auto-detected field mappings
 - Properties entries for scheduling, file paths
-- Registration in `camel-context.xml`
 
 Supports: CSV files, zipped CSV, SFTP sources, database (pfx-sql), REST API (pfx-rest).
 
@@ -636,7 +635,6 @@ PartNumber, Description, UOM, PricingType, Status, ListPrice
 2. Fetches Product metadata from your partition via `pfx product-metadata`
 3. Auto-maps CSV columns to Pricefx fields (PartNumber→sku, Description→label, etc.)
 4. Generates route XML, mapper, and properties
-5. Registers the route in `camel-context.xml`
 
 ### Example 2: Import pricing parameters (exchange rates)
 

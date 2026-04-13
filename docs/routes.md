@@ -47,29 +47,6 @@ Used for simple routes without bean definitions. Uses `<routes>` as root.
 </routes>
 ```
 
-## Registering Routes in camel-context.xml
-
-Routes must be imported and referenced in `camel-context.xml`:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:pfx="http://www.pricefx.eu/schema/pfx"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-       http://www.pricefx.eu/schema/pfx http://www.pricefx.eu/schema/pfx.xsd">
-
-    <import resource="refs/routes/MyRoutes.xml"/>
-
-    <camelContext useMDCLogging="true" xmlns="http://camel.apache.org/schema/spring" errorHandlerRef="defaultErrorHandler">
-        <contextScan/>
-        <streamCaching id="streamCacheConfig" spoolEnabled="true" spoolThreshold="1"/>
-        <routeContextRef ref="myRoutes"/>
-    </camelContext>
-</beans>
-```
-
 ## Common Route Patterns
 
 ### Pattern 1: Inbound CSV to Pricefx (Product Load)

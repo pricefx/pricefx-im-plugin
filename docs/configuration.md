@@ -12,9 +12,6 @@ The main configuration file is `src/main/resources/application.properties`.
 ###############################################################################
 integration.name=my-integration-manager
 
-# Camel context XML location (default: classpath)
-integration.context=classpath*:camel-context.xml
-
 ###############################################################################
 # PFX Client (mandatory)
 ###############################################################################
@@ -104,46 +101,6 @@ Reference any property using `{{property.name}}` in XML routes:
 <to uri="pfx-csv:unmarshal?header=field1,field2{{pfx-csv.common}}"/>
 ```
 
-## Camel Context XML
-
-The `camel-context.xml` is the entry point that wires routes together:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:pfx="http://www.pricefx.eu/schema/pfx"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
-       http://www.pricefx.eu/schema/pfx http://www.pricefx.eu/schema/pfx.xsd">
-
-    <!-- Import route files -->
-    <import resource="refs/routes/ProductRoutes.xml"/>
-    <import resource="refs/routes/CustomerRoutes.xml"/>
-
-    <!-- Optional: custom beans -->
-    <bean id="myBean" class="com.example.MyBean"/>
-
-    <camelContext useMDCLogging="true" xmlns="http://camel.apache.org/schema/spring" errorHandlerRef="defaultErrorHandler">
-        <contextScan/>
-        <streamCaching id="streamCacheConfig" spoolEnabled="true" spoolThreshold="1"/>
-
-        <!-- Reference imported routeContexts by ID -->
-        <routeContextRef ref="productRoutes"/>
-        <routeContextRef ref="customerRoutes"/>
-    </camelContext>
-</beans>
-```
-
-### Key camelContext Settings
-
-| Attribute | Description |
-|-----------|-------------|
-| `useMDCLogging="true"` | Enable MDC logging for route tracing |
-| `errorHandlerRef="defaultErrorHandler"` | Default error handler bean |
-| `<contextScan/>` | Auto-discover route builders |
-| `<streamCaching>` | Enable stream caching with spool to disk |
-
 ## Deployment Structure
 
 Customer integration projects follow this directory structure:
@@ -155,7 +112,6 @@ my-integration/
 │       ├── java/                          # Custom Java code (if needed)
 │       └── resources/
 │           ├── application.properties     # Main configuration
-│           ├── camel-context.xml          # Route wiring
 │           └── refs/
 │               └── routes/
 │                   ├── ProductRoutes.xml

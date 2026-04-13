@@ -64,7 +64,6 @@ All tutorials assume you have a working IM project with this structure:
 ```text
 src/main/resources/
 ├── application.properties
-├── camel-context.xml
 └── repo/
     ├── routes/
     ├── mappers/
@@ -199,22 +198,6 @@ Let's break this down:
 ### Step 4: Add route properties
 
 Add these lines to `application.properties`:
-
-### Step 5: Register the route
-
-If your project uses `camel-context.xml` with explicit imports, add:
-
-```xml
-<import resource="refs/routes/import-products.xml"/>
-```
-
-And in the `<camelContext>` section, add:
-
-```xml
-<routeContextRef ref="import-products"/>
-```
-
-> **Note:** In provisioned IM projects (where routes live under `repo/routes/`), routes are auto-discovered — you can skip this step.
 
 ## How It Works
 

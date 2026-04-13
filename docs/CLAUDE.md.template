@@ -17,7 +17,6 @@ This is a Pricefx Integration Manager customer project that integrates ${EXTERNA
 ```
 src/main/resources/
 ├── application.properties     # Configuration (PFX credentials, schedulers, paths)
-├── camel-context.xml          # Route wiring (imports + camelContext)
 └── refs/routes/               # Route XML files
     ├── ProductRoutes.xml
     ├── CustomerRoutes.xml
@@ -34,7 +33,6 @@ config/
 2. **Use `pfx-*` components** — `pfx-api`, `pfx-csv`, `pfx-rest`, `pfx-sftp`, etc.
 3. **Property placeholders** — `{{property.name}}` for externalized config
 4. **XML escaping** — `&amp;` for `&` in URI attributes
-5. **Register routes** in `camel-context.xml` via `<import>` and `<routeContextRef>`
 
 ## Framework Reference
 

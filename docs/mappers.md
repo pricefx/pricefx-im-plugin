@@ -3,8 +3,8 @@
 Mappers define how input data fields are mapped to Pricefx object fields.
 
 > **Format note:** This guide uses two XML syntaxes:
-> - **Spring XML beans** (sections above "Mapper File Organization") — use `` namespace prefix, defined inside a `<beans>` wrapper in `camel-context.xml`
-> - **Provisioned IM standalone files** (see "Mapper File Organization" section) — no `` prefix, no `<beans>` wrapper, one mapper per file under `mappers/`
+> - **Spring XML beans** (sections above "Mapper File Organization") — defined inside a `<beans>` wrapper
+> - **Provisioned IM standalone files** (see "Mapper File Organization" section) — no `<beans>` wrapper, one mapper per file under `mappers/`
 >
 > For all new integrations, use the **provisioned IM** format.
 
