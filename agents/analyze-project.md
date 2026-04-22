@@ -112,15 +112,21 @@ Run all anti-pattern checks on every route file. Count each individual hit (not 
 
 **AP-10: Inconsistent naming** -- Collect IDs of all routes, mappers, filters. Check whether naming style is consistent kebab-case. Risk: hard to find related artifacts. Fix: rename to kebab-case.
 
+**AP-11: Direct2ds flag usage** -- Find usage of `direct2ds=true` for `pfx-api:loaddata`. It was deprecated long time ago and creates significant performance issues in Pricefx Core. Risk: severe performance degradation. Fix: remove `direct2ds=true` parameter.
+
+**AP-12: Simple language `${body}` within split loop** -- Check for any occurrence of Simple language `${body}`and calls to its methods like`${body.size}`within`<split>`. There is an Apache Camel issue — it keeps all data in memory until the split is done. Risk: OutOfMemoryError. Fix: avoid referencing `${body}` inside split, use headers or properties instead.
+
+**AP-13: Missing removeHeaders before HTTP/JMS** -- Check for `<removeHeaders>` before sending data to HTTP or JMS endpoints. All Camel headers are sent by default and may create issues. Risk: unexpected headers sent to external systems. Fix: add `<removeHeaders pattern="*" excludePattern="..."/>` before HTTP/JMS endpoints.
+
+**AP-14: Missing `allowContextMapAll=true` on FreeMarker** -- For routes using FreeMarker templates, check that the URI includes `allowContextMapAll=true`. Risk: template cannot access exchange properties or headers. Fix: add `allowContextMapAll=true` to the FreeMarker URI.
+
+**AP-15: using groovy expression in mapper** -- Convert it to converter bean. It is hard to debug and test and also it creates performance issues.
+
+**AP-16: Check all groovy code for groovy related antipatterns** -- e.g. using `def` instead of explicit types, using `println` for logging, using `def` within loops, etc.
+
 ### Step 6 -- Naming Consistency
 
 Collect IDs of all routes, mappers, and filters. Determine the dominant naming style (kebab-case is the IM convention). **Consistency % = (artifacts using kebab-case / total artifacts) x 100**
-
-**AP-11: Direct2ds flag usage** -- Find usage of `direct2ds=true` for `pfx-api:loaddata`. It was deprecated long time ago and creates significant performance issues in Pricefx Core. Risk: severe performance degradation. Fix: remove `direct2ds=true` parameter.
-
-**AP-12: ${body} within split loop** -- Check for any occurrence of Simple language `${body}` within `<split>`. There is an Apache Camel issue — it keeps all data in memory until the split is done. Risk: OutOfMemoryError. Fix: avoid referencing `${body}` inside split, use headers or properties instead.
-
-**AP-13: Missing removeHeaders before HTTP/JMS** -- Check for `<removeHeaders>` before sending data to HTTP or JMS endpoints. All Camel headers are sent by default and may create issues. Risk: unexpected headers sent to external systems. Fix: add `<removeHeaders pattern="*" excludePattern="..."/>` before HTTP/JMS endpoints.
 
 ### Step 7 -- IM Version Currency
 
