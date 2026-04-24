@@ -124,6 +124,8 @@ Run all anti-pattern checks on every route file. Count each individual hit (not 
 
 **AP-16: Check all groovy code for groovy related antipatterns** -- e.g. using `def` instead of explicit types, using `println` for logging, using `def` within loops, etc.
 
+**AP-17: Usage of pfx-sftp with default-sftp-connection** -- Check for any `pfx-sftp` routes using `default-sftp-connection` or a connection starting with that. Risk: performance and reliability issues. Fix: switch to `file://{{integration.sftp.root}}/{path}`.
+
 ### Step 6 -- Naming Consistency
 
 Collect IDs of all routes, mappers, and filters. Determine the dominant naming style (kebab-case is the IM convention). **Consistency % = (artifacts using kebab-case / total artifacts) x 100**
