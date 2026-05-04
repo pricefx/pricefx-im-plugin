@@ -244,6 +244,21 @@ Use `stateful=true` to prevent overlapping executions.
 <from uri="file:{{data.directory}}/import/products?delete=true"/>
 ```
 
+### File Polling with Scheduler
+
+```xml
+<!-- delete=true: delete files after processing -->
+<from uri="file:{{data.directory}}/import/products?delete=true&amp;scheduler=quartz&amp;scheduler.cron=0+0/10+*+*+*+?+*&amp;scheduler.timeZone=CET"/>
+```
+
+### File Polling without lock processing file older then 5 minutes
+Used when there is no signal file. Avoids locking files and scanning all files for writes.
+```xml
+<!-- File Filter definition is deserialized for clarity. --> 
+<from uri="file:{{data.directory}}/import/products?delete=true&amp;filterFile=${file:modified} < ${date:now-5m}"/>
+<!-- Serialized version of the above URI: -->
+<from uri="file:{{data.directory}}/import/products?delete=true&amp;filterFile=%24%7Bfile%3Amodified%7D+%3C+%7Bdate%3Anow-5m%7D"/>
+```
 ## Error Handling
 
 ### doTry/doCatch
