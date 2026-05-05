@@ -147,6 +147,7 @@ Run the appropriate `pfx` CLI command to get real field metadata:
 | SOAP source or target | `generate-soap-integration` |
 | S3 source or target | `generate-s3-integration` |
 | SQL database source or target (Snowflake, SQL Server, Postgres, etc.) | `generate-sql-integration` |
+| Salesforce source or target (Accounts, Opportunities, custom SObjects) | `generate-salesforce-api` |
 
 Invoke the selected skill and let it generate the route, mapper, and filter files.
 
