@@ -231,6 +231,8 @@ Anti-patterns to verify automatically before reporting done:
 - PX/CX/SX exports have `name = {ExtensionName}` criterion in filter
 - No `connection=pricefx` present when the connection is named `pricefx` (redundant)
 - DS/DMDS flush placed after the split loop, not inside it
+- Avoid using spring properties in curly brackets in groovy in xml. It breaks groovy sandbox security analysis.
+- Avoid static calls to local beans from the classes folder. Use bean auto discovered instances instead.
 
 ---
 
