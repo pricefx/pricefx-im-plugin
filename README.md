@@ -138,11 +138,11 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **24 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **25 skills** covering the full integration development lifecycle.
 
 ---
 
-### Generation (13 skills)
+### Generation (14 skills)
 
 #### generate-import-integration
 
@@ -265,6 +265,16 @@ Generates routes that read from or write to a relational/cloud SQL database (Sno
 ```
 
 Covers: paginated `LIMIT/OFFSET` SELECT loops, incremental sync via `pfx-config:get/set`, stored procedures with `Get/SetBatchSuccess/SetBatchFailure` ack-nack pattern, Snowflake bulk staging (`COPY INTO @~/` + gzipped CSV), and outbound batch INSERTs with named parameters. Produces: JDBC datasource bean, route XML, mapper, and per-environment properties.
+
+#### generate-salesforce-api
+
+Generates routes that fetch from or push to Salesforce via the REST API.
+
+```
+/pricefx-im-plugin:generate-salesforce-api
+```
+
+Covers: OAuth2 client-credentials connection JSON, API-version discovery, SOQL queries with cursor-based pagination (`done` / `nextRecordsUrl`), the `Sforce-Query-Options` batch-size override (default 2000, min 200, max 2000), incremental loads via `pfx-config:get/set`, and outbound PATCH/POST against `/sobjects/{Type}/{Id}` including the Composite API for high-volume writes.
 
 #### generate-multi-tenant-route
 
