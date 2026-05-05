@@ -138,11 +138,11 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **23 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **24 skills** covering the full integration development lifecycle.
 
 ---
 
-### Generation (12 skills)
+### Generation (13 skills)
 
 #### generate-import-integration
 
@@ -255,6 +255,16 @@ Generates routes that read from or write to an AWS S3 bucket — including bucke
 ```
 
 Produces: S3 connection JSON, route XML with streaming download/upload, and properties entries for bucket name and region.
+
+#### generate-sql-integration
+
+Generates routes that read from or write to a relational/cloud SQL database (Snowflake, SQL Server, Postgres, MySQL, Oracle).
+
+```
+/pricefx-im-plugin:generate-sql-integration
+```
+
+Covers: paginated `LIMIT/OFFSET` SELECT loops, incremental sync via `pfx-config:get/set`, stored procedures with `Get/SetBatchSuccess/SetBatchFailure` ack-nack pattern, Snowflake bulk staging (`COPY INTO @~/` + gzipped CSV), and outbound batch INSERTs with named parameters. Produces: JDBC datasource bean, route XML, mapper, and per-environment properties.
 
 #### generate-multi-tenant-route
 

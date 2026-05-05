@@ -22,7 +22,7 @@ The plugin has four components:
 
 ### Skills (Slash Commands)
 
-Skills are interactive generators. You invoke them, answer questions, and they create files in your project. There are 23 skills covering generation, analysis, testing, and workflow.
+Skills are interactive generators. You invoke them, answer questions, and they create files in your project. There are 24 skills covering generation, analysis, testing, and workflow.
 
 **Generation skills — create integration files:**
 
@@ -39,6 +39,7 @@ Skills are interactive generators. You invoke them, answer questions, and they c
 | `generate-kafka-integration` | Kafka consumer for CDC events | `/generate-kafka-integration` or "consume Kafka topic" |
 | `generate-soap-integration` | SOAP/XML web service calls | `/generate-soap-integration` or "call SOAP service" |
 | `generate-s3-integration` | AWS S3 read/write | `/generate-s3-integration` or "read from S3 bucket" |
+| `generate-sql-integration` | SQL database (Snowflake, SQL Server, Postgres) read/write | `/generate-sql-integration` or "load from Snowflake" |
 | `generate-multi-tenant-route` | Multi-partition routing | `/generate-multi-tenant-route` or "multi-tenant setup" |
 | `generate-scheduling-route` | Add Quartz scheduling to existing route | `/generate-scheduling-route` or "schedule this route" |
 | `generate-connection` | Connection JSON (Pricefx, SFTP, OAuth2, Basic, JWT) | `/generate-connection` or "create SFTP connection" |
