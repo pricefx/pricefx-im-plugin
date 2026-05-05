@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import { PricefxClient } from "../lib/client.mjs";
-import { getConnectionConfig } from "../lib/config.mjs";
+import { resolveConnectionConfig } from "../lib/config.mjs";
 import { formatMetadataTable, formatAttributeMetaTable, printTable, printResponsiveTable, printBoxTable, printTransposedBoxTable, printMarkdownTable } from "../lib/formatters.mjs";
 
 const program = new Command();
@@ -20,7 +20,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const extensions = await client.listProductExtensions();
 
@@ -42,7 +42,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const extensions = await client.listCustomerExtensions();
 
@@ -64,7 +64,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.fetchMetadata("PX", name);
 
@@ -91,7 +91,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.fetchMetadata("CX", name);
 
@@ -118,7 +118,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const data = await client.fetchProductAttributeMeta();
       if (opts.json) {
@@ -144,7 +144,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const data = await client.fetchProductExtensionAttributeMeta(name);
       if (opts.json) {
@@ -170,7 +170,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const data = await client.fetchExtensionAttributeMeta("customer", name);
       if (opts.json) {
@@ -198,7 +198,7 @@ program
   .option("--json", "Output raw JSON")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.createExtension("product", name, {
         label: opts.label,
@@ -224,7 +224,7 @@ program
   .option("--json", "Output raw JSON")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.createExtension("customer", name, {
         label: opts.label,
@@ -271,7 +271,7 @@ program
       if (opts.type && fieldType === undefined) {
         throw new Error(`Unknown field type "${opts.type}". Valid: ${Object.keys(FIELD_TYPES).join(", ")}`);
       }
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.setAttribute(type, extensionName, fieldName, {
         label: opts.label,
@@ -296,7 +296,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const config = await client.listDataSources();
 
@@ -318,7 +318,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.fetchMetadata("DMDS", name);
 
@@ -345,7 +345,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const data = await client.fetchDataSourceAttributeMeta(name);
       if (opts.json) {
@@ -371,7 +371,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const data = await client.listPricingParameters();
 
@@ -394,7 +394,7 @@ program
   .option("--json", "Output raw JSON instead of a table")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const allParams = await client.listPricingParameters();
 
@@ -478,7 +478,7 @@ program
   .option("--json", "Output raw JSON")
   .action(async (name, opts) => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const result = await client.createPricingParameter(name, {
         label: opts.label,
@@ -503,7 +503,7 @@ program
   .description("Test if Pricefx credentials in .env are valid")
   .action(async () => {
     try {
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       console.log(`Connecting to ${connOpts.url} (partition: ${connOpts.partition}, user: ${connOpts.username})...`);
       const client = new PricefxClient(connOpts);
       await client.testConnection();
@@ -535,7 +535,7 @@ program
       if ((ot === "PX" || ot === "CX" || ot === "DMDS") && !opts.name) {
         throw new Error(`--name is required for ${ot}. Example: pfx fetch-sample ${ot} --name MyTable`);
       }
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const data = await client.fetchSample(ot, { name: opts.name, limit: opts.limit });
 
@@ -650,7 +650,7 @@ program
         };
       });
 
-      const connOpts = getConnectionConfig();
+      const connOpts = resolveConnectionConfig();
       const client = new PricefxClient(connOpts);
       const results = await client.setAttributes(type, extensionName, attributes);
 
