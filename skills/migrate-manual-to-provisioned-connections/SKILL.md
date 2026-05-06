@@ -10,9 +10,10 @@ You are converting Pricefx connection definitions to the provisioned IM JSON for
 | Form | Where it lives | When |
 |---|---|---|
 | **XML** | `<pfx:connection id="x" uri="..." partition="..." username="..." password="..."/>` inside `camel-context.xml` (or imported XML) | Older IM projects, or projects following the `<pfx:>` namespace pattern |
-| **Properties** | `pfx.url=`, `pfx.partition=`, `pfx.username=`, `pfx.password=` (sometimes `integration.pfx.*`) inside `application-{env}.properties` | Most real-world manual IM projects (e.g. bosch-rexroth-integration). Connection details ride alongside other config; the runtime stitches them into a `PriceFxConnection` bean. |
+| **Properties** | `pfx.url=`, `pfx.partition=`, `pfx.username=`, `pfx.password=` (sometimes `integration.pfx.*`) inside `application-{env}.properties` | Most real-world manual IM projects (e.g. bosch-rexroth, cargill, amd, fiskars). Connection details ride alongside other config; the runtime stitches them into a `PriceFxConnection` bean. |
+| **Spring bean** | `<bean id="x" class="net.pricefx.integration.component.rest.domain.connection.{Type}Connection">` with `<property>` children for the connection fields | Projects that define non-Pricefx connections (e.g. external REST APIs with BasicAuth/OAuth2/JWT) inline as Spring beans. Validated against bridgestone-integration which has a `mulesoftConn` BasicConnection bean. |
 
-The skill handles **both** forms. If the project has both, prefer the XML form's data when ids clash and report the conflict.
+The skill handles **all three** forms. If the project has overlap, prefer the XML form's data when ids clash and report the conflict.
 
 ## Inputs
 
@@ -75,9 +76,53 @@ If the dev/qa/prod values are identical (all four point to the same partition, j
 
 If only ONE environment file has the keys (e.g. `application-bosch-rexroth_dev.properties` has them but `application-bosch-rexroth_prod.properties` does not), use that single set verbatim and report the missing files.
 
+## Step 2C: Extract from Spring `<bean>` with Connection-Discriminator Class (Bean form)
+
+Walk every `*.xml` under SOURCE_DIR. Scan for `<bean>` elements whose `class` attribute matches one of the Pricefx connection discriminator classes:
+
+| Class attribute | Discriminator |
+|---|---|
+| `net.pricefx.integration.component.rest.domain.connection.PriceFxConnection` | `PriceFxConnection` |
+| `net.pricefx.integration.component.rest.domain.connection.BasicConnection` | `BasicConnection` (HTTP Basic Auth REST) |
+| `net.pricefx.integration.component.rest.domain.connection.OAuth2Connection` | `OAuth2Connection` |
+| `net.pricefx.integration.component.rest.domain.connection.JwtConnection` | `JwtConnection` |
+| `net.pricefx.integration.component.rest.domain.connection.NoopConnection` | `NoopConnection` |
+| `net.pricefx.integration.connection.SftpConnection` | `SftpConnection` |
+| `net.pricefx.integration.component.s3.S3Connection` | `S3Connection` |
+
+For each match, read every `<property name="X" value="Y"/>` child to recover the connection fields. Common property names:
+- `url` → `uri`
+- `username` → `username`
+- `password` → `password`
+- `partition` → `partition` (Pricefx only)
+- `clientId`, `clientSecret`, `authUri`, `grantType` (OAuth2)
+
+The `value` may be a Spring property placeholder (`${bridgestone.mulesoft.url}`) — preserve it verbatim in the JSON so the runtime resolves per-environment.
+
+**Bean id becomes the JSON file id.** Example:
+```xml
+<bean id="mulesoftConn" class="net.pricefx.integration.component.rest.domain.connection.BasicConnection">
+    <property name="username" value="${bridgestone.mulesoft.username}"/>
+    <property name="password" value="${bridgestone.mulesoft.password}"/>
+    <property name="url"      value="${bridgestone.mulesoft.url}"/>
+</bean>
+```
+becomes `connections/mulesoftConn.json`:
+```json
+{
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.BasicConnection",
+  "id": "mulesoftConn",
+  "uri": "${bridgestone.mulesoft.url}",
+  "username": "${bridgestone.mulesoft.username}",
+  "password": "${bridgestone.mulesoft.password}"
+}
+```
+
+After extracting a connection bean, **also remove it from the `-beans` skill's extraction set** (otherwise the bean would be written to BOTH `connections/` and `beans/`). The orchestrator should run `-connections` before `-beans` so this dedup happens correctly.
+
 ## Step 3: Convert to JSON
 
-For each extracted connection (XML form or properties form), write to `$TARGET_DIR/src/main/resources/repo/connections/{id}.json`:
+For each extracted connection (XML form, properties form, or bean form), write to `$TARGET_DIR/src/main/resources/repo/connections/{id}.json`:
 
 ```json
 {

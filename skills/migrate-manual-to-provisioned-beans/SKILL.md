@@ -38,6 +38,21 @@ The patterns above capture both `<bean>` (no prefix) and `<beans:bean>` (prefixe
 
 For each match, capture the bean `id` (group 3 in the new patterns). Sanitise the id for use as a filename: replace `/` with `_`, strip `'` and `"`.
 
+### 2a — Skip connection beans (they belong in `connections/`, not `beans/`)
+
+If the bean's `class` attribute matches one of the Pricefx connection discriminator classes, **skip it** — the `migrate-manual-to-provisioned-connections` skill extracts these as JSON files in `connections/`. Writing them as Spring beans in `beans/` AND as JSON in `connections/` would result in duplicate definitions.
+
+Skip when class is any of:
+- `net.pricefx.integration.component.rest.domain.connection.PriceFxConnection`
+- `net.pricefx.integration.component.rest.domain.connection.BasicConnection`
+- `net.pricefx.integration.component.rest.domain.connection.OAuth2Connection`
+- `net.pricefx.integration.component.rest.domain.connection.JwtConnection`
+- `net.pricefx.integration.component.rest.domain.connection.NoopConnection`
+- `net.pricefx.integration.connection.SftpConnection`
+- `net.pricefx.integration.component.s3.S3Connection`
+
+Validated against `bridgestone-integration` where `<bean id="mulesoftConn" class="...BasicConnection">` is a connection bean that must end up in `connections/mulesoftConn.json`, not `beans/mulesoftConn.xml`.
+
 ## Step 3: Transform Each Bean
 
 For each extracted bean block, apply these transformations in order:

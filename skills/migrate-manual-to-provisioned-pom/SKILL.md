@@ -57,6 +57,7 @@ Real IM poms use **inconsistent property names** (`im.version` vs `pricefx-im-ve
    |---|---|---|---|---|
    | 1.0–1.1 | 2.20–2.25 | 8 / 11 | 1.5 / 2.1 | bosch-rexroth (IM 1.1.18.15 → Camel 2.25.0); cargill-anh-tca (IM 1.1.18.15 → Camel 2.25.0) |
    | 1.4 | 3.5 (transition point) | 11 | 2.3 | dieteren (IM 1.4.4 → Camel 3.5.0). IM 1.4 is the Camel 2→3 transition; do NOT assume Camel 2.x just because the IM major is 1. |
+   | 2.x | 3.11 | 11 | 2.3 | bridgestone (IM 2.6.3 → Camel 3.11.0) |
    | 4.0–4.5 | 3.10–3.14 | 11 | 2.5 | fiskars (IM 4.5.1 → Camel 3.11.3); amd (IM 4.5.0 → Camel 3.11.1) |
    | 4.6+ | 3.14–3.18 | 11 | 2.5–2.7 | mohawk (IM 4.6.0) |
    | 5.x | 3.18+ | 11 | 2.7 | — |

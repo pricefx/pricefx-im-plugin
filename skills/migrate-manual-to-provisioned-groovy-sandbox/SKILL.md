@@ -11,6 +11,16 @@ You are generating the `integration.groovy-sandbox.custom-allowed-types` allow-l
 
 - **TARGET_DIR** — current working directory (provisioned project)
 
+## Step 0: Skip if the Sandbox Is Disabled
+
+Before doing any work, scan every `application*.properties` in the target for `integration.groovy-sandbox.enabled=`. If the value is `false` in **all** environment files, the sandbox is disabled and the allow-list is unnecessary. Skip the rest of this skill and report:
+
+> Skipping Groovy sandbox allow-list generation: `integration.groovy-sandbox.enabled=false` in all environment files. The sandbox is disabled, so `integration.groovy-sandbox.custom-allowed-types` is not consulted at runtime.
+
+If some envs disable and others enable the sandbox, generate the allow-list normally and add it only to the env files that enable the sandbox.
+
+This was surfaced by `bridgestone-integration` where all 6 env files set `integration.groovy-sandbox.enabled=false`.
+
 ## Step 1: Collect All Imports
 
 Walk every `*.groovy` file under `$TARGET_DIR/src/main/resources/repo/classes/` (skip `target/`, `.git/`, etc.). This is the canonical location of custom code in provisioned IM.

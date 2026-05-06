@@ -53,6 +53,12 @@ Before you run anything, look at the source's directory tree. A real customer pr
 | **Pure provisioned** | only `src/main/resources/repo/{routes,mappers,filters,beans,connections}/` exists; no `refs/`, no top-level `camel-context.xml` | The project is already provisioned — the user probably wants the modernization skills (`-camel-syntax`, `-java-code`, `-properties`, `-pom`, `-groovy-sandbox`) but not extraction. Skip skills 1–5 and run skills 6–10 only. |
 | **Hybrid (mid-migration)** | both `refs/` AND `repo/` exist, often with overlapping route IDs | Some routes already extracted, others not. The previous extraction tool (e.g. IMigrator) may have left **unmodernized** artifacts in `repo/` (validated against `amd-integration`, where `repo/routes/*.xml` still contained 17 `strategyRef=` attributes). Run the full pipeline; extraction skills will skip artifacts already in target, modernization skills will fix the partial work. **Pay particular attention to `connections/pricefx.json` — the IMigrator left a placeholder template that survives untouched in many hybrid projects.** |
 
+**Detect malformed paths:** Some projects have a botched earlier extraction with a duplicated path like `src/main/src/main/resources/repo/...` (validated against `bridgestone-integration` which has 18 bean files at this nested path). The recursive walk in each extraction skill picks files up correctly and writes them to the proper target location, but the malformed source path itself is dead weight. Flag it in the project-state report so the developer knows to delete the nested mistake from the source repo:
+```bash
+find "$SOURCE_DIR/src" -mindepth 3 -name "main" -type d -path "*/src/main/src/main"
+```
+If anything matches, list the files under the malformed path and warn the user.
+
 State the detected mode clearly in the user-facing summary:
 ```
 Project state: Hybrid (mid-migration)
@@ -158,6 +164,7 @@ Use this approximate mapping when Camel cannot be resolved directly:
 |---|---|---|---|---|
 | 1.0–1.1 | 2.20–2.25 | 8 / 11 | 1.5 / 2.1 | bosch-rexroth-integration (IM 1.1.18.15 → Camel 2.25.0); cargill-anh-tca (IM 1.1.18.15 → Camel 2.25.0) |
 | 1.4 | 3.5 (transition point) | 11 | 2.3 | dieteren-integration (IM 1.4.4 → Camel 3.5.0). IM 1.4 is the Camel 2→3 transition; do NOT assume Camel 2.x just because the IM major is 1. Check `mvn dependency:list` to confirm. |
+| 2.x | 3.11 | 11 | 2.3 | bridgestone-integration (IM 2.6.3 → Camel 3.11.0). Same Camel line as IM 4.0–4.5. |
 | 4.0–4.5 | 3.10–3.14 | 11 | 2.5 | fiskars-integration (IM 4.5.1 → Camel 3.11.3); amd-integration (IM 4.5.0 → Camel 3.11.1) |
 | 4.6+ | 3.14–3.18 | 11 | 2.5–2.7 | mohawk-integration (IM 4.6.0) |
 | 5.x | 3.18+ | 11 | 2.7 | — |
