@@ -134,16 +134,18 @@ This recipe was hardened after a real-world false positive on `bosch-rexroth-int
 
 Use this approximate mapping when Camel cannot be resolved directly:
 
-| IM major | Camel line | Java | Spring Boot |
-|---|---|---|---|
-| 1.x | 2.20–2.25 | 8 | 1.5.x |
-| 4.x | 3.0–3.5 | 11 | 2.1–2.3 |
-| 5.x | 3.x | 11 | 2.x |
-| 6.x | 3.18–3.20 | 11 | 2.7 |
-| 7.0 | 4.0 | 17 | 3.1 |
-| 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ |
+| IM major | Camel line | Java | Spring Boot | Validated against |
+|---|---|---|---|---|
+| 1.0–1.1 | 2.20–2.25 | 8 / 11 | 1.5 / 2.1 | bosch-rexroth-integration (IM 1.1.18.15 → Camel 2.25.0) |
+| 1.4 | 2.x late | 11 | 2.3 | heineken-integration (IM 1.4.4 → Camel 2.x) |
+| 4.0–4.5 | 3.10–3.14 | 11 | 2.5 | fiskars-integration (IM 4.5.1 → Camel 3.11.3) |
+| 4.6+ | 3.14–3.18 | 11 | 2.5–2.7 | mohawk-integration (IM 4.6.0) |
+| 5.x | 3.18+ | 11 | 2.7 | — |
+| 6.x | 3.18–3.20 | 11 | 2.7 | — |
+| 7.0 | 4.0 | 17 | 3.1 | — |
+| 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ | — |
 
-State the inference clearly: `"Camel ~3.20 (inferred from IM 6.5)"`.
+State the inference clearly: `"Camel ~3.11 (inferred from IM 4.5)"`. The "Validated against" column lists the actual Camel version observed in real customer projects — extend the table when new project samples surface a different mapping.
 
 #### Layer 5 — Maven fallback
 

@@ -53,14 +53,16 @@ Real IM poms use **inconsistent property names** (`im.version` vs `pricefx-im-ve
 
 4. **Infer Camel from IM version** (when nothing else resolves):
 
-   | IM major | Camel line | Java | Spring Boot |
-   |---|---|---|---|
-   | 1.x | 2.20–2.25 | 8 | 1.5.x |
-   | 4.x | 3.0–3.5 | 11 | 2.1–2.3 |
-   | 5.x | 3.x | 11 | 2.x |
-   | 6.x | 3.18–3.20 | 11 | 2.7 |
-   | 7.0 | 4.0 | 17 | 3.1 |
-   | 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ |
+   | IM major | Camel line | Java | Spring Boot | Validated against |
+   |---|---|---|---|---|
+   | 1.0–1.1 | 2.20–2.25 | 8 / 11 | 1.5 / 2.1 | bosch-rexroth (IM 1.1.18.15 → Camel 2.25.0) |
+   | 1.4 | 2.x late | 11 | 2.3 | heineken (IM 1.4.4 → Camel 2.x) |
+   | 4.0–4.5 | 3.10–3.14 | 11 | 2.5 | fiskars (IM 4.5.1 → Camel 3.11.3) |
+   | 4.6+ | 3.14–3.18 | 11 | 2.5–2.7 | mohawk (IM 4.6.0) |
+   | 5.x | 3.18+ | 11 | 2.7 | — |
+   | 6.x | 3.18–3.20 | 11 | 2.7 | — |
+   | 7.0 | 4.0 | 17 | 3.1 | — |
+   | 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ | — |
 
 5. **Maven fallback** — only if the above do not resolve and `mvn` is available. Use `dependency:list` first; `help:evaluate -Dexpression=camel.version` returns `null` when Camel comes via a BOM import (the most common IM case):
    ```bash

@@ -59,10 +59,17 @@ Report missing keys before adding them, and ask for confirmation if any are unce
 
 These are **report-only**, do not auto-fix:
 
-### 5a — Logging file override
+### 5a — Logging file override (IM and Spring Boot deprecations)
 
-Search every target `application-{env}.properties` for `integration.logging.file=`. This property overrides the platform-managed logging configuration and causes runtime issues. Report each file where it is present with the suggestion:
+Two deprecations to flag:
+
+**(a) `integration.logging.file=`** — the IM-specific override that conflicts with platform-managed logging. Report each file where it is present:
 > Remove `integration.logging.file` — the platform manages the log location automatically.
+
+**(b) `logging.file=` and `logging.path=` (without `.name`/`.path` suffix)** — Spring Boot 2.2 renamed these to `logging.file.name` and `logging.file.path`. They were removed entirely in Spring Boot 3.x. Report each file where the legacy form is present:
+> Spring Boot 2.2+ renamed `logging.file=foo.log` to `logging.file.name=foo.log`, and `logging.path=/var/log` to `logging.file.path=/var/log`. The legacy keys are removed in Spring Boot 3 (IM 7.x). Rename or remove. Found in: [files]
+
+This was surfaced by validating against `fiskars-integration`, where `logging.file=main.log` appeared in dev/qa/prod env files.
 
 ### 5b — Invalid error-handling exception classes
 
