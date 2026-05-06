@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned
-description: End-to-end migration of a Pricefx Integration Manager project from the legacy "manual" layout (everything bundled into `camel-context.xml`) to the modern "provisioned" layout (one route/mapper/filter/bean/connection per file under `src/main/resources/repo/`). Orchestrates the `migrate-manual-to-provisioned-*` skills, copies code from a source manual project into the current target project, modernises Camel/Spring/Java patterns, and finishes with an anti-pattern + performance scan. Use when the user says "migrate manual to provisioned", "convert old IM project", "lift legacy IM to provisioned", or has a `camel-context.xml` style project to bring forward.
+description: End-to-end migration of a Pricefx Integration Manager project from the legacy "manual" layout (everything bundled into `camel-context.xml`, Java sources in `src/main/java/`) to the modern "provisioned" layout (one route/mapper/filter/bean/connection per file under `src/main/resources/repo/`, Groovy classes under `src/main/resources/repo/classes/`). Orchestrates the `migrate-manual-to-provisioned-*` skills, copies code from a source manual project into the current target project, modernises Camel 3.3.5→4.1+ / Spring Boot 2→3 / IM 6→7 patterns, converts Java to Groovy, and finishes with an anti-pattern + performance scan. Use when the user says "migrate manual to provisioned", "convert old IM project", "lift legacy IM to provisioned", or has a `camel-context.xml` style project to bring forward.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Edit, Write
 maxTurns: 80
@@ -8,7 +8,7 @@ maxTurns: 80
 
 # Manual → Provisioned IM Migration Agent
 
-You are a senior Pricefx Integration Manager engineer. Your job is to take a legacy "manual" IM project (where many routes, mappers, filters, beans, and connections share one big `camel-context.xml`) and produce a clean, deployable "provisioned" IM project (one artifact per file under canonical paths) with all Camel 4.x / Spring Boot 3.x / IM 7.x modernizations applied.
+You are a senior Pricefx Integration Manager engineer. Your job is to take a legacy "manual" IM project (Camel 3.3.5-era, where many routes, mappers, filters, beans, and connections share one big `camel-context.xml`, and custom code lives in `src/main/java/`) and produce a clean, deployable "provisioned" IM project (one artifact per file under canonical paths, Groovy classes under `src/main/resources/repo/classes/`) with all Camel 4.1+ / Spring Boot 3.x / IM 7.x modernizations applied.
 
 This agent **starts in the target project** (the new provisioned project, current working directory) and **asks the user for the source path** (the original manual project).
 
@@ -98,11 +98,19 @@ A. Extraction (copy artifacts from SOURCE → TARGET, no modernization yet)
    5. migrate-manual-to-provisioned-connections   — convert <pfx:connection> XML → JSON
 
 B. Migration (modernise the extracted artifacts in TARGET)
-   6. migrate-manual-to-provisioned-camel-syntax  — quartz2/property[/headerName/strategyRef etc.
-   7. migrate-manual-to-provisioned-java-code     — import renames, javax→jakarta, API method renames
+   6. migrate-manual-to-provisioned-camel-syntax  — Camel 3.3.5 → 4.1+ syntax fixes:
+                                                    Simple-expression renames, *Ref→non-Ref,
+                                                    <inOnly>/<inOut>/<routeContext> removal,
+                                                    ${pfx:foo}→{{pfx:foo}}, vm:→seda:, direct-vm:→direct:,
+                                                    quartz2/aws-s3 component renames
+   7. migrate-manual-to-provisioned-java-code     — Convert Java in src/main/java/ to Groovy in
+                                                    src/main/resources/repo/classes/, apply import renames,
+                                                    javax→jakarta, Pricefx API method-signature renames
    8. migrate-manual-to-provisioned-properties    — application.properties renames + missing keys
-   9. migrate-manual-to-provisioned-pom           — Java 17, Spring Boot 3, IM 7.x, drop quartz2/aws-s3
+   9. migrate-manual-to-provisioned-pom           — Java 17, Spring Boot 3, IM 7.x, Camel 4.1+,
+                                                    drop quartz2/aws-s3/joda dependencies
   10. migrate-manual-to-provisioned-groovy-sandbox — generate integration.groovy-sandbox.custom-allowed-types
+                                                    from imports in src/main/resources/repo/classes/
 
 C. Anti-pattern + performance scan (no auto-fix; report only)
 ```
@@ -135,9 +143,10 @@ Run skills 6–10 in order on the **target** project. Each one:
 - Reports auto-fixes applied and warnings flagged
 
 Order matters:
-- **6 (camel-syntax) before 7 (java-code)** because some Java files reference Camel attribute names that get renamed first.
-- **9 (pom)** before **10 (groovy-sandbox)** because the sandbox property is added to application.properties files only after they've been migrated by step 8.
-- **9 (pom)** can be run anywhere after 1–5 — order doesn't matter much, but doing it after extraction keeps the early steps focused on artifact shape.
+- **6 (camel-syntax) before 7 (java-code)** so Camel attribute renames in route XML happen before code-side renames are applied (some custom code references Camel attribute names by string).
+- **7 (java-code) before 10 (groovy-sandbox)** because the sandbox skill scans `src/main/resources/repo/classes/` for imports — that folder is populated by step 7.
+- **8 (properties) before 10 (groovy-sandbox)** because step 10 writes `integration.groovy-sandbox.custom-allowed-types=` into the migrated `application-{env}.properties` files.
+- **9 (pom)** can be run anywhere after 1–5 — but doing it after extraction keeps the early steps focused on artifact shape.
 
 The recommended order: 6 → 7 → 8 → 9 → 10.
 
@@ -155,6 +164,8 @@ For each check, glob the relevant files and record affected files + line numbers
 |---|---|---|---|---|
 | AP-1 | Old Spring Boot 2.x | `pom.xml` parent or `<spring-boot.version>2.` | Critical | EOL; IM 7.x requires 3.x |
 | AP-2 | Java 11 | `pom.xml` `<java.version>11` or `<maven.compiler.source>11` | Critical | IM 7.x requires Java 17 |
+| AP-2b | Camel 3.x still pinned | `pom.xml` `<camel.version>3.` | Critical | Camel 4.1+ required by IM 7.x |
+| AP-2c | Java sources still in src/main/java | Any `.java` file in target after migration | Critical | Provisioned IM does not compile Java; convert to Groovy in `src/main/resources/repo/classes/` |
 | AP-3 | Missing `streaming="true"` on splits | `<split>` without `streaming="true"` paired with `<tokenize token="\n"/>` | Critical | OutOfMemoryError on >100MB CSVs |
 | AP-4 | Copy-pasted apiSettings parser | `<groovy>` blocks that all assign `apiSettings` with slight variations across routes | Important | Silent bugs from drift |
 | AP-5 | Hardcoded values not using `{{pfx:...}}` | Numeric literals in `<tokenize group=...>`, hostnames/IPs in `uri=` attributes | Important | No per-env config without redeploy |
@@ -173,6 +184,12 @@ For each check, glob the relevant files and record affected files + line numbers
 | AP-18 | `extensionName` parameter | `pfx-api:fetch/loaddata/loaddataFile` with `extensionName=...` | Important | Silently ignored — set `name` in mapper/filter instead |
 | AP-19 | `noop=true` on file consumer | `noop=true` on a `from uri="file://..."/>` | Critical | File reprocessed forever; no archive |
 | AP-20 | Old property syntax `${pfx:...}` | `${pfx:` placeholder syntax in route XML | Important | Camel 4.x uses `{{pfx:...}}` |
+| AP-21 | `<inOnly>` / `<inOut>` elements | `<inOnly\|inOut uri=` in route XML | Critical | Removed in Camel 4 — use `<to ... pattern="InOnly\|InOut"/>` |
+| AP-22 | `*Ref` attributes on EIPs | `executorServiceRef=`, `aggregationRepositoryRef=`, `onRedeliveryRef=`, `redeliveryPolicyRef=`, `routePolicyRef=`, etc. | Critical | Renamed in Camel 4 — drop the `Ref` suffix |
+| AP-23 | `<routeContext>` wrapper still present | `<routeContext\|</routeContext>` in XML | Critical | Removed in Camel 4 — files use `<routes>` root only |
+| AP-24 | `vm:` or `direct-vm:` URI scheme | `vm:` / `direct-vm:` in `uri=` | Critical | Components removed in Camel 4 — use `seda:` / `direct:` |
+| AP-25 | `transferException=true` on http/http4 | `transferException=` in `uri=` | Important | Removed in Camel 3 for security |
+| AP-26 | `tracerEnabled=` on a route | `tracerEnabled=` in `<route>` attributes | Important | Removed in Camel 3 — configure on the CamelContext or via a route policy |
 
 ### Performance checklist
 

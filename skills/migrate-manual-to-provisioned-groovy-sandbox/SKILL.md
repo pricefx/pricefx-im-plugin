@@ -13,9 +13,13 @@ You are generating the `integration.groovy-sandbox.custom-allowed-types` allow-l
 
 ## Step 1: Collect All Imports
 
-Walk every `*.java` and `*.groovy` file under TARGET_DIR (skip `target/`, `.git/`, etc.). For each file, extract every line matching the pattern `import .*;`.
+Walk every `*.groovy` file under `$TARGET_DIR/src/main/resources/repo/classes/` (skip `target/`, `.git/`, etc.). This is the canonical location of custom code in provisioned IM.
 
-Strip `import static ` and `import ` and the trailing `;` — keep just the fully qualified type name.
+If `$TARGET_DIR/src/main/java/` still contains any `.java` files, also scan those — but warn the user that those should have been converted to Groovy by `migrate-manual-to-provisioned-java-code`.
+
+For each file, extract every line matching the pattern `import .*;?` (the `;` is optional in Groovy).
+
+Strip `import static ` and `import ` and any trailing `;` — keep just the fully qualified type name.
 
 **Skip imports that contain `*`** (wildcard imports are not allowed in the sandbox allow-list).
 
@@ -81,5 +85,5 @@ Sample of generated allow-list (first 10):
 - The output must be a **single line** — no newlines inside the comma-separated value.
 - Never wildcard-include packages — explicit fully-qualified type names only.
 - If the user already has a `integration.groovy-sandbox.custom-allowed-types=` line, **merge** rather than overwrite. Deduplicate after merging.
-- This skill is run after Java/Groovy code has been copied to TARGET (i.e. after `migrate-manual-to-provisioned-java-code`).
+- This skill is run after Java/Groovy code has been moved into `src/main/resources/repo/classes/` (i.e. after `migrate-manual-to-provisioned-java-code`).
 - Do not include types that are referenced only inside `<groovy>` blocks in route XML (those are handled by the platform reflection allow-list separately). This skill only inspects `import` statements in `.java` and `.groovy` files.

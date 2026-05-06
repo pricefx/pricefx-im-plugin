@@ -28,12 +28,13 @@ Read `$TARGET_DIR/pom.xml`. If the target does not have a pom.xml yet, copy from
 | P-1 | `<java.version>11` or `<maven.compiler.source>11` | Bump to `17` |
 | P-2 | `<spring-boot.version>2.` | Bump to the latest Spring Boot 3.x |
 | P-3 | `<parent>` referencing `spring-boot-starter-parent` 2.x | Bump parent to 3.x |
-| P-4 | Camel version `< 4.0` | Bump to Camel 4.x |
+| P-4 | Camel version `< 4.1` | Bump to Camel 4.1+ (managed by the IM 7.x parent BOM — usually Camel 4.4 LTS) |
 | P-5 | IM version `< 7.0` | Ask the user for the target IM version, then bump |
 | P-6 | Dependency on `camel-quartz2` or any artifactId containing `quartz2` | Remove (now `camel-quartz`) |
 | P-7 | Dependency on `camel-aws-starter` | Remove (renamed to `camel-aws2-s3-starter` in Camel 3.x) |
 | P-8 | Dependency on `joda-time` | Flag for review (use `java.time` instead) |
 | P-9 | Dependency on `org.apache.commons:commons-lang` | Replace with `org.apache.commons:commons-lang3` |
+| P-10 | `maven-compiler-plugin` configured for `src/main/java` and target has no `.java` after Java→Groovy conversion | Flag for removal — provisioned IM does not need to compile Java |
 
 ## Step 3: Present the Plan
 
@@ -47,7 +48,7 @@ Version bumps:
   java.version:                          11 → 17
   spring-boot.version:                   2.7.x → 3.2.x
   pricefx-integration-manager.version:   6.x → 7.x          (confirm target with user)
-  camel.version:                         3.x → 4.4.x        (managed by IM parent — remove explicit version if redundant)
+  camel.version:                         3.3.5 → 4.1+ (typically 4.4.x LTS; managed by IM parent — remove explicit pin if redundant)
 
 Dependencies to remove:
   - org.apache.camel:camel-quartz2      (renamed)
