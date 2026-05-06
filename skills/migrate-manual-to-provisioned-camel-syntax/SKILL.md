@@ -12,6 +12,19 @@ You are applying mechanical Camel syntax modernizations to every file in the tar
 ## Inputs
 
 - **TARGET_DIR** — current working directory (provisioned project). Files are modified in place.
+- **SRC_CAMEL** (optional) — source Camel version detected by the orchestrator (e.g. `3.3.5`, `3.20`, `4.1`). When passed, gate the work by this version (skip rewrites that don't apply to the source line).
+- **TGT_CAMEL** (optional) — target Camel version (e.g. `4.4`).
+
+If neither is set, run the full rewrite set.
+
+## Version-gated behavior
+
+| Source line | What runs |
+|---|---|
+| Camel 2.x | Full set + warn that `streaming="true"` was added in 2.18 (so older patterns may need it added by hand) |
+| Camel 3.x (any) | Full set — every Camel-3→4 fix |
+| Camel 4.0+ | Skip Step 1 #1 (`quartz2`) and #6 (`aws-s3`); skip Step 2 (`*Ref` renames); skip Step 3 #3a/#3b (`<inOnly>`/`<inOut>` were already removed in 3.x). Still run the `${pfx:foo}` → `{{pfx:foo}}` rewrite (often missed across migrations). Still run Step 4 reports. |
+| Unknown | Run full set; flag in the report that the source Camel version was unknown |
 
 ## Step 1: Simple-Expression and Attribute Renames
 

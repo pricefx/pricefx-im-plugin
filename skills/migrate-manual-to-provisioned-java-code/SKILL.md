@@ -13,6 +13,8 @@ Java is mostly valid Groovy, so the conversion is mainly: rename, relocate, and 
 
 - **SOURCE_DIR** — original manual project (read-only)
 - **TARGET_DIR** — current working directory (provisioned project; files written under `src/main/resources/repo/classes/`)
+- **SRC_SB** (optional) — source Spring Boot version (e.g. `2.7`, `3.2`). When `>= 3.0`, skip the `javax.*` → `jakarta.*` rewrite — the source code is already on Jakarta.
+- **SRC_IM** (optional) — source IM version. Used to gate the Pricefx API method-signature renames in Step 5 (those renames only apply going from IM 6.x → 7.x; if the source is already on IM 7.x, skip them).
 
 ## Step 1: Discover Source Code
 

@@ -12,14 +12,55 @@ You are bringing the project's `pom.xml` up to the IM 7.x baseline. This is the 
 - **SOURCE_DIR** — original manual project (read its `pom.xml` for context — read-only)
 - **TARGET_DIR** — current working directory (provisioned project; modify `pom.xml` here)
 
-## Step 1: Read the Target pom.xml
+## Step 1: Read the Target pom.xml and Detect Versions
 
 Read `$TARGET_DIR/pom.xml`. If the target does not have a pom.xml yet, copy from source as a starting point, then continue. Capture:
 - `<groupId>`, `<artifactId>`, `<version>`
 - Current parent (e.g. `spring-boot-starter-parent`, `pricefx-integration-manager-parent`)
-- `<java.version>`, `<maven.compiler.source>`, `<maven.compiler.target>`
-- `<spring-boot.version>`, `<camel.version>`, `<pricefx-integration-manager.version>` / `<im.version>` if defined
 - All `<dependency>` entries
+
+### Version detection (layered — fall through until found)
+
+Real IM poms use **inconsistent property names** (`im.version` vs `pricefx-im-version` vs `pricefx-integration-manager.version`; `spring-boot.version` vs `spring-boot-version`; `java.version` vs `version.Java`) and **rarely pin Camel explicitly**. Apply the layers in order:
+
+1. **Explicit property** in `<properties>`:
+   ```bash
+   grep -oE '<camel(\.|-)?version>[^<]+</' "$pom"
+   grep -oE '<spring-boot(\.|-)?version>[^<]+</' "$pom"
+   grep -oE '<(java(\.|-)?version|maven\.compiler\.source|version\.Java)>[^<]+</' "$pom"
+   grep -oE '<(im|pricefx-im|pricefx-integration-manager)(\.|-)?version>[^<]+</' "$pom"
+   ```
+
+2. **Parent BOM** — read the `<parent>` block. If `pricefx-integration-manager-parent` or `spring-boot-starter-parent`, the parent version implies Camel/Spring Boot.
+
+3. **Explicit `<version>` on a `camel-*` dependency**:
+   ```bash
+   awk '
+     /<groupId>org.apache.camel/{flag=1}
+     flag && /<version>[^$<]/{ sub(/.*<version>/, ""); sub(/<\/version>.*/, ""); print; exit }
+     /<\/dependency>/{flag=0}
+   ' "$pom"
+   ```
+
+4. **Infer Camel from IM version** (when nothing else resolves):
+
+   | IM major | Camel line | Java | Spring Boot |
+   |---|---|---|---|
+   | 1.x | 2.20–2.25 | 8 | 1.5.x |
+   | 4.x | 3.0–3.5 | 11 | 2.1–2.3 |
+   | 5.x | 3.x | 11 | 2.x |
+   | 6.x | 3.18–3.20 | 11 | 2.7 |
+   | 7.0 | 4.0 | 17 | 3.1 |
+   | 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ |
+
+5. **Maven fallback** — only if the above do not resolve and `mvn` is available:
+   ```bash
+   JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=camel.version -q -DforceStdout 2>/dev/null
+   JAVA_HOME=... mvn -f "$pom" dependency:list -q -DincludeGroupIds=org.apache.camel --no-transfer-progress 2>/dev/null \
+     | grep -oE 'camel-core[^:]*:[^:]+:[0-9.]+' | head -1
+   ```
+
+State which layer resolved each version: `"Camel 3.20 (layer 4 — inferred from IM 6.5)"`. If anything is still unknown, **ask the user** before continuing.
 
 ## Step 2: Detect Anti-Patterns
 

@@ -66,20 +66,112 @@ find src/main/resources/repo -type f 2>/dev/null | wc -l
 
 If the target directories don't exist yet, plan to create them on first write.
 
+### Detect framework versions (source AND target)
+
+Real IM `pom.xml` files use **inconsistent property names** (`im.version` vs `pricefx-im-version` vs `pricefx-integration-manager.version`; `spring-boot.version` vs `spring-boot-version`; `java.version` vs `version.Java`) and **rarely pin Camel explicitly** — Camel comes through transitive resolution from the IM parent BOM. Use the layered detection below; fall through each layer until a version is found. **Do this for both `$SOURCE_DIR/pom.xml` and `$TARGET_DIR/pom.xml`.**
+
+#### Layer 1 — Explicit property in `<properties>`
+
+Scan for the common variants:
+
+```bash
+# Camel
+grep -oE '<camel(\.|-)?version>[^<]+</' "$pom" | head -1
+
+# Spring Boot
+grep -oE '<spring-boot(\.|-)?version>[^<]+</' "$pom" | head -1
+
+# Java
+grep -oE '<(java(\.|-)?version|maven\.compiler\.source|version\.Java)>[^<]+</' "$pom" | head -1
+
+# IM
+grep -oE '<(im|pricefx-im|pricefx-integration-manager)(\.|-)?version>[^<]+</' "$pom" | head -1
+```
+
+#### Layer 2 — `<parent>` BOM reference
+
+If no explicit property is present, the parent often pins everything. Read the `<parent>` block:
+
+```bash
+awk '/<parent>/,/<\/parent>/' "$pom"
+```
+
+If the parent is `pricefx-integration-manager-parent` or `spring-boot-starter-parent`, the version field gives you the BOM version which implies Camel/Spring Boot.
+
+#### Layer 3 — Explicit `<version>` on a `camel-*` dependency
+
+A few projects pin one specific Camel artifact:
+
+```bash
+# Camel-core or any camel-* dep with a literal <version>
+awk '
+  /<groupId>org.apache.camel/{flag=1}
+  flag && /<version>[^$<]/{
+    sub(/.*<version>/, ""); sub(/<\/version>.*/, ""); print; exit
+  }
+  /<\/dependency>/{flag=0}
+' "$pom"
+```
+
+#### Layer 4 — Infer Camel from IM version
+
+Use this approximate mapping when Camel cannot be resolved directly:
+
+| IM major | Camel line | Java | Spring Boot |
+|---|---|---|---|
+| 1.x | 2.20–2.25 | 8 | 1.5.x |
+| 4.x | 3.0–3.5 | 11 | 2.1–2.3 |
+| 5.x | 3.x | 11 | 2.x |
+| 6.x | 3.18–3.20 | 11 | 2.7 |
+| 7.0 | 4.0 | 17 | 3.1 |
+| 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ |
+
+State the inference clearly: `"Camel ~3.20 (inferred from IM 6.5)"`.
+
+#### Layer 5 — Maven fallback
+
+If the user has `mvn` installed and the Maven settings can resolve dependencies, ask Maven:
+
+```bash
+JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=camel.version -q -DforceStdout 2>/dev/null
+JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=spring-boot.version -q -DforceStdout 2>/dev/null
+JAVA_HOME=... mvn -f "$pom" dependency:list -q -DincludeGroupIds=org.apache.camel --no-transfer-progress 2>/dev/null \
+  | grep -oE 'camel-core[^:]*:[^:]+:[0-9.]+' | head -1
+```
+
+Use this only as a last resort — it can be slow and may fail on private-Nexus auth issues.
+
 ### Summary
 
-Present:
-```
-Source project: {artifactId} @ IM {version} (Java {n}, Spring Boot {n})
-  - {count} XML files
-  - {count} Java/Groovy files
-  - environments: {dev, prod, ...}
+Present the resolved versions in a table that makes the **delta** explicit, since the delta drives which migration steps actually need to run:
 
-Target project: {artifactId} @ IM {version}
-  - empty / partially populated / complete
+```
+Source project: {artifactId}
+  IM:           {detected} (source: layer N)
+  Camel:        {detected} (source: layer N)
+  Spring Boot:  {detected} (source: layer N)
+  Java:         {detected} (source: layer N)
+  Files: {count} XML, {count} Java/Groovy, envs: {dev, prod, ...}
+
+Target project: {artifactId}
+  IM:           {detected or empty}
+  Camel:        {detected or empty}
+  Spring Boot:  {detected or empty}
+  Java:         {detected or empty}
+
+Migration delta:
+  IM:          6.5 → 7.3   (cross-major — full pipeline)
+  Camel:       3.20 → 4.4  (3→4 fixes apply)
+  Spring Boot: 2.7 → 3.2   (javax→jakarta applies)
+  Java:        11 → 17     (jdk bump)
 ```
 
-Ask the user for the **target IM version** if it isn't already obvious from `$TARGET_DIR/pom.xml`. Default to the latest stable IM 7.x line.
+If any version cannot be resolved, **ask the user**:
+> Camel version not detectable from `$SOURCE_DIR/pom.xml`. What Camel line is the source on? (`2.x` / `3.x early` / `3.20+` / `4.x`)
+
+Confirm the **target IM version** if not in the target pom; default to the latest stable IM 7.x line.
+
+Store the resolved values as agent-internal variables (`SRC_CAMEL`, `TGT_CAMEL`, `SRC_IM`, `TGT_IM`, `SRC_SB`, `TGT_SB`, `SRC_JAVA`, `TGT_JAVA`) so subsequent steps can branch on them.
 
 ---
 
@@ -141,6 +233,24 @@ Run skills 6–10 in order on the **target** project. Each one:
 - Walks files under `TARGET_DIR/src/`
 - Asks for confirmation before applying writes
 - Reports auto-fixes applied and warnings flagged
+
+### Version-gated skill behavior
+
+The detected source/target versions from Step 1 should drive what each skill does — there's no value in applying a Camel-3→4 rewrite when the source is already on Camel 4.
+
+| Skill | If source already at... | Then... |
+|---|---|---|
+| `-camel-syntax` | Camel 4.x | Skip Step 1 fixes #1 (`quartz2`) and #6 (`aws-s3`); skip Step 2 (`*Ref` renames) and Step 3 (removed elements). Still run `${pfx:foo}`→`{{pfx:foo}}` if any `${pfx:` remains, since the property-placeholder syntax may still be wrong. |
+| `-camel-syntax` | Camel 3.x (any) | Run all 3→4 fixes |
+| `-camel-syntax` | Camel 2.x | Run the full set; additionally flag the project for a 2→3 review since some idioms predate Camel 3 (e.g. `from uri="bean:..."?method=...`, no `streaming="true"` widely used) |
+| `-java-code` | Spring Boot 3.x | Skip the `javax`→`jakarta` rewrite |
+| `-java-code` | Spring Boot 2.x | Run the full rewrite |
+| `-pom` | Already on IM 7.x | Skip P-1..P-5 version bumps; only apply P-6..P-10 dependency cleanups |
+| `-properties` | Source already uses `integration.*` keys | Skip rename pass; still run missing-key check |
+
+Pass `SRC_CAMEL`, `SRC_SB`, `SRC_IM` to each skill when invoking it so it can self-gate.
+
+### Order
 
 Order matters:
 - **6 (camel-syntax) before 7 (java-code)** so Camel attribute renames in route XML happen before code-side renames are applied (some custom code references Camel attribute names by string).
