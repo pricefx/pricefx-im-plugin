@@ -33,12 +33,21 @@ Real IM poms use **inconsistent property names** (`im.version` vs `pricefx-im-ve
 
 2. **Parent BOM** — read the `<parent>` block. If `pricefx-integration-manager-parent` or `spring-boot-starter-parent`, the parent version implies Camel/Spring Boot.
 
-3. **Explicit `<version>` on a `camel-*` dependency**:
+3. **Explicit `<version>` on a `camel-*` dependency** — use the hardened awk that handles XML comments and resets state at every `<dependency>` boundary (a naive version false-positives on commented-out blocks and bleeds into `<build><plugins>`):
    ```bash
    awk '
-     /<groupId>org.apache.camel/{flag=1}
-     flag && /<version>[^$<]/{ sub(/.*<version>/, ""); sub(/<\/version>.*/, ""); print; exit }
-     /<\/dependency>/{flag=0}
+     BEGIN { flag=0; incomment=0 }
+     /<!--/  { incomment=1 }
+     incomment && /-->/ { incomment=0; next }
+     incomment           { next }
+     /<dependency>/      { flag=0 }
+     /<\/dependencies>/  { flag=0 }
+     /<groupId>org\.apache\.camel/ { flag=1 }
+     flag && /<version>[^$<]/ {
+       line=$0; sub(/.*<version>/, "", line); sub(/<\/version>.*/, "", line)
+       print line; exit
+     }
+     /<\/dependency>/    { flag=0 }
    ' "$pom"
    ```
 
@@ -53,11 +62,11 @@ Real IM poms use **inconsistent property names** (`im.version` vs `pricefx-im-ve
    | 7.0 | 4.0 | 17 | 3.1 |
    | 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ |
 
-5. **Maven fallback** — only if the above do not resolve and `mvn` is available:
+5. **Maven fallback** — only if the above do not resolve and `mvn` is available. Use `dependency:list` first; `help:evaluate -Dexpression=camel.version` returns `null` when Camel comes via a BOM import (the most common IM case):
    ```bash
-   JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=camel.version -q -DforceStdout 2>/dev/null
-   JAVA_HOME=... mvn -f "$pom" dependency:list -q -DincludeGroupIds=org.apache.camel --no-transfer-progress 2>/dev/null \
-     | grep -oE 'camel-core[^:]*:[^:]+:[0-9.]+' | head -1
+   JAVA_HOME=... mvn -f "$pom" dependency:list -DincludeGroupIds=org.apache.camel --no-transfer-progress 2>&1 \
+     | grep -E 'org\.apache\.camel:camel-core' | head -1 \
+     | grep -oE ':[0-9]+\.[0-9]+(\.[0-9]+)?:' | tr -d ':'
    ```
 
 State which layer resolved each version: `"Camel 3.20 (layer 4 — inferred from IM 6.5)"`. If anything is still unknown, **ask the user** before continuing.

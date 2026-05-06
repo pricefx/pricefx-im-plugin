@@ -90,6 +90,12 @@ For every file now in `classes/` (both newly-converted and pre-existing Groovy),
 | `import net.pricefx.integration.component.producer.ProducerUtils` | `import net.pricefx.integration.util.ProducerUtils` |
 | `import org.apache.commons.lang.Validate` | `import org.apache.commons.lang3.Validate` |
 | `import org.apache.commons.lang.StringUtils` | `import org.apache.commons.lang3.StringUtils` |
+| `import org.apache.commons.collections.MapUtils` | `import org.apache.commons.collections4.MapUtils` |
+| `import org.apache.commons.collections.CollectionUtils` | `import org.apache.commons.collections4.CollectionUtils` |
+| `import org.apache.commons.collections.ListUtils` | `import org.apache.commons.collections4.ListUtils` |
+| `import org.apache.commons.collections.SetUtils` | `import org.apache.commons.collections4.SetUtils` |
+| `import org.apache.commons.collections.` (any other) | `import org.apache.commons.collections4.` (same suffix) |
+| `import org.springframework.beans.factory.annotation.Autowired` | (do NOT auto-rewrite — flag for review; in IM 7.x sandbox, prefer constructor injection or `connectionLookup`) |
 
 Original IMigrator mapped `com.sun.jersey.api.client.GenericType` → `javax.ws.rs.core.GenericType`, but for IM 7.x (Spring Boot 3 / Jakarta EE 9) the new package is `jakarta.ws.rs.core.GenericType` — that's the form to use.
 
@@ -138,6 +144,13 @@ Apply this exact-match replacement across all files now in `classes/`:
 | `.getPricegridApi().fetchItems(` | `.getPricegridApi().pricegridmanagerFetchItemsPGid(` |
 
 **These method renames change the parameter list as well as the name.** The textual rewrite produces code that compiles only if the parameter shape happens to match — usually it doesn't. Flag every rewritten call site as **REVIEW** in the report.
+
+## Step 5b: Flag Legacy Pricefx API Client Imports
+
+The `net.pricefx.integration.api.client.*` package (including `PriceFxClient`, `FetchFilterBuilder`, `FilterCriteriaBuilder`, `FetchRequest`, `FetchResponse`, `FilterCriteria`, `Response`) was reorganised in IM 7.x. The package paths often moved to `net.pricefx.integration.api.client.builder.*` or `net.pricefx.integration.api.client.model.*` in IM 6, and again in IM 7. There is no single mechanical rewrite that holds across all IM versions, so:
+
+- **Do NOT auto-rewrite.** Flag every import that starts with `net.pricefx.integration.api.client.` as **REVIEW**.
+- Suggest the developer cross-check against the IM 7.x javadoc and replace with the correct types from `net.pricefx.integration.api.*`.
 
 ## Step 6: Manual-Action Hint — PartitionConnectionFactory
 

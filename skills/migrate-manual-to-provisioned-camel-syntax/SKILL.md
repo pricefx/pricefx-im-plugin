@@ -86,6 +86,15 @@ In Camel 4 routes XML, the `<routeContext>` wrapper has been replaced by the fil
 - Replace `<routeContext\s+id="[^"]+">` with empty string
 - Replace `</routeContext>` with empty string
 
+### 3e — `<routeContextRef ref="X"/>` references
+
+`<routeContextRef ref="X"/>` was the Camel-3 way to import a routeContext defined in another file (typical inside `<camelContext>...</camelContext>` in `camel-context.xml`). Camel 4 has no `routeContext` and provisioned IM auto-discovers routes from `repo/routes/`, so every `<routeContextRef>` becomes dead config.
+
+- Detect: `<routeContextRef\s+ref="[^"]+"\s*/>`
+- Replace with: empty string (delete the line)
+
+After deletion, the `<camelContext>` block in the target's `camel-context.xml` may end up almost empty. That's expected — provisioned IM does not need a `<camelContext>` declaration at all (it's auto-configured), so the file can be removed entirely once empty. Flag this in the report.
+
 ### 3d — `<setBody><expression><simple>...</simple></expression></setBody>` (verbose form)
 
 Camel 4 simplified the inline-language form. The verbose `<expression><simple>...</simple></expression>` wrapper is still accepted, but the recommended form is just `<simple>...</simple>` directly inside `<setBody>` / `<setHeader>` / `<filter>` / `<when>`.
@@ -109,6 +118,9 @@ These are anti-patterns or removed features. Do **not** auto-fix — the right r
 | `@Autowired` annotation | Java/Groovy | Discouraged in IM 7.x sandbox. Use constructor injection or `connectionLookup`. |
 | `@PropertyInject` annotation | Java/Groovy | Removed. Use Camel Simple `${properties:my.key}` in routes, or `@Value` in Spring beans. |
 | `<process ref="..."/>` to a bean defined inside `<camelContext>` | route XMLs | Camel 4 prefers `<to uri="bean:processorId"/>` to reference a Spring bean. |
+| `errorHandlerRef=` attribute on `<camelContext>` / `<route>` | route XMLs | Camel 4 still accepts `errorHandlerRef` for backward compatibility, but the modern attribute name is `errorHandler`. Rename when convenient. |
+| `<dataFormats>` block at the `<camelContext>` level | `camel-context.xml` | In provisioned IM there is no `<camelContext>` to attach `<dataFormats>` to. Move the inline data-format definitions into individual routes (`<marshal><jacksonxml/></marshal>`) or extract to a bean. |
+| `<contextScan/>` element | `camel-context.xml` | Provisioned IM doesn't scan a Spring bean context for routes — it discovers them in `repo/routes/`. Remove the element. |
 
 For each pattern found, list the affected files and the suggestion.
 

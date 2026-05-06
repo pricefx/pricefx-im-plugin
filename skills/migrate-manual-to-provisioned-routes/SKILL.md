@@ -26,12 +26,18 @@ find "$SOURCE_DIR" -name "*.xml" -not -path "*/target/*" -not -path "*/.git/*" -
 
 For every XML file:
 
-1. Find every `<route ... >...</route>` block. Use a non-greedy multi-line regex:
+1. **First, identify exclusion zones** — `<route>` elements that must stay inline because they are part of a containing DSL, not standalone routes:
+   - `<route>` nested inside `<rest>...</rest>` (REST DSL — the route IS the handler for a `<get>`/`<post>`/`<put>`/`<delete>` endpoint)
+   - `<route>` nested inside `<routeBuilder>...</routeBuilder>` (Java DSL fragment — Camel 4 removes this anyway, but skip extraction so it doesn't get duplicated)
+
+   Strategy: scan the file once, mark the `[start, end]` byte ranges of every `<rest>...</rest>` and `<routeBuilder>...</routeBuilder>` block, and skip any `<route>` whose match falls inside one.
+
+2. Find every `<route ... >...</route>` block outside the exclusion zones. Use a non-greedy multi-line regex:
    ```
    (?s)<route[^Cs][^>]*>.*?</route>
    ```
    The `[^Cs]` exclusion avoids matching `<routeContext>` and `<routes>` wrapper tags.
-2. For each match:
+3. For each match:
    - **Determine the route id.** Look for `id="..."` on the `<route>` element.
    - **If no id is present**, generate one from the `<from uri="..."/>` URI:
      - Replace `:`, `.` with `-`
@@ -78,5 +84,6 @@ Generated IDs (no id was present in source): K
 - **Do NOT auto-fix anti-patterns** here (no streaming flags, no archive folders, no connection-pricefx removal). Those are applied later by `migrate-manual-to-provisioned-anti-patterns`-style steps in the orchestrator.
 - **Preserve the original route body verbatim** (whitespace, comments, indentation). Only the `id` attribute may be added if it was missing.
 - A `<route>` element nested inside `<routeContext>` is still one route — extract it. The wrapper element is dropped; the new file uses `<routes>` as the root.
+- A `<route>` element nested inside `<rest>` or `<routeBuilder>` must NOT be extracted — those routes are part of a containing DSL and have to stay where they are. List the skipped routes in the report so the developer knows the REST DSL handlers are still in `camel-context.xml`.
 - If the same route id appears more than once across source files, write the first occurrence and report the duplicates as a warning.
 - File header rule: The output file's `<route id="X">` must match the file name `X.xml` exactly.

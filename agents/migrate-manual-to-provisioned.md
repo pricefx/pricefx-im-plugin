@@ -100,18 +100,35 @@ If the parent is `pricefx-integration-manager-parent` or `spring-boot-starter-pa
 
 #### Layer 3 — Explicit `<version>` on a `camel-*` dependency
 
-A few projects pin one specific Camel artifact:
+A few projects pin one specific Camel artifact. Use this awk that:
+- resets the flag on every `<dependency>` open and on `</dependencies>` close (so it never bleeds into `<build><plugins>`)
+- skips XML comment blocks (so a commented-out `<dependency>` doesn't leave the flag set)
 
 ```bash
-# Camel-core or any camel-* dep with a literal <version>
 awk '
-  /<groupId>org.apache.camel/{flag=1}
-  flag && /<version>[^$<]/{
-    sub(/.*<version>/, ""); sub(/<\/version>.*/, ""); print; exit
+  BEGIN { flag=0; incomment=0 }
+  # XML comment handling
+  /<!--/  { incomment=1 }
+  incomment && /-->/ { incomment=0; next }
+  incomment           { next }
+  # Reset flag on each new dependency block and at the end of <dependencies>
+  /<dependency>/      { flag=0 }
+  /<\/dependencies>/  { flag=0 }
+  # Set flag inside an org.apache.camel dependency
+  /<groupId>org\.apache\.camel/  { flag=1 }
+  # First explicit <version> after the camel groupId wins
+  flag && /<version>[^$<]/ {
+    line=$0
+    sub(/.*<version>/, "", line)
+    sub(/<\/version>.*/, "", line)
+    print line
+    exit
   }
-  /<\/dependency>/{flag=0}
+  /<\/dependency>/    { flag=0 }
 ' "$pom"
 ```
+
+This recipe was hardened after a real-world false positive on `bosch-rexroth-integration` where a commented-out `<!-- camel-xpath -->` block left the flag set and the awk printed `maven-compiler-plugin` 3.8.1 as if it were Camel.
 
 #### Layer 4 — Infer Camel from IM version
 
@@ -130,16 +147,31 @@ State the inference clearly: `"Camel ~3.20 (inferred from IM 6.5)"`.
 
 #### Layer 5 — Maven fallback
 
-If the user has `mvn` installed and the Maven settings can resolve dependencies, ask Maven:
+If the user has `mvn` installed and the Maven settings can resolve dependencies, ask Maven. **Order matters here**: when Camel comes through a BOM `<dependency-management><scope>import</scope>` (very common in IM projects — the IM parent BOM pins Camel), `help:evaluate -Dexpression=camel.version` returns `null` because there is no `camel.version` *property*. Use `dependency:list` first:
 
 ```bash
-JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=camel.version -q -DforceStdout 2>/dev/null
-JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=spring-boot.version -q -DforceStdout 2>/dev/null
-JAVA_HOME=... mvn -f "$pom" dependency:list -q -DincludeGroupIds=org.apache.camel --no-transfer-progress 2>/dev/null \
-  | grep -oE 'camel-core[^:]*:[^:]+:[0-9.]+' | head -1
+# PRIMARY — works whether camel.version is a property or comes via BOM import
+JAVA_HOME=... mvn -f "$pom" dependency:list -DincludeGroupIds=org.apache.camel \
+  --no-transfer-progress 2>&1 \
+  | grep -E 'org\.apache\.camel:camel-core' \
+  | head -1 \
+  | grep -oE ':[0-9]+\.[0-9]+(\.[0-9]+)?:' \
+  | tr -d ':'
+
+# FALLBACK — only works when camel.version is an explicit property
+JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=camel.version \
+  -q -DforceStdout 2>/dev/null
+
+# Same pattern for Spring Boot
+JAVA_HOME=... mvn -f "$pom" dependency:list -DincludeGroupIds=org.springframework.boot \
+  --no-transfer-progress 2>&1 \
+  | grep -E 'org\.springframework\.boot:spring-boot' | head -1 \
+  | grep -oE ':[0-9]+\.[0-9]+(\.[0-9]+)?(\.RELEASE)?:' | tr -d ':'
 ```
 
-Use this only as a last resort — it can be slow and may fail on private-Nexus auth issues.
+Validated on `bosch-rexroth-integration`: this returns `2.25.0` for Camel — matching the actual transitive resolution. The `help:evaluate` form returned `null` for the same project because the IM parent BOM (not a `<camel.version>` property) supplies the version.
+
+Use this layer only as a last resort — `mvn dependency:list` is slow (10–60s) and may fail on private-Nexus auth issues.
 
 ### Summary
 
