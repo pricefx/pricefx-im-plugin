@@ -35,6 +35,21 @@ For example: `src/main/java/com/example/processor/PriceFilter.java` → `src/mai
 
 If the source file already lives at `src/main/resources/repo/classes/...`, mirror the same relative path inside the target.
 
+### 1a — Skip Spring Boot bootstrap classes
+
+Provisioned IM provides its own bootstrap — the project does not need its own `Application.java` / `@SpringBootApplication`. Manual IM projects often have one (e.g. `net.pricefx.integration.Application` with `SpringApplication.run(Application.class, args)`).
+
+**Detect** any source file that contains ANY of:
+- `@SpringBootApplication`
+- `SpringApplication.run(`
+- `@EnableAutoConfiguration` together with `@ImportResource`
+
+**Exclude** these files from the conversion. Do not write them to `repo/classes/`. Report them in the "Manual action required" section so the developer knows the bootstrap class was deliberately dropped:
+
+> Skipped Spring Boot bootstrap class `{path}` — provisioned IM has its own boot. Delete from the source project after migration to avoid the entry point being loaded twice.
+
+This was surfaced by `dieteren-integration`, where `src/main/java/net/pricefx/integration/Application.java` is the legacy main class.
+
 ## Step 2: Convert `.java` → `.groovy`
 
 For each `.java` source file, apply these mechanical conversions (in this order):
@@ -75,7 +90,9 @@ Rename `.java` → `.groovy`. Move under `$TARGET_DIR/src/main/resources/repo/cl
 
 ## Step 3: Fix Imports
 
-For every file now in `classes/` (both newly-converted and pre-existing Groovy), apply this exact-match replacement table to `import ...` lines (the trailing `;` may or may not be present after step 2a):
+For every file now in `classes/` (both newly-converted and pre-existing Groovy), apply this exact-match replacement table to `import ...` lines (the trailing `;` may or may not be present after step 2a).
+
+**Caveat:** the rewrite operates on raw text and **also touches commented-out imports** (`//import com.foo.Bar;`). This is harmless — the comment stays a comment — but it can be confusing if the file already has the active modern import on another line. After the rewrite pass, scan each file for **duplicate active import lines** (i.e. two non-commented `import X;` lines with the same fully-qualified name) and report them; do not remove duplicates automatically. Surfaced by `dieteren-integration` where `ProductsAggregationStrategy.java` had `// import org.apache.camel.processor.aggregate.AggregationStrategy;` (commented) alongside the active modern `import org.apache.camel.AggregationStrategy;`.
 
 | Old import | New import |
 |---|---|

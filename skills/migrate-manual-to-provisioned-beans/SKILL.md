@@ -18,16 +18,25 @@ Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle
 
 ## Step 2: Extract Each `<bean>` Block
 
-Run both patterns and collect every match:
+Run both patterns and collect every match. The patterns optionally allow a `beans:` namespace prefix because some XML files declare the Spring beans namespace explicitly (e.g. `xmlns:beans="http://www.springframework.org/schema/beans"`) and prefix every bean definition as `<beans:bean>`:
 
 | Pattern | Captures |
 |---|---|
-| `<bean[^s][^>]*?id="(.*?)"[^>]*?/>` | self-closing bean |
-| `(?s)<bean[^s][^>]*?id="(.*?)"(.*?)</bean>` | block bean |
+| `<(beans:)?bean[ />]([^>]*?)id="(.*?)"[^>]*?/>` | self-closing bean |
+| `(?s)<(beans:)?bean[ />]([^>]*?)id="(.*?)"(.*?)</(beans:)?bean>` | block bean |
 
-The `[^s]` exclusion avoids matching `<beans>` wrapper tags.
+The `[ />]` after `bean` ensures the next character is one of space / `/` / `>`, which avoids matching `<beans>` (next char is `s`) and `<beanstuff>` (next char is `s`). The id capture group is now group 3 (was group 1) because of the optional `beans:` prefix at group 1.
 
-For each match, capture group 1 is the bean `id`. Sanitise the id for use as a filename: replace `/` with `_`, strip `'` and `"`.
+If a project declares the **Pricefx default namespace** (`xmlns="http://www.pricefx.eu/schema/pfx"`) and **prefixes Spring beans** as `xmlns:beans="..."`, an XML file looks like:
+```xml
+<beans:beans xmlns="http://www.pricefx.eu/schema/pfx" xmlns:beans="...">
+    <loadMapper id="x">...</loadMapper>      <!-- pfx:loadMapper, default ns -->
+    <beans:bean id="y" class="...">           <!-- spring bean, prefixed -->
+</beans:beans>
+```
+The patterns above capture both `<bean>` (no prefix) and `<beans:bean>` (prefixed). The `<loadMapper>` is handled by the `-mappers` skill via its `<loadMapper>` (no-prefix) regex.
+
+For each match, capture the bean `id` (group 3 in the new patterns). Sanitise the id for use as a filename: replace `/` with `_`, strip `'` and `"`.
 
 ## Step 3: Transform Each Bean
 
