@@ -11,15 +11,9 @@ You are generating the `integration.groovy-sandbox.custom-allowed-types` allow-l
 
 - **TARGET_DIR** — current working directory (provisioned project)
 
-## Step 0: Skip if the Sandbox Is Disabled
+## Always generate the allow-list — do NOT short-circuit on `integration.groovy-sandbox.enabled=false`
 
-Before doing any work, scan every `application*.properties` in the target for `integration.groovy-sandbox.enabled=`. If the value is `false` in **all** environment files, the sandbox is disabled and the allow-list is unnecessary. Skip the rest of this skill and report:
-
-> Skipping Groovy sandbox allow-list generation: `integration.groovy-sandbox.enabled=false` in all environment files. The sandbox is disabled, so `integration.groovy-sandbox.custom-allowed-types` is not consulted at runtime.
-
-If some envs disable and others enable the sandbox, generate the allow-list normally and add it only to the env files that enable the sandbox.
-
-This was surfaced by `bridgestone-integration` where all 6 env files set `integration.groovy-sandbox.enabled=false`.
+A source project may set `integration.groovy-sandbox.enabled=false` in one or more environment files (validated against `bridgestone-integration` where all 6 env files set this). **Do not treat this as a signal to skip the skill.** The Pricefx cloud runtime enables the sandbox regardless of what the project file says — the `=false` override is typically a dev-machine convenience and is overridden by the platform at deploy time. Generating the allow-list is mandatory: if it is missing, Groovy scripts that worked locally will throw `SandboxSecurityException` once the project is deployed.
 
 ## Step 1: Collect All Imports
 
