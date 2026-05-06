@@ -85,7 +85,7 @@ For every file now in `classes/` (both newly-converted and pre-existing Groovy),
 | `import io.swagger.client.Pair` | `import net.pricefx.integration.api.Pair` |
 | `import net.pricefx.integration.mapper.converter.Converter` | `import net.pricefx.integration.api.converter.Converter` |
 | `import net.pricefx.integration.connection.PartitionConnectionFactory` | `import net.pricefx.integration.connection.service.ConnectionLookup` |
-| `import net.pricefx.integration.api.client.ApiClientRequestBuilder` | `import net.pricefx.integration.api.ApiResponse` |
+| `import net.pricefx.integration.api.client.ApiClientRequestBuilder` | (do NOT auto-rewrite — flag for review; the IMigrator's old mapping to `ApiResponse` was wrong because the classes are unrelated. The replacement depends on call-site intent: a request builder caller usually wants a different class than a response holder.) |
 | `import org.apache.camel.processor.aggregate.AggregationStrategy` | `import org.apache.camel.AggregationStrategy` |
 | `import net.pricefx.integration.component.producer.ProducerUtils` | `import net.pricefx.integration.util.ProducerUtils` |
 | `import org.apache.commons.lang.Validate` | `import org.apache.commons.lang3.Validate` |
@@ -147,10 +147,49 @@ Apply this exact-match replacement across all files now in `classes/`:
 
 ## Step 5b: Flag Legacy Pricefx API Client Imports
 
-The `net.pricefx.integration.api.client.*` package (including `PriceFxClient`, `FetchFilterBuilder`, `FilterCriteriaBuilder`, `FetchRequest`, `FetchResponse`, `FilterCriteria`, `Response`) was reorganised in IM 7.x. The package paths often moved to `net.pricefx.integration.api.client.builder.*` or `net.pricefx.integration.api.client.model.*` in IM 6, and again in IM 7. There is no single mechanical rewrite that holds across all IM versions, so:
+The `net.pricefx.integration.api.client.*` package (including `PriceFxClient`, `FetchFilterBuilder`, `FilterCriteriaBuilder`, `FetchRequest`, `FetchResponse`, `FilterCriteria`, `Response`, `MassEditBuilder`, `FcResponse`, `FormulaExecuteRequest`, `MasseditRequest`, `MasseditResponse`, `ApiClientRequestBuilder`) was reorganised in IM 7.x. The package paths often moved to `net.pricefx.integration.api.client.builder.*` or `net.pricefx.integration.api.client.model.*` in IM 6, and again in IM 7. There is no single mechanical rewrite that holds across all IM versions, so:
 
 - **Do NOT auto-rewrite.** Flag every import that starts with `net.pricefx.integration.api.client.` as **REVIEW**.
 - Suggest the developer cross-check against the IM 7.x javadoc and replace with the correct types from `net.pricefx.integration.api.*`.
+
+Likewise flag these other internal-Pricefx package roots that have shifted between IM lines (validated against `cargill-anh-tca-integration`):
+
+- `net.pricefx.integration.command.*` (e.g. `Command`)
+- `net.pricefx.integration.component.bean.*` (e.g. `Filter`)
+- `net.pricefx.integration.filter.*` (e.g. `FilterConverter`)
+- `net.pricefx.integration.util.ExpressionUtils`
+
+These are all flag-for-review.
+
+## Step 5c: Flag Apache HttpClient 4 (`org.apache.http.*`) Usage
+
+Spring Boot 3 (IM 7.x baseline) replaced Apache HttpClient 4 with HttpClient 5. The package root changed from `org.apache.http.*` to `org.apache.hc.*` (with substantial API changes — not a pure rename). 
+
+- **Do NOT auto-rewrite** — the API differences require code changes, not just import renames.
+- Flag every import starting with `org.apache.http.` as **REVIEW**, with the suggestion: "Migrate to `org.apache.hc.client5.*` / `org.apache.hc.core5.*`. The fluent API and connection-management classes changed significantly."
+
+This was surfaced by `cargill-anh-tca-integration` where `AzureAuthentication.java` uses `CloseableHttpClient`, `HttpClientBuilder`, `BasicResponseHandler`, `UrlEncodedFormEntity`, `BasicNameValuePair` from HC4.
+
+## Step 5d: Flag Class Names That Shadow Groovy Auto-Imports
+
+When a Java class name matches a type that Groovy auto-imports for every script, the converted `.groovy` class can cause subtle resolution bugs in inline `<groovy>` blocks elsewhere in the project. Groovy auto-imports include:
+
+```
+java.io.*       (File, FileInputStream, ...)
+java.lang.*     (String, Integer, Exception, ...)
+java.util.*     (List, Map, Set, Date, ...)
+java.net.*      (URL, ...)
+java.math.*     (BigDecimal, BigInteger)
+groovy.lang.*
+groovy.util.*
+```
+
+After conversion, scan the target `classes/` for any `.groovy` file whose **simple class name** matches a Groovy auto-imported type (e.g. `File`, `String`, `List`, `Map`, `Set`, `Date`, `Exception`, `URL`).
+
+- **Do NOT rename automatically** — that would break every reference site.
+- Flag for review: "Class `{name}` shadows the Groovy auto-imported `{auto-import-target}`. Inline `<groovy>` blocks that reference `{name}` unqualified will resolve to the auto-import, not your class. Consider renaming the class (e.g. `File` → `FileService`) or always using the fully-qualified name."
+
+This was surfaced by `cargill-anh-tca-integration` where `net.pricefx.integration.cargill.service.File` shadows `java.io.File`.
 
 ## Step 6: Manual-Action Hint — PartitionConnectionFactory
 
