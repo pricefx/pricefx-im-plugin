@@ -43,6 +43,26 @@ Wait for confirmation.
 
 Run a quick read of both projects to understand scope.
 
+### Hybrid-project detection
+
+Before you run anything, look at the source's directory tree. A real customer project may be in one of three states:
+
+| State | Detection | Implication |
+|---|---|---|
+| **Pure manual** | only `src/main/resources/refs/...` and `src/main/resources/camel-context.xml` exist; no `repo/` directory | Run the full pipeline against `SOURCE_DIR`. Files land in `TARGET_DIR/src/main/resources/repo/`. |
+| **Pure provisioned** | only `src/main/resources/repo/{routes,mappers,filters,beans,connections}/` exists; no `refs/`, no top-level `camel-context.xml` | The project is already provisioned — the user probably wants the modernization skills (`-camel-syntax`, `-java-code`, `-properties`, `-pom`, `-groovy-sandbox`) but not extraction. Skip skills 1–5 and run skills 6–10 only. |
+| **Hybrid (mid-migration)** | both `refs/` AND `repo/` exist, often with overlapping route IDs | Some routes already extracted, others not. The previous extraction tool (e.g. IMigrator) may have left **unmodernized** artifacts in `repo/` (validated against `amd-integration`, where `repo/routes/*.xml` still contained 17 `strategyRef=` attributes). Run the full pipeline; extraction skills will skip artifacts already in target, modernization skills will fix the partial work. **Pay particular attention to `connections/pricefx.json` — the IMigrator left a placeholder template that survives untouched in many hybrid projects.** |
+
+State the detected mode clearly in the user-facing summary:
+```
+Project state: Hybrid (mid-migration)
+  refs/  has 121 route(s), 29 mapper(s), 26 filter(s), 17 bean(s)
+  repo/  has 120 route(s), 28 mapper(s), 25 filter(s), 6 bean(s)
+  Migration backlog: 1 route, 1 mapper, 1 filter not yet in repo/
+  Modernization scope: applies to BOTH refs/ AND repo/ (the previous
+    extraction did not run camel-syntax / java-code / properties skills)
+```
+
 ### Source inspection
 
 ```bash

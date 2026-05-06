@@ -103,7 +103,35 @@ For each extracted connection (XML form or properties form), write to `$TARGET_D
 
 After extracting from the source, check whether `$TARGET_DIR/src/main/resources/repo/connections/pricefx.json` exists.
 
-If it does not, create a placeholder with id `pricefx` so the provisioned project can build. Use empty/placeholder values and **clearly mark them as placeholders** in the report so the user knows to fill in real credentials:
+### 4a — File exists but contains the IMigrator placeholder
+
+The legacy IMigrator Go tool wrote a hard-coded template when no real connection was found in the source:
+
+```json
+{
+  "partition": "mvich",
+  "username": "ahoj1",
+  "password": "{ENC}m07IjU973nuNn9dEo7kUDw0YdQUKxJjT",
+  "uri": "https://test.pricefx.eu/pricefx/"
+}
+```
+
+Many partially-migrated projects have this template sitting in `connections/pricefx.json` and never replaced it (validated against `amd-integration`, where the placeholder still ships with the project alongside real `integration.pfx.*` properties).
+
+**Detect the placeholder** by reading the existing file and checking whether *any* of these signature values are present:
+- `"partition": "mvich"`
+- `"username": "ahoj1"`
+- `"uri": "https://test.pricefx.eu/pricefx/"`
+- `"password": "{ENC}m07IjU973nuNn9dEo7kUDw0YdQUKxJjT"`
+
+If any is present, treat the file as a placeholder (NOT as a real existing connection). Show the user:
+> The existing `connections/pricefx.json` looks like the IMigrator default template (partition `mvich`, username `ahoj1`, etc.). Real connection values were found in `application-{env}.properties` at `integration.pfx.*`. Overwrite the placeholder with the property-based form?
+
+If the user agrees, overwrite per Step 3 (use the placeholder/property-reference form when env values differ; literal values otherwise).
+
+### 4b — File does not exist
+
+If `pricefx.json` does not exist at all, create a placeholder with id `pricefx` so the provisioned project can build. Use empty/placeholder values and **clearly mark them as placeholders** in the report so the user knows to fill in real credentials:
 
 ```json
 {
