@@ -208,13 +208,31 @@ After conversion, scan the target `classes/` for any `.groovy` file whose **simp
 
 This was surfaced by `cargill-anh-tca-integration` where `net.pricefx.integration.cargill.service.File` shadows `java.io.File`.
 
-## Step 6: Manual-Action Hint — PartitionConnectionFactory
+## Step 6a: Manual-Action Hint — PartitionConnectionFactory
 
 Search for `PartitionConnectionFactory.getPriceFxClient` in any file in `classes/`. This API is gone in IM 7.x. Report the affected files with the suggestion:
 
 > Replace `PartitionConnectionFactory.getPriceFxClient(...)` with `ConnectionLookup.lookupPriceFx(...).getClient()`. The argument list also changes — refer to the IM 7.x `ConnectionLookup` javadoc.
 
 Do NOT auto-fix this — the call shape changes meaningfully.
+
+## Step 6b: Replacement snippet for Pricefx client lookup
+
+When fixing the call sites flagged in Step 6a, the canonical IM 7.x replacement is:
+
+```groovy
+import org.apache.camel.spi.Registry
+import net.pricefx.integration.connection.service.ConnectionLookup
+
+Registry registry = exchange.getContext().getRegistry()
+def client = ConnectionLookup.lookupPriceFx(registry, "pricefx").getClient()
+```
+
+Use `"pricefx"` for the default connection; for multi-partition projects, pull the connection name from a header (e.g. `exchange.getIn().getHeader("partitionPfxApi", String.class)`).
+
+There is also a 2-arg overload `ConnectionLookup.lookupPriceFx(exchange, connectionName)` returning a `PriceFxConnection` if you need the connection object rather than just the client.
+
+This is **report-only** — the developer must apply the fix manually because surrounding code (state, caching, exception handling) usually needs adjustment too.
 
 ## Step 7: Stop Compiling Java in pom.xml
 
