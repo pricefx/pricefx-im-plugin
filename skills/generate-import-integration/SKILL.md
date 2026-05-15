@@ -276,16 +276,24 @@ If auto-detected, skip Steps 6 (Batch Size), 7 (CSV Header) — they are already
 
 **IMPORTANT:** This step applies ONLY to P, PX, CX, C, SL, SX imports. For DS/DMDS (PA Data Sources), ALWAYS use the `generate-pa-import-integration` skill which uses the split+tokenize+loaddata+flush pattern. NEVER offer `loaddataFile` for DS/DMDS.
 
-Recommend `loaddataFile` as the default:
-
-> **Recommended: `loaddataFile`** (streaming, server-side batching)
+> ⚠️ **Critical trade-off — read this before choosing:**
 >
-> This is the simplest and most efficient approach. The file is streamed directly to Pricefx, which handles batching internally. No split/tokenize, no Groovy parser, minimal code.
+> `loaddataFile` + `streamingUnmarshal` is faster and simpler, BUT it gives **NO row-level or batch-level feedback** during processing. The file streams to Pricefx as a single opaque upload; IM logs only show "started" and "complete" with the final record count. If a load takes hours, you have no visibility into how far it has progressed, no per-batch timing, and no way to spot a slow batch or partial failure mid-stream.
+>
+> `loaddata` + split/tokenize parses the file in IM and loads in named batches — every batch logs its number, file name, and starting row (see the batch log line in the loaddata template below). You can watch progress in the IM logs.
 
-| Method | Best for | Description |
-|--------|----------|-------------|
-| `pfx-api:loaddataFile` | **Default for all P/PX/CX/C/SL/SX** | Streams file to Pricefx server. Server handles batching. Minimal route code (~5 lines). |
-| `pfx-api:loaddata` | Complex row-level transformations | IM parses CSV, applies Groovy per-row logic, sends JSON batches. Use ONLY when you need Groovy expressions in the mapper that access other rows or headers. |
+**You MUST ask the user explicitly before generating the route:**
+
+> **Which import method do you want?**
+> 1. **`loaddataFile`** (streaming, fast, **no progress visibility**) — recommended for small/medium files where you don't need to watch progress, or when downstream monitoring (Pricefx UI, events) is sufficient.
+> 2. **`loaddata` + split/tokenize** (slower, **per-batch logging**) — recommended for large files (>500k rows), long-running loads, or any production load where you want to see batch progress in IM logs.
+
+Do NOT silently default to `loaddataFile`. The observability difference is significant and the user should make this choice deliberately.
+
+| Method | Best for | Observability | Description |
+|--------|----------|---------------|-------------|
+| `pfx-api:loaddataFile` | Small/medium files, simple maps | ❌ None — single-shot stream | Streams file to Pricefx server. Server handles batching. Minimal route code (~5 lines). |
+| `pfx-api:loaddata` | Large files, long-running loads, row-level Groovy logic | ✅ Per-batch logging | IM parses CSV, batches via tokenize, logs each batch. Use when you need progress visibility or Groovy row-level transforms. |
 
 ### loaddataFile Sync Modes
 
