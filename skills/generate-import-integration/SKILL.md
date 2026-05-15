@@ -332,6 +332,7 @@ Use this ONLY if the user explicitly needs row-level Groovy transformations:
   <split aggregationStrategy="recordsCountAggregation" streaming="true">
     <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
     <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+    <log message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelFileName} (batch size: {{pfx:batch.size:20000}}, starting at row ${exchangeProperty.CamelSplitIndex * {{pfx:batch.size:20000}} + 1})" loggingLevel="INFO"/>
     <toD uri="pfx-api:loaddata?objectType=P&amp;mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
     <setBody><constant/></setBody>
   </split>
