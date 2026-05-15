@@ -65,6 +65,37 @@ Once loaded, you should see the plugin's skills available when you type `/` in C
 
 ### Connect to your Pricefx partition
 
+The pfx CLI resolves credentials in this order, picking the first one that produces a complete set:
+
+1. **Project connection JSON + `local-secret.properties`** (preferred — keeps the CLI aligned with what the IM project actually deploys)
+2. **`.env` file in the project root** (fallback — useful for ad-hoc partitions or when no IM project is present)
+
+#### Option 1 — project connection JSON + local-secret.properties (preferred)
+
+The CLI scans `src/main/resources/repo/connections/` for any JSON file whose `discriminator` is `net.pricefx.integration.component.rest.domain.connection.PriceFxConnection` and reads `uri`, `partition`, and `username` from it. The password is loaded from `src/main/resources/local-secret.properties` using the key `connections.{connection-id}.password`.
+
+Example — `src/main/resources/repo/connections/pricefx.json`:
+
+```json
+{
+  "id": "pricefx",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.PriceFxConnection",
+  "uri": "https://your-cluster.pricefx.eu/pricefx",
+  "partition": "your-partition",
+  "username": "admin"
+}
+```
+
+Example — `src/main/resources/local-secret.properties` (never committed):
+
+```properties
+connections.pricefx.password=your-password
+```
+
+Add `local-secret.properties` to `.gitignore`. The `.json` file is safe to commit because it does not contain the password.
+
+#### Option 2 — `.env` file (fallback)
+
 Create a `.env` file in **your IM project root** (not the plugin directory):
 
 ```env
@@ -74,7 +105,9 @@ PFX_USERNAME=admin
 PFX_PASSWORD=your-password
 ```
 
-Test the connection:
+Process environment variables (`PFX_URL`, `PFX_PARTITION`, `PFX_USERNAME`, `PFX_PASSWORD`) override values from the `.env` file. This is the fallback path — used only when no project connection JSON is found or its password is missing from `local-secret.properties`.
+
+#### Test the connection
 
 ```
 > pfx test-connection
@@ -596,7 +629,7 @@ Apply all safe upgrades and tell me what still needs manual work
 
 ## pfx CLI Tool
 
-The bundled `pfx` CLI (`tools/bin/pfx.mjs`) connects directly to your Pricefx partition to fetch metadata. It reads credentials from the `.env` file.
+The bundled `pfx` CLI (`tools/bin/pfx.mjs`) connects directly to your Pricefx partition to fetch metadata. It auto-discovers credentials by first reading the project's `PriceFxConnection` JSON under `src/main/resources/repo/connections/` and pulling the password from `src/main/resources/local-secret.properties` (key: `connections.{id}.password`). If that fails — no project JSON, missing password key — it falls back to `PFX_URL` / `PFX_PARTITION` / `PFX_USERNAME` / `PFX_PASSWORD` from `.env` or the process environment. See [Setup → Connect to your Pricefx partition](#connect-to-your-pricefx-partition) for details.
 
 ### Commands
 
