@@ -10,3 +10,4 @@ Shared reference documentation for all skills in this plugin.
 @docs/mappers.md
 @docs/filters.md
 @docs/connections.md
+@docs/faq.md
