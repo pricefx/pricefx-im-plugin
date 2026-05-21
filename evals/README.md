@@ -14,8 +14,8 @@ Replace `<skill-name>` with one of:
 
 | Skill | Last committed iteration | Pass rate (with-skill / baseline) |
 |---|---|---|
-| `generate-import-integration` | `iteration-1` (commit `c5cc806`) | 100% / 92% |
-| `generate-pa-import-integration` | `iteration-1` (commit `1ff089b`) | 97% / 66% |
+| `generate-import-integration` | `iteration-1` (squash-merged via !26, develop SHA `cd66927`) | 100% / 92% |
+| `generate-pa-import-integration` | `iteration-1` (squash-merged via !27, develop SHA `4e0df1a`) | 97% / 66% |
 | `generate-ppv-import-integration` | — (PFIMCORE-3026) | — |
 | `generate-rest-outbound-integration` | — (PFIMCORE-3027) | — |
 | `analyze` | — (PFIMCORE-3028) | — |
@@ -43,7 +43,7 @@ The bar to clear before committing:
 
 - **with-skill pass rate ≥ previous iteration's with-skill pass rate.** A drop is a regression.
 - **No new failures on cases that previously passed.** Look at the per-eval breakdown in the viewer, not just the aggregate.
-- **No new false-positive assertions.** If a case fails but the output is actually fine, it's the assertion that's wrong, not the skill — relax the assertion and re-grade (see the `businessKeys=sku` example in commit `c5cc806`).
+- **No new false-positive assertions.** If a case fails but the output is actually fine, it's the assertion that's wrong, not the skill — relax the assertion and re-grade (see the `businessKeys=sku` example in MR !26).
 
 Baseline pass rate is informational, not a target. It exists to quantify how much value the skill adds over Claude-with-docs-only. If `delta ≤ 0`, the skill isn't pulling its weight and the eval probably needs more discriminating cases.
 
