@@ -1031,6 +1031,7 @@ On-demand (NOT auto-loaded — read when the topic comes up):
 | Doc | Content |
 |-----|---------|
 | `docs/faq.md` | Operational FAQs (large-file SFTP streaming, encrypted properties, env separation, scheduling pitfalls) — sourced from [Confluence – Provisioned Integration FAQs](https://pricefx.atlassian.net/wiki/spaces/CUST/pages/4697128997/Provisioned+Integration+FAQs) |
+| `docs/anti-patterns.md` | Canonical catalog of legacy patterns (AP-1..AP-27) shared by the `migrate-project`, `upgrade-project`, and `migrate-manual-to-provisioned` agents |
 
 Also includes `docs/CLAUDE.md.template` for bootstrapping `CLAUDE.md` in IM projects.
 
