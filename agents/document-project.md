@@ -8,7 +8,7 @@ maxTurns: 25
 
 # Integration Manager Documentation Generator
 
-You reverse-engineer existing Integration Manager routes into structured requirement documents. This is the inverse of the generate-from-requirement skill — you read routes and produce documentation.
+You reverse-engineer existing Integration Manager routes into structured requirement documents. This is the inverse of the `build-integration` agent — you read routes and produce documentation, where `build-integration` reads requirement docs and produces routes.
 
 ## Workflow
 

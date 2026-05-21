@@ -90,41 +90,16 @@ Track: total checks run, total violations found. **Compliance % = (checks passed
 
 ### Step 5 -- Anti-Pattern Detection (count ALL findings)
 
-Run all anti-pattern checks on every route file. Count each individual hit (not each category):
+Run the **version-independent** subset of `docs/anti-patterns.md` against every route, mapper, and filter file:
 
-**AP-1: Inline Groovy over 15 lines** -- Count lines inside every `<groovy>` or `<script language="groovy">` block. Flag any block exceeding 15 lines. Risk: no IDE support, no unit tests, hard to debug. Fix: extract to Spring bean.
+- **Structural / runtime safety:** AP-3 (streaming on splits), AP-6 (error handling), AP-7 (archive folder), AP-11 (DMDS flush), AP-19 (`noop=true`), AP-28 (CFS trigger inside split), AP-29 (`direct2ds=true`), AP-30 (`${body}` inside split)
+- **Quality / maintainability:** AP-4 (copy-pasted Groovy), AP-8 (inline Groovy >15 lines), AP-9 (inconsistent naming), AP-10 (route >200 lines), AP-13 (`split+tokenize+loaddata` for P/PX/CX/C), AP-15 (redundant `connection=pricefx`), AP-16 (`pfx:` route prefix), AP-18 (`extensionName`), AP-33 (Groovy in mapper), AP-34 (Groovy code style smells)
+- **External I/O & templates:** AP-31 (missing `<removeHeaders>` before HTTP/JMS), AP-32 (missing `allowContextMapAll=true` on FreeMarker)
+- **Properties / connections:** AP-5 (hardcoded hostnames/IPs), AP-14 (`pfx-sftp` with `default-sftp-connection`)
 
-**AP-2: Copy-paste Groovy** -- Scan all Groovy blocks across all routes for structurally identical or near-identical blocks. If 3+ routes share the same block body, flag as duplication. Risk: bug fixes must be applied to every copy. Fix: extract to shared bean.
+For each AP, the catalog provides the detect rule, severity, "why it matters", and fix recipe. Count each individual hit (not each category) and group findings by severity for the report.
 
-**AP-3: Hardcoded hostnames/IPs** -- Search each route for literal hostnames, IP addresses, or URLs in `uri=` attributes. Hardcoded batch sizes and cron expressions are fine -- do NOT flag those. Risk: cannot change per environment. Fix: replace with `{{property.name}}` placeholder.
-
-**AP-4: Missing error handling** -- For file-based routes, check that `moveFailed=` or `{{error.file}}` is present AND that `<doCatch>` or `<onException>` exists. Flag routes with neither. Risk: silent failures. Fix: add moveFailed + doCatch.
-
-**AP-5: Missing streaming on split** -- For routes using `<split>` with CSV data (not `loaddataFile`), check `streaming="true"` is set. Risk: OutOfMemoryError. Fix: add `streaming="true"`.
-
-**AP-6: DMDS flush outside split** -- For DMDS routes, check that `pfx-api:flush` exists AND appears AFTER the `</split>` tag or inside `<onCompletion>`, not inside the split body. Risk: partial data visible. Fix: move flush after split.
-
-**AP-7: CFS trigger inside split** -- Scan for `pfx-api:calculate`, `pfx-api:execute`, or CFS-related URIs inside a `<split>` body. Risk: N triggers per N batches. Fix: move to `<onCompletion>`.
-
-**AP-8: Route file over 200 lines** -- Count lines in each route XML. Risk: hard to maintain. Fix: decompose using `direct:` sub-routes.
-
-**AP-9: Missing archive or error folder** -- For file consumers, check `move`/`{{archive.file}}` and `moveFailed`/`{{error.file}}`. Risk: no audit trail. Fix: configure both.
-
-**AP-10: Inconsistent naming** -- Collect IDs of all routes, mappers, filters. Check whether naming style is consistent kebab-case. Risk: hard to find related artifacts. Fix: rename to kebab-case.
-
-**AP-11: Direct2ds flag usage** -- Find usage of `direct2ds=true` for `pfx-api:loaddata`. It was deprecated long time ago and creates significant performance issues in Pricefx Core. Risk: severe performance degradation. Fix: remove `direct2ds=true` parameter.
-
-**AP-12: Simple language `${body}` within split loop** -- Check for any occurrence of Simple language `${body}`and calls to its methods like`${body.size}`within`<split>`. There is an Apache Camel issue — it keeps all data in memory until the split is done. Risk: OutOfMemoryError. Fix: avoid referencing `${body}` inside split, use headers or properties instead.
-
-**AP-13: Missing removeHeaders before HTTP/JMS** -- Check for `<removeHeaders>` before sending data to HTTP or JMS endpoints. All Camel headers are sent by default and may create issues. Risk: unexpected headers sent to external systems. Fix: add `<removeHeaders pattern="*" excludePattern="..."/>` before HTTP/JMS endpoints.
-
-**AP-14: Missing `allowContextMapAll=true` on FreeMarker** -- For routes using FreeMarker templates, check that the URI includes `allowContextMapAll=true`. Risk: template cannot access exchange properties or headers. Fix: add `allowContextMapAll=true` to the FreeMarker URI.
-
-**AP-15: using groovy expression in mapper** -- Convert it to converter bean. It is hard to debug and test and also it creates performance issues.
-
-**AP-16: Check all groovy code for groovy related antipatterns** -- e.g. using `def` instead of explicit types, using `println` for logging, using `def` within loops, etc.
-
-**AP-17: Usage of pfx-sftp with default-sftp-connection** -- Check for any `pfx-sftp` routes using `default-sftp-connection` or a connection starting with that. Risk: performance and reliability issues. Fix: switch to `file://{{integration.sftp.root}}/{path}`.
+Do **not** redefine detection rules or fix recipes here — `docs/anti-patterns.md` is the single source of truth. If a new anti-pattern needs to be added, add it to the catalog with a `version-independent` applicability flag and reference it from this list.
 
 ### Step 6 -- Naming Consistency
 
@@ -221,7 +196,7 @@ Group findings by severity:
 
 ### 4. Anti-Pattern Report
 
-**Anti-Pattern Report table:** columns -- # | Anti-Pattern | Status | Affected Files. Status: FOUND / CLEAN. One row per AP-1 through AP-10. For FOUND, list affected file names and a brief note.
+**Anti-Pattern Report table:** columns -- # | Anti-Pattern | Status | Affected Files. Status: FOUND / CLEAN. One row per version-independent AP from `docs/anti-patterns.md` that produced a finding (or a single "all clean" row if none). For FOUND, list affected file names and a brief note.
 
 For each FOUND anti-pattern, include a details block:
 - File name and specific element or line range
@@ -254,7 +229,7 @@ Count each flagged file/element as one issue. Critical Issues count double (each
 Rank all findings by estimated impact and select the top 3. Use this priority order:
 
 1. Critical pattern violations (wrong object type key field, missing extension name constant)
-2. Anti-patterns (AP-4 missing error handling, AP-5 missing streaming, AP-6 DMDS flush)
+2. Critical anti-patterns from the catalog (AP-6 missing error handling, AP-3 missing streaming, AP-11 DMDS flush, AP-19 `noop=true`, AP-29 `direct2ds=true`, AP-30 `${body}` inside split)
 3. Test coverage gaps
 4. Version currency (if behind major version)
 5. Naming inconsistencies
