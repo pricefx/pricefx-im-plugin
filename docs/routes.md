@@ -14,6 +14,46 @@ Routes use `<routes>` as the root element:
 </routes>
 ```
 
+## Camel 3 ↔ Camel 4 — version-aware attribute names
+
+A handful of EIP attributes and a few URI schemes were renamed between Camel 3 (shipped in IM ≤ 6.x) and Camel 4 (IM 7.x). Generation skills must emit the form that matches the **target project's Camel version**, not a fixed default.
+
+### How to detect
+
+Read `<camel.version>` from the target `pom.xml`. If missing, infer from IM version using the layered recipe in `skills/migrate-manual-to-provisioned-pom/SKILL.md` Step 1 (parent BOM lookup → IM-major → Camel inference table → `mvn dependency:list` fallback).
+
+| Detected | Use |
+|---|---|
+| Camel 4.x (or IM ≥ 7.0) | **Camel 4 form** (modern, non-`Ref`) |
+| Camel 3.x (or IM ≤ 6.x) | **Camel 3 form** (`*Ref`, legacy URI schemes) |
+| Unknown | Default to **Camel 4** and flag the assumption in the route's generation report |
+
+### Attribute mapping
+
+| Camel 3 (IM ≤ 6.x) | Camel 4 (IM 7.x+) | Where it appears |
+|---|---|---|
+| `errorHandlerRef=` | `errorHandler=` | `<route>`, `<camelContext>` |
+| `redeliveryPolicyRef=` | `redeliveryPolicy=` | `<onException>` |
+| `strategyRef=` | `aggregationStrategy=` | `<split>`, `<aggregate>` |
+| `aggregationRepositoryRef=` | `aggregationRepository=` | `<aggregate>` |
+| `executorServiceRef=` | `executorService=` | `<multicast>`, `<split>`, `<aggregate>` |
+| `routePolicyRef=` | `routePolicy=` | `<route>` |
+| `onRedeliveryRef=` | `onRedelivery=` | `<onException>` |
+| `<inOnly uri="X"/>` | `<to uri="X" pattern="InOnly"/>` | route body |
+| `<inOut uri="X"/>` | `<to uri="X" pattern="InOut"/>` | route body |
+| `<routeContext id="X">…</routeContext>` wrapper | `<routes>…</routes>` only (no wrapper) | route XML root |
+| `${pfx:foo}` (Simple syntax) | `{{pfx:foo}}` (property placeholder) | URI attributes |
+| `quartz2:` | `quartz:` | `<from uri=…>` |
+| `vm:` | `seda:` | `<to>`, `<from>` |
+| `direct-vm:` | `direct:` | `<to>`, `<from>` |
+| `aws-s3:` | `aws2-s3:` | `<to>`, `<from>` |
+
+These are the same renames the migration agents detect — see `docs/anti-patterns.md` AP-20..AP-26 for the migration angle.
+
+### Examples below
+
+Every generation skill in this plugin shows its templates in **Camel 4** form (the IM 7.x default). When the detected target is Camel 3, swap the attributes per the table above before writing the file.
+
 ## Common Route Patterns
 
 ### Pattern 1: Inbound CSV to Pricefx (Product Load)

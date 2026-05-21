@@ -9,6 +9,8 @@ You are generating an import integration for a **PA Data Source (DMDS)** in a Pr
 
 **This skill is for DMDS (PA Data Source) imports only.** For P, PX, CX, or C imports, use `/generate-import-integration` instead.
 
+> **Camel version note:** the `<split>` template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
+
 ## DMDS Import Pattern Overview
 
 PA Data Source imports are different from P/PX/CX/C imports:

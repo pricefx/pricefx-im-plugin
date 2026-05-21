@@ -7,6 +7,8 @@ description: Use when a Pricefx Integration Manager route reads from or writes t
 
 You are generating a SQL database integration for a Pricefx Integration Manager project. The route either reads rows from a database and loads them into Pricefx, or fetches data from Pricefx and writes it back to a database table. Follow the steps below. Never hardcode database credentials — always read them via `#{environment['...']}` placeholders that resolve to profile-specific properties.
 
+> **Camel version note:** the `<split>` template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
+
 ## Step 1: Gather Information
 
 Ask the user for the following (or read from `$ARGUMENTS` if already provided):
