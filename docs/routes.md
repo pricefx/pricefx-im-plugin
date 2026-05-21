@@ -163,12 +163,12 @@ Use `integrate` instead of `loaddata` when you need to update existing records.
 
 ### Pattern 7: Event Polling
 
-Listen for Pricefx system events and react.
+Listen for Pricefx system events and react. The consumer is `pfx-event:fetch`; one route listens for one `eventType` — use multiple routes (or a `<choice>` downstream) for multiple types.
 
 ```xml
 <route id="fetchEvents">
-    <from uri="pfx-api:events?delay=60000&amp;eventTypes=ITEM_UPDATE_PPV,PADATALOAD_COMPLETED"/>
-    <log message="Event: ${body[operation]}"/>
+    <from uri="pfx-event:fetch?eventType=ITEM_UPDATE_PPV&amp;delay=60000"/>
+    <log message="Event received: ${header.PfxEventType}"/>
     <to uri="direct:handleEvent"/>
 </route>
 ```
