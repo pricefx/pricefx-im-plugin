@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-pom
-description: Migrate the manual project's `pom.xml` to the provisioned IM 7.x layout — bump Java to 17, Spring Boot to 3.x, Camel to 4.x, IM to 7.x, and remove unwanted dependencies (`quartz2`, `camel-aws-starter`, `joda-time`).
+description: Use when migrating from manual to provisioned and the source project's `pom.xml` targets Java < 17, Spring Boot 2.x, Camel 3.x, IM 6.x, or pulls in legacy dependencies (`quartz2`, `camel-aws-starter`, `joda-time`).
 ---
 
 # Migrate Manual → Provisioned: pom.xml

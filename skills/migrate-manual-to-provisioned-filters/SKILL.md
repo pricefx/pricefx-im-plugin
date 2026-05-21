@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-filters
-description: Extract every `<filter>` and legacy `<pfx:filter>` element (block and self-closing forms) from a manual IM project's bundled XML files and split them into one-filter-per-file under `src/main/resources/repo/filters/` in the target provisioned project.
+description: Use when migrating from manual to provisioned and the source project has `<filter>` or legacy `<pfx:filter>` elements (block or self-closing form) bundled into shared XML files instead of standalone `*.filter.xml` files under `src/main/resources/repo/filters/`.
 ---
 
 # Migrate Manual → Provisioned: Filters

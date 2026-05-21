@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-properties
-description: Migrate `application.properties` and `application-*.properties` from a manual IM project to the provisioned shape — rename Spring Boot keys to integration.* equivalents, copy required keys that are missing, and warn about overrides and invalid error-handling exception classes.
+description: Use when migrating from manual to provisioned and the source project's `application.properties` / `application-*.properties` use legacy Spring Boot keys, are missing required `integration.*` keys, override provisioned-managed properties, or reference unknown error-handling exception classes.
 ---
 
 # Migrate Manual → Provisioned: Application Properties
