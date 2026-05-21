@@ -1,0 +1,20 @@
+{
+  "reviews": [
+    {
+      "run_id": "p-master-sftp-daily-with_skill",
+      "feedback": "businessKeys is optional. so it is ok",
+      "timestamp": "2026-05-21T15:27:20.803Z"
+    },
+    {
+      "run_id": "p-master-sftp-daily-without_skill",
+      "feedback": "look greak",
+      "timestamp": "2026-05-21T15:27:20.803Z"
+    },
+    {
+      "run_id": "px-prices-hourly-with_skill",
+      "feedback": "again businessKeys is optional",
+      "timestamp": "2026-05-21T15:27:20.803Z"
+    }
+  ],
+  "status": "in_progress"
+}

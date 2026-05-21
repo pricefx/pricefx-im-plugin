@@ -1,0 +1,24 @@
+<mappers>
+    <!--
+        Sales history mapper for DMDS.SalesHistory.
+
+        ASSUMED CSV HEADER (the schema was not supplied with the request):
+            transactionId,transactionDate,sku,customerId,quantity,netPrice,netAmount,currency,salesOrg,salesRep
+
+        Adjust the `in=` source names below to the real CSV column names. The
+        `out=` names are the DMDS field names — also adjust those to the actual
+        field names of DMDS.SalesHistory in the target partition.
+    -->
+    <loadMapper id="import-sales-history.mapper">
+        <body in="transactionId"   out="transactionId"/>
+        <body in="transactionDate" out="transactionDate" converterExpression="stringToDate"/>
+        <body in="sku"             out="sku"/>
+        <body in="customerId"      out="customerId"/>
+        <body in="quantity"        out="quantity"     converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netPrice"        out="netPrice"     converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netAmount"       out="netAmount"    converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="currency"        out="currency"/>
+        <body in="salesOrg"        out="salesOrg"/>
+        <body in="salesRep"        out="salesRep"/>
+    </loadMapper>
+</mappers>

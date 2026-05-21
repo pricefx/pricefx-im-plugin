@@ -1,0 +1,983 @@
+{
+  "metadata": {
+    "skill_name": "generate-import-integration",
+    "skill_path": "/Users/mnagas/Documents/pricefx/pricefx-im-plugin/skills/generate-import-integration",
+    "executor_model": "claude-opus-4-7",
+    "analyzer_model": "claude-opus-4-7",
+    "timestamp": "2026-05-21T15:23:30.594595+00:00",
+    "evals_run": [
+      "c-customer-sftp-6am",
+      "edge-generic-csv-daily",
+      "edge-no-type-specified",
+      "neg-dmds-sales-history",
+      "neg-ltv-exchange-rates",
+      "neg-mltv2-discount-matrix",
+      "p-master-sftp-daily",
+      "px-prices-hourly",
+      "px-rename-loaddatafile",
+      "sl-seller-rest-4h"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 2,
+      "eval_name": "c-customer-sftp-6am",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 295.36,
+        "tokens": 65011,
+        "tool_calls": 12,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-C",
+          "text": "Generated route uses objectType=C (not CX)",
+          "passed": true,
+          "evidence": "matched: 'objectType=C(?![A-Z])'"
+        },
+        {
+          "id": "businesskeys-customerId",
+          "text": "Business key is customerId",
+          "passed": true,
+          "evidence": "matched: 'businessKeys=customerId'"
+        },
+        {
+          "id": "6am-cron",
+          "text": "Cron fires at 6 AM (cron field for hour=6)",
+          "passed": true,
+          "evidence": "matched: '\\\\+6\\\\+'"
+        },
+        {
+          "id": "sftp-source",
+          "text": "Route reads from pfx-sftp or file with sftp path",
+          "passed": true,
+          "evidence": "matched: 'pfx-sftp:' | 'file:' | 'customer-master'"
+        },
+        {
+          "id": "no-pa-ltv-pattern",
+          "text": "No PA / DMDS / LTV / MLTV2 patterns in route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "c-customer-sftp-6am",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 86.8,
+        "tokens": 48542,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-C",
+          "text": "Generated route uses objectType=C (not CX)",
+          "passed": true,
+          "evidence": "matched: 'objectType=C(?![A-Z])'"
+        },
+        {
+          "id": "businesskeys-customerId",
+          "text": "Business key is customerId",
+          "passed": true,
+          "evidence": "matched: 'businessKeys=customerId'"
+        },
+        {
+          "id": "6am-cron",
+          "text": "Cron fires at 6 AM (cron field for hour=6)",
+          "passed": true,
+          "evidence": "matched: '\\\\+6\\\\+'"
+        },
+        {
+          "id": "sftp-source",
+          "text": "Route reads from pfx-sftp or file with sftp path",
+          "passed": true,
+          "evidence": "matched: 'pfx-sftp:' | 'file:' | 'customer-master'"
+        },
+        {
+          "id": "no-pa-ltv-pattern",
+          "text": "No PA / DMDS / LTV / MLTV2 patterns in route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 9,
+      "eval_name": "edge-generic-csv-daily",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 111.75,
+        "tokens": 63058,
+        "tool_calls": 5,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-or-makes-reasonable-default",
+          "text": "Subagent either asks for object type OR picks one with a clear note that the assumption can be overridden",
+          "passed": true,
+          "evidence": "matched: 'object type' | 'default'"
+        },
+        {
+          "id": "no-pa-ltv-leak-if-generated",
+          "text": "If a route was generated, it doesn't accidentally use DMDS / LTV / MLTV2 (those need separate skills)",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 9,
+      "eval_name": "edge-generic-csv-daily",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 75.93,
+        "tokens": 45575,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-or-makes-reasonable-default",
+          "text": "Subagent either asks for object type OR picks one with a clear note that the assumption can be overridden",
+          "passed": true,
+          "evidence": "matched: 'object type' | 'default'"
+        },
+        {
+          "id": "no-pa-ltv-leak-if-generated",
+          "text": "If a route was generated, it doesn't accidentally use DMDS / LTV / MLTV2 (those need separate skills)",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 8,
+      "eval_name": "edge-no-type-specified",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 72.6,
+        "tokens": 61875,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-for-object-type",
+          "text": "Subagent asks a clarifying question naming object types (P/PX/C/CX/DMDS/LTV/MLTV2 etc.) before committing",
+          "passed": true,
+          "evidence": "matched: 'P / PX' | 'Product Master' | 'object type'"
+        },
+        {
+          "id": "did-not-write-route-file",
+          "text": "Subagent did NOT silently generate a route XML file",
+          "passed": true,
+          "evidence": "no route .xml present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 8,
+      "eval_name": "edge-no-type-specified",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 69.92,
+        "tokens": 45092,
+        "tool_calls": 2,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-for-object-type",
+          "text": "Subagent asks a clarifying question naming object types (P/PX/C/CX/DMDS/LTV/MLTV2 etc.) before committing",
+          "passed": true,
+          "evidence": "matched: 'P / PX' | 'P, PX' | 'object type'"
+        },
+        {
+          "id": "did-not-write-route-file",
+          "text": "Subagent did NOT silently generate a route XML file",
+          "passed": true,
+          "evidence": "no route .xml present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "neg-dmds-sales-history",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 47.03,
+        "tokens": 60325,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-pa-skill",
+          "text": "Subagent recognizes DMDS use case and refers to generate-pa-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-pa-import-integration' | 'pa-import-integration' | 'PA Data Source'"
+        },
+        {
+          "id": "no-wrong-objecttype-pcx",
+          "text": "Does NOT generate objectType=P/PX/C/CX/SL/SX for a DMDS file",
+          "passed": true,
+          "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+        },
+        {
+          "id": "no-loaddatafile-for-dmds",
+          "text": "Does NOT use pfx-api:loaddataFile for DMDS (DMDS needs split+tokenize+loaddata+flush)",
+          "passed": true,
+          "evidence": "none of: 'pfx-api:loaddataFile' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "neg-dmds-sales-history",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 122.31,
+        "tokens": 50554,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-pa-skill",
+          "text": "Subagent recognizes DMDS use case and refers to generate-pa-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-pa-import-integration' | 'pa-import-integration' | 'DMDS.*different'"
+        },
+        {
+          "id": "no-wrong-objecttype-pcx",
+          "text": "Does NOT generate objectType=P/PX/C/CX/SL/SX for a DMDS file",
+          "passed": true,
+          "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+        },
+        {
+          "id": "no-loaddatafile-for-dmds",
+          "text": "Does NOT use pfx-api:loaddataFile for DMDS (DMDS needs split+tokenize+loaddata+flush)",
+          "passed": false,
+          "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-ltv-exchange-rates",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 44.78,
+        "tokens": 59832,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-ppv-skill",
+          "text": "Subagent recognizes LTV use case and refers to generate-ppv-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-ppv-import-integration' | 'ppv-import' | 'Pricing Parameter[s]?'"
+        },
+        {
+          "id": "no-wrong-objecttype-pcx",
+          "text": "Does NOT generate objectType=P / PX / C / CX for what is an LTV table",
+          "passed": true,
+          "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+        },
+        {
+          "id": "no-px-name-constant",
+          "text": "Does NOT produce a PX/CX <constant out=\"name\"/> table-name mapper line",
+          "passed": true,
+          "evidence": "none of: '<constant[^>]*expression=\"ExchangeRates\"[^>]*out=\"name\"' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-ltv-exchange-rates",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 81.81,
+        "tokens": 47807,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-ppv-skill",
+          "text": "Subagent recognizes LTV use case and refers to generate-ppv-import-integration",
+          "passed": true,
+          "evidence": "matched: 'Pricing Parameter[s]?'"
+        },
+        {
+          "id": "no-wrong-objecttype-pcx",
+          "text": "Does NOT generate objectType=P / PX / C / CX for what is an LTV table",
+          "passed": true,
+          "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+        },
+        {
+          "id": "no-px-name-constant",
+          "text": "Does NOT produce a PX/CX <constant out=\"name\"/> table-name mapper line",
+          "passed": true,
+          "evidence": "none of: '<constant[^>]*expression=\"ExchangeRates\"[^>]*out=\"name\"' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 7,
+      "eval_name": "neg-mltv2-discount-matrix",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 42.49,
+        "tokens": 59817,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-ppv-skill",
+          "text": "Subagent recognizes MLTV2 use case and refers to generate-ppv-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-ppv-import-integration' | 'ppv-import' | 'Pricing Parameter'"
+        },
+        {
+          "id": "no-wrong-objecttype-pcx",
+          "text": "Does NOT generate objectType=P/PX/C/CX for an MLTV2 table",
+          "passed": true,
+          "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 7,
+      "eval_name": "neg-mltv2-discount-matrix",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 1,
+        "failed": 1,
+        "total": 2,
+        "time_seconds": 104.99,
+        "tokens": 49424,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-ppv-skill",
+          "text": "Subagent recognizes MLTV2 use case and refers to generate-ppv-import-integration",
+          "passed": false,
+          "evidence": "missing: 'generate-ppv-import-integration' | 'ppv-import' | 'Pricing Parameter'"
+        },
+        {
+          "id": "no-wrong-objecttype-pcx",
+          "text": "Does NOT generate objectType=P/PX/C/CX for an MLTV2 table",
+          "passed": true,
+          "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "p-master-sftp-daily",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 120.29,
+        "tokens": 64681,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-P",
+          "text": "Generated route URI contains objectType=P",
+          "passed": true,
+          "evidence": "matched: 'objectType=P'"
+        },
+        {
+          "id": "uses-loaddatafile-or-loaddata",
+          "text": "Generated route uses pfx-api:loaddataFile or pfx-api:loaddata",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:loaddataFile' | 'pfx-api:loaddata'"
+        },
+        {
+          "id": "mapper-file-present",
+          "text": "A mapper XML file is produced (loadMapper or integrateMapper)",
+          "passed": true,
+          "evidence": "matched: 'loadMapper'"
+        },
+        {
+          "id": "daily-schedule",
+          "text": "Daily schedule wired (quartz cron, scheduler param, or property placeholder)",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "No DMDS / flush / dataSourceName pattern leaks into the generated route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'pfx-api:flush' | 'dataSourceName=' present"
+        },
+        {
+          "id": "no-ltv-mltv2-pattern",
+          "text": "No LTV / MLTV2 / pricingParameterName pattern leaks into the generated route/mapper",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "p-master-sftp-daily",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 301.96,
+        "tokens": 47925,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-P",
+          "text": "Generated route URI contains objectType=P",
+          "passed": true,
+          "evidence": "matched: 'objectType=P'"
+        },
+        {
+          "id": "uses-loaddatafile-or-loaddata",
+          "text": "Generated route uses pfx-api:loaddataFile or pfx-api:loaddata",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:loaddataFile' | 'pfx-api:loaddata'"
+        },
+        {
+          "id": "mapper-file-present",
+          "text": "A mapper XML file is produced (loadMapper or integrateMapper)",
+          "passed": true,
+          "evidence": "matched: 'loadMapper'"
+        },
+        {
+          "id": "daily-schedule",
+          "text": "Daily schedule wired (quartz cron, scheduler param, or property placeholder)",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "No DMDS / flush / dataSourceName pattern leaks into the generated route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'pfx-api:flush' | 'dataSourceName=' present"
+        },
+        {
+          "id": "no-ltv-mltv2-pattern",
+          "text": "No LTV / MLTV2 / pricingParameterName pattern leaks into the generated route/mapper",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "px-prices-hourly",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 129.85,
+        "tokens": 67252,
+        "tool_calls": 13,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-PX",
+          "text": "Generated route uses objectType=PX",
+          "passed": true,
+          "evidence": "matched: 'objectType=PX'"
+        },
+        {
+          "id": "px-name-constant",
+          "text": "Mapper contains <constant ... out=\"name\"/> with table name Prices (required for PX)",
+          "passed": true,
+          "evidence": "matched: '<constant[^>]*expression=\"Prices\"[^>]*out=\"name\"'"
+        },
+        {
+          "id": "hourly-cron",
+          "text": "Schedule is hourly (cron pattern roughly every hour or every 60 minutes)",
+          "passed": true,
+          "evidence": "matched: '0\\\\+0\\\\+0/1'"
+        },
+        {
+          "id": "file-component",
+          "text": "Route reads from file:// or pfx-sftp:// source",
+          "passed": true,
+          "evidence": "matched: 'file:'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "No DMDS / flush pattern in route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'pfx-api:flush' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "px-prices-hourly",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 89.45,
+        "tokens": 48118,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-PX",
+          "text": "Generated route uses objectType=PX",
+          "passed": true,
+          "evidence": "matched: 'objectType=PX'"
+        },
+        {
+          "id": "px-name-constant",
+          "text": "Mapper contains <constant ... out=\"name\"/> with table name Prices (required for PX)",
+          "passed": true,
+          "evidence": "matched: '<constant[^>]*expression=\"Prices\"[^>]*out=\"name\"'"
+        },
+        {
+          "id": "hourly-cron",
+          "text": "Schedule is hourly (cron pattern roughly every hour or every 60 minutes)",
+          "passed": true,
+          "evidence": "matched: '0\\\\+0\\\\+0/1'"
+        },
+        {
+          "id": "file-component",
+          "text": "Route reads from file:// or pfx-sftp:// source",
+          "passed": true,
+          "evidence": "matched: 'file:'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "No DMDS / flush pattern in route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'pfx-api:flush' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "px-rename-loaddatafile",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 98.12,
+        "tokens": 64511,
+        "tool_calls": 10,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-PX",
+          "text": "Generated route uses objectType=PX",
+          "passed": true,
+          "evidence": "matched: 'objectType=PX'"
+        },
+        {
+          "id": "uses-loaddatafile",
+          "text": "Generated route uses pfx-api:loaddataFile (explicitly requested over loaddata)",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:loaddataFile'"
+        },
+        {
+          "id": "mapper-rename-partnumber",
+          "text": "Mapper renames partNumber -> sku (in=partNumber out=sku)",
+          "passed": true,
+          "evidence": "matched: 'in=\"partNumber\"[^>]*out=\"sku\"'"
+        },
+        {
+          "id": "mapper-listprice-attribute",
+          "text": "Mapper maps listPrice to an attribute slot",
+          "passed": true,
+          "evidence": "matched: 'in=\"listPrice\"[^>]*out=\"attribute'"
+        },
+        {
+          "id": "mapper-costcenter-attribute",
+          "text": "Mapper maps costCenter to an attribute slot",
+          "passed": true,
+          "evidence": "matched: 'in=\"costCenter\"[^>]*out=\"attribute'"
+        },
+        {
+          "id": "px-name-constant",
+          "text": "PX mapper has <constant ... expression=\"Pricing\" out=\"name\"/>",
+          "passed": true,
+          "evidence": "matched: '<constant[^>]*expression=\"Pricing\"[^>]*out=\"name\"'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "px-rename-loaddatafile",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 69.65,
+        "tokens": 47119,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-PX",
+          "text": "Generated route uses objectType=PX",
+          "passed": true,
+          "evidence": "matched: 'objectType=PX'"
+        },
+        {
+          "id": "uses-loaddatafile",
+          "text": "Generated route uses pfx-api:loaddataFile (explicitly requested over loaddata)",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:loaddataFile'"
+        },
+        {
+          "id": "mapper-rename-partnumber",
+          "text": "Mapper renames partNumber -> sku (in=partNumber out=sku)",
+          "passed": true,
+          "evidence": "matched: 'in=\"partNumber\"[^>]*out=\"sku\"'"
+        },
+        {
+          "id": "mapper-listprice-attribute",
+          "text": "Mapper maps listPrice to an attribute slot",
+          "passed": true,
+          "evidence": "matched: 'in=\"listPrice\"[^>]*out=\"attribute'"
+        },
+        {
+          "id": "mapper-costcenter-attribute",
+          "text": "Mapper maps costCenter to an attribute slot",
+          "passed": true,
+          "evidence": "matched: 'in=\"costCenter\"[^>]*out=\"attribute'"
+        },
+        {
+          "id": "px-name-constant",
+          "text": "PX mapper has <constant ... expression=\"Pricing\" out=\"name\"/>",
+          "passed": true,
+          "evidence": "matched: '<constant[^>]*expression=\"Pricing\"[^>]*out=\"name\"'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "sl-seller-rest-4h",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 127.38,
+        "tokens": 66077,
+        "tool_calls": 11,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-SL",
+          "text": "Generated route uses objectType=SL",
+          "passed": true,
+          "evidence": "matched: 'objectType=SL'"
+        },
+        {
+          "id": "businesskeys-sellerId",
+          "text": "Business key is sellerId (SL convention)",
+          "passed": true,
+          "evidence": "matched: 'businessKeys=sellerId'"
+        },
+        {
+          "id": "rest-get-step",
+          "text": "Route includes pfx-rest:get step targeting the seller endpoint",
+          "passed": true,
+          "evidence": "matched: 'pfx-rest:get'"
+        },
+        {
+          "id": "json-unmarshal",
+          "text": "Route includes pfx-json:unmarshal before loaddata (JSON response from REST)",
+          "passed": true,
+          "evidence": "matched: 'pfx-json:unmarshal'"
+        },
+        {
+          "id": "4hour-schedule",
+          "text": "Schedule is every 4 hours (cron 0 0 0/4 OR property)",
+          "passed": true,
+          "evidence": "matched: '0/4' | 'every 4' | '0\\\\+0\\\\+0/4'"
+        },
+        {
+          "id": "no-pa-ltv-pattern",
+          "text": "No PA / LTV / MLTV2 patterns in route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "sl-seller-rest-4h",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 102.81,
+        "tokens": 49261,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-SL",
+          "text": "Generated route uses objectType=SL",
+          "passed": true,
+          "evidence": "matched: 'objectType=SL'"
+        },
+        {
+          "id": "businesskeys-sellerId",
+          "text": "Business key is sellerId (SL convention)",
+          "passed": true,
+          "evidence": "matched: 'businessKeys=sellerId'"
+        },
+        {
+          "id": "rest-get-step",
+          "text": "Route includes pfx-rest:get step targeting the seller endpoint",
+          "passed": true,
+          "evidence": "matched: 'pfx-rest:get'"
+        },
+        {
+          "id": "json-unmarshal",
+          "text": "Route includes pfx-json:unmarshal before loaddata (JSON response from REST)",
+          "passed": true,
+          "evidence": "matched: 'pfx-json:unmarshal'"
+        },
+        {
+          "id": "4hour-schedule",
+          "text": "Schedule is every 4 hours (cron 0 0 0/4 OR property)",
+          "passed": true,
+          "evidence": "matched: '0/4' | 'every 4' | '0\\\\+0\\\\+0/4'"
+        },
+        {
+          "id": "no-pa-ltv-pattern",
+          "text": "No PA / LTV / MLTV2 patterns in route/mapper",
+          "passed": true,
+          "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 108.965,
+        "stddev": 70.3342,
+        "min": 42.49,
+        "max": 295.36
+      },
+      "tokens": {
+        "mean": 63243.9,
+        "stddev": 2543.578,
+        "min": 59817,
+        "max": 67252
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9167,
+        "stddev": 0.1708,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 110.563,
+        "stddev": 65.7452,
+        "min": 69.65,
+        "max": 301.96
+      },
+      "tokens": {
+        "mean": 47941.7,
+        "stddev": 1599.0821,
+        "min": 45092,
+        "max": 50554
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.0833",
+      "time_seconds": "-1.6",
+      "tokens": "+15302"
+    }
+  },
+  "notes": [
+    "With-skill is strictly equal-or-better than the baseline on every eval. All wins are concentrated on negative cases (correct PA/PPV redirects).",
+    "neg-dmds-sales-history: with-skill 100% (deferred to generate-pa-import-integration), baseline 67% \u2014 baseline generated a DMDS import using pfx-api:loaddataFile, which the docs explicitly warn against (DMDS needs split+tokenize+loaddata+flush).",
+    "neg-mltv2-discount-matrix: with-skill 100% (deferred to generate-ppv-import-integration), baseline 50% \u2014 baseline built an MLTV2 route without flagging that a specialized skill exists.",
+    "neg-ltv-exchange-rates: tied at 100% \u2014 with-skill deferred; baseline built a functioning LTV route. Both technically correct; the redirect is preferable per the plugin's organization.",
+    "Positive cases (P, PX, C, SL, PX-rename): tied at 100% \u2014 both configurations produce a workable route+mapper+properties bundle.",
+    "Edge cases (no type / generic CSV daily): tied at 100% \u2014 both correctly asked for clarification (the skill's Step 2 enforces this explicitly, the baseline reached the same conclusion from the project docs).",
+    "Cost trade: skill adds ~15k tokens per invocation (reading SKILL.md) and saves ~2s. The token cost buys protection against the negative-case misroutes \u2014 worth it on any real run.",
+    "Trigger evals NOT measured here \u2014 see evals/benchmarks/config.md for the known scripts/run_eval.py harness limitation. This benchmark is output-quality only.",
+    "All 20 runs completed without leaking writes into src/main/resources/repo/ (verified via git status).",
+    "Caveat: pfx CLI was unavailable during the runs (no .env), so all field-to-attribute mappings are synthetic. Real-world output quality on Smart Auto-Mapping is not exercised by this benchmark."
+  ]
+}

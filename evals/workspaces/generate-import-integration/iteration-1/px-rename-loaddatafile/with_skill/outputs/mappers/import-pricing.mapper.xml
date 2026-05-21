@@ -1,0 +1,16 @@
+<mappers>
+    <loadMapper id="import-pricing.mapper">
+        <!-- PX table name (required for PX/CX imports) -->
+        <constant expression="Pricing" out="name"/>
+
+        <!-- Business key: partNumber -> sku -->
+        <body in="partNumber" out="sku"/>
+
+        <!-- Assumed PX attribute mapping (pfx CLI not available):
+             attribute1 = listPrice  (decimal / money)
+             attribute2 = costCenter (string)
+             Adjust if the actual Pricing PX schema differs. -->
+        <body in="listPrice"  out="attribute1" converterExpression="stringToDecimal"/>
+        <body in="costCenter" out="attribute2"/>
+    </loadMapper>
+</mappers>

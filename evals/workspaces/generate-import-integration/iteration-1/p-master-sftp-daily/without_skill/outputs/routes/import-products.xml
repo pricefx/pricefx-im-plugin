@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="import-products">
+        <!-- Daily poll of SFTP /import folder for products.csv -->
+        <from uri="pfx-sftp:///import?connection=sftp.connection&amp;fileName=products.csv&amp;delete=true&amp;scheduler=quartz&amp;scheduler.cron=0+0+2+*+*+?&amp;scheduler.triggerStartDelay=10000"/>
+
+        <log message="Picked up file ${header.CamelFileName} from SFTP /import"/>
+
+        <!-- Parse CSV into a list of maps -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <!-- Stream-load into Pricefx Product master -->
+        <to uri="pfx-api:loaddataFile?objectType=P&amp;mapper=import-products.mapper&amp;businessKeys=sku&amp;batchSize=200000"/>
+
+        <log message="Finished loading products.csv into Pricefx Product master"/>
+
+        <onCompletion onCompleteOnly="true">
+            <log message="Triggering internal copy for Product master"/>
+            <to uri="pfx-api:internalCopy?label=Product"/>
+        </onCompletion>
+    </route>
+
+</routes>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+        Import Seller Master from internal ERP REST API into Pricefx SL master.
+        - Runs every 4 hours via Quartz.
+        - Uses stateful=true to prevent overlapping runs.
+        - Fetches JSON from https://erp.internal/api/sellers via pfx-rest.
+        - Unmarshals JSON, maps with import-sellers.mapper, and loads via pfx-api:loaddata.
+    -->
+    <route id="import-sellers">
+        <from uri="quartz://import-sellers?cron=0+0+0/4+*+*+?&amp;stateful=true"/>
+
+        <log message="Starting seller master import from ERP REST API"/>
+
+        <!-- Fetch sellers from the ERP REST API -->
+        <toD uri="pfx-rest:get?uri=/api/sellers&amp;connection=erp.connection&amp;connectionTimeoutMs=500000"/>
+
+        <!-- Parse JSON response into a list of maps -->
+        <to uri="pfx-json:unmarshal"/>
+
+        <!-- Load into Pricefx Seller Master (SL).
+             businessKeys=sellerId so existing sellers are matched on the natural key. -->
+        <to uri="pfx-api:loaddata?objectType=SL&amp;mapper=import-sellers.mapper&amp;businessKeys=sellerId"/>
+
+        <log message="Seller master import complete. Total records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <onCompletion onCompleteOnly="true">
+            <log message="Triggering internal copy for Seller"/>
+            <to uri="pfx-api:internalCopy?label=Seller"/>
+        </onCompletion>
+    </route>
+
+</routes>

@@ -1,0 +1,48 @@
+{
+  "eval_id": 3,
+  "eval_name": "sl-seller-rest-4h",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-SL",
+      "text": "Generated route uses objectType=SL",
+      "passed": true,
+      "evidence": "matched: 'objectType=SL'"
+    },
+    {
+      "id": "businesskeys-sellerId",
+      "text": "Business key is sellerId (SL convention)",
+      "passed": true,
+      "evidence": "matched: 'businessKeys=sellerId'"
+    },
+    {
+      "id": "rest-get-step",
+      "text": "Route includes pfx-rest:get step targeting the seller endpoint",
+      "passed": true,
+      "evidence": "matched: 'pfx-rest:get'"
+    },
+    {
+      "id": "json-unmarshal",
+      "text": "Route includes pfx-json:unmarshal before loaddata (JSON response from REST)",
+      "passed": true,
+      "evidence": "matched: 'pfx-json:unmarshal'"
+    },
+    {
+      "id": "4hour-schedule",
+      "text": "Schedule is every 4 hours (cron 0 0 0/4 OR property)",
+      "passed": true,
+      "evidence": "matched: '0/4' | 'every 4' | '0\\\\+0\\\\+0/4'"
+    },
+    {
+      "id": "no-pa-ltv-pattern",
+      "text": "No PA / LTV / MLTV2 patterns in route/mapper",
+      "passed": true,
+      "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+    }
+  ],
+  "score": {
+    "passed": 6,
+    "total": 6
+  }
+}

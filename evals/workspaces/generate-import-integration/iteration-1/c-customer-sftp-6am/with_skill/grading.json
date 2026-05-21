@@ -1,0 +1,42 @@
+{
+  "eval_id": 2,
+  "eval_name": "c-customer-sftp-6am",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-C",
+      "text": "Generated route uses objectType=C (not CX)",
+      "passed": true,
+      "evidence": "matched: 'objectType=C(?![A-Z])'"
+    },
+    {
+      "id": "businesskeys-customerId",
+      "text": "Business key is customerId",
+      "passed": true,
+      "evidence": "matched: 'businessKeys=customerId'"
+    },
+    {
+      "id": "6am-cron",
+      "text": "Cron fires at 6 AM (cron field for hour=6)",
+      "passed": true,
+      "evidence": "matched: '\\\\+6\\\\+'"
+    },
+    {
+      "id": "sftp-source",
+      "text": "Route reads from pfx-sftp or file with sftp path",
+      "passed": true,
+      "evidence": "matched: 'pfx-sftp:' | 'file:' | 'customer-master'"
+    },
+    {
+      "id": "no-pa-ltv-pattern",
+      "text": "No PA / DMDS / LTV / MLTV2 patterns in route/mapper",
+      "passed": true,
+      "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+    }
+  ],
+  "score": {
+    "passed": 5,
+    "total": 5
+  }
+}

@@ -1,0 +1,16 @@
+<mappers>
+    <loadMapper id="import-discount-matrix.mapper">
+        <!-- Multi-key dimensions: customer x product x quantity tier -->
+        <body in="customerId"   out="key1"/>
+        <body in="sku"          out="key2"/>
+        <body in="quantityTier" out="key3"/>
+
+        <!-- Discount value (percentage stored as decimal) -->
+        <body in="discountPct"  out="attribute1" converterExpression="stringToDecimal(us,0,4)"/>
+
+        <!-- Optional metadata commonly carried on a discount matrix -->
+        <body in="validFrom"    out="attribute2"/>
+        <body in="validTo"      out="attribute3"/>
+        <body in="currency"     out="attribute4"/>
+    </loadMapper>
+</mappers>

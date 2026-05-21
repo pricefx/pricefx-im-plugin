@@ -1,0 +1,8 @@
+{
+  "id": "pricefx",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.PriceFxConnection",
+  "partition": "your-partition",
+  "username": "admin",
+  "password": "CHANGE_ME",
+  "uri": "https://your-cluster.pricefx.eu/pricefx"
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-pricing">
+        <from uri="file://{{integration.sftp.root}}/import/pricing?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+        <log message="Starting Pricing PX import from ${header[CamelFileNameOnly]}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=PX&amp;mapper=import-pricing.mapper&amp;batchSize=200000"/>
+        <log message="Completed Pricing PX import from ${header[CamelFileNameOnly]}"/>
+    </route>
+</routes>

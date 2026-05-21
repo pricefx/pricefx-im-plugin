@@ -1,0 +1,24 @@
+{
+  "eval_id": 7,
+  "eval_name": "neg-mltv2-discount-matrix",
+  "category": "negative",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-ppv-skill",
+      "text": "Subagent recognizes MLTV2 use case and refers to generate-ppv-import-integration",
+      "passed": false,
+      "evidence": "missing: 'generate-ppv-import-integration' | 'ppv-import' | 'Pricing Parameter'"
+    },
+    {
+      "id": "no-wrong-objecttype-pcx",
+      "text": "Does NOT generate objectType=P/PX/C/CX for an MLTV2 table",
+      "passed": true,
+      "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+    }
+  ],
+  "score": {
+    "passed": 1,
+    "total": 2
+  }
+}

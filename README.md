@@ -1106,7 +1106,12 @@ pricefx-im-plugin/
 
 1. Create a feature branch from `develop`
 2. Make your changes
-3. Submit a merge request to `develop`
+3. If you changed a `description:` field on any skill or agent, re-run the relevant evals in [`evals/triggers.md`](evals/triggers.md) — description regressions are the #1 silent failure mode in this plugin
+4. Submit a merge request to `develop`
+
+### Evals
+
+Manual trigger evals live at [`evals/triggers.md`](evals/triggers.md). They list `(user prompt) → (expected skill / agent)` mappings for every skill and agent. Run after any `description:` change. Future: scripted runner via the Claude SDK.
 
 ## Repository
 
