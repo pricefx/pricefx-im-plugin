@@ -48,8 +48,8 @@ Skip when class is any of:
 - `net.pricefx.integration.component.rest.domain.connection.OAuth2Connection`
 - `net.pricefx.integration.component.rest.domain.connection.JwtConnection`
 - `net.pricefx.integration.component.rest.domain.connection.NoopConnection`
-- `net.pricefx.integration.connection.SftpConnection`
-- `net.pricefx.integration.component.s3.S3Connection`
+- `net.pricefx.integration.component.sftp.connection.SFTPConnection`
+- `net.pricefx.integration.component.s3.connection.S3Connection`
 
 Validated against `bridgestone-integration` where `<bean id="mulesoftConn" class="...BasicConnection">` is a connection bean that must end up in `connections/mulesoftConn.json`, not `beans/mulesoftConn.xml`.
 

@@ -50,7 +50,7 @@ Use the `pfx` CLI tool to discover tables and fetch field-level metadata from th
 | PX | Product Extension |
 | C | Customer Master |
 | CX | Customer Extension |
-| S | Seller |
+| SL | Seller Master |
 | SX | Seller Extension |
 | DS | Data Source |
 | DMF | Data Feed (Company Parameters) |
@@ -60,13 +60,16 @@ Use the `pfx` CLI tool to discover tables and fetch field-level metadata from th
 | PG | Price Grid |
 | PGI | Price Grid Item |
 | LPG | Live Price Grid |
-| LPGI | Live Price Grid Item |
 | Q | Quote |
-| QI | Quote Item |
-| A | Agreement |
-| AI | Agreement Item |
-| CRCI | Condition Record |
-| RBI | Rebate Item |
+| QLI | Quote Line Item |
+| CT | Contract (UI label: "Agreement") |
+| CTLI | Contract Line Item |
+| CRCP | Condition Record Processing (used with `pfx-api:loaddata`/`integrate`) |
+| CRCI1 … CRCI12 | Condition Record (numbered slot — used with `pfx-api:fetch`) |
+| CRCS | Condition Record Set |
+| RBA | Rebate Agreement |
+| RBALI | Rebate Agreement Line Item |
+| RR | Rebate Record |
 
 ## Route File Conventions
 

@@ -87,15 +87,15 @@ Walk every `*.xml` under SOURCE_DIR. Scan for `<bean>` elements whose `class` at
 | `net.pricefx.integration.component.rest.domain.connection.OAuth2Connection` | `OAuth2Connection` |
 | `net.pricefx.integration.component.rest.domain.connection.JwtConnection` | `JwtConnection` |
 | `net.pricefx.integration.component.rest.domain.connection.NoopConnection` | `NoopConnection` |
-| `net.pricefx.integration.connection.SftpConnection` | `SftpConnection` |
-| `net.pricefx.integration.component.s3.S3Connection` | `S3Connection` |
+| `net.pricefx.integration.component.sftp.connection.SFTPConnection` | `SFTPConnection` (note: uppercase) |
+| `net.pricefx.integration.component.s3.connection.S3Connection` | `S3Connection` |
 
-For each match, read every `<property name="X" value="Y"/>` child to recover the connection fields. Common property names:
-- `url` → `uri`
-- `username` → `username`
-- `password` → `password`
-- `partition` → `partition` (Pricefx only)
-- `clientId`, `clientSecret`, `authUri`, `grantType` (OAuth2)
+For each match, read every `<property name="X" value="Y"/>` child to recover the connection fields. The JSON key depends on the discriminator (see `docs/connections.md` → "Endpoint-field naming"). Common property mappings:
+- For `PriceFxConnection`: bean `url` → JSON `uri`
+- For REST family (`OAuth2`, `Basic`, `Jwt`, `Noop`): bean `url` → JSON `url` (keep as-is)
+- For `SFTPConnection`: bean `host` → JSON `host` (plus `port`, `path`, `username`, `password`, `strictHostKeyChecking`)
+- `username`, `password`, `partition` (Pricefx only) → same names
+- For OAuth2: `clientId`, `clientSecret`, `authUrl` (not `authUri`). There is no `grantType` field — grant type is embedded in the default `authRequestTemplate`; only set `authRequestTemplate` if a non-`password` grant is needed.
 
 The `value` may be a Spring property placeholder (`${bridgestone.mulesoft.url}`) — preserve it verbatim in the JSON so the runtime resolves per-environment.
 
