@@ -90,31 +90,9 @@ Rename `.java` → `.groovy`. Move under `$TARGET_DIR/src/main/resources/repo/cl
 
 ## Step 3: Fix Imports
 
-For every file now in `classes/` (both newly-converted and pre-existing Groovy), apply this exact-match replacement table to `import ...` lines (the trailing `;` may or may not be present after step 2a).
+For every file now in `classes/` (both newly-converted and pre-existing Groovy), apply the **Import renames** table in `references.md`. It covers Jersey → Jakarta, Swagger client → Pricefx integration API, Camel `AggregationStrategy`, commons-lang/collections → -lang3/-collections4, `PartitionConnectionFactory` → `ConnectionLookup`, plus two "do not auto-rewrite — flag for review" entries (`ApiClientRequestBuilder`, `@Autowired`).
 
-**Caveat:** the rewrite operates on raw text and **also touches commented-out imports** (`//import com.foo.Bar;`). This is harmless — the comment stays a comment — but it can be confusing if the file already has the active modern import on another line. After the rewrite pass, scan each file for **duplicate active import lines** (i.e. two non-commented `import X;` lines with the same fully-qualified name) and report them; do not remove duplicates automatically. Surfaced by `dieteren-integration` where `ProductsAggregationStrategy.java` had `// import org.apache.camel.processor.aggregate.AggregationStrategy;` (commented) alongside the active modern `import org.apache.camel.AggregationStrategy;`.
-
-| Old import | New import |
-|---|---|
-| `import com.sun.jersey.api.client.GenericType` | `import jakarta.ws.rs.core.GenericType` |
-| `import io.swagger.client.ApiClient` | `import net.pricefx.integration.api.ApiClient` |
-| `import io.swagger.client.ApiException` | `import net.pricefx.integration.api.ApiException` |
-| `import io.swagger.client.Pair` | `import net.pricefx.integration.api.Pair` |
-| `import net.pricefx.integration.mapper.converter.Converter` | `import net.pricefx.integration.api.converter.Converter` |
-| `import net.pricefx.integration.connection.PartitionConnectionFactory` | `import net.pricefx.integration.connection.service.ConnectionLookup` |
-| `import net.pricefx.integration.api.client.ApiClientRequestBuilder` | (do NOT auto-rewrite — flag for review; the IMigrator's old mapping to `ApiResponse` was wrong because the classes are unrelated. The replacement depends on call-site intent: a request builder caller usually wants a different class than a response holder.) |
-| `import org.apache.camel.processor.aggregate.AggregationStrategy` | `import org.apache.camel.AggregationStrategy` |
-| `import net.pricefx.integration.component.producer.ProducerUtils` | `import net.pricefx.integration.util.ProducerUtils` |
-| `import org.apache.commons.lang.Validate` | `import org.apache.commons.lang3.Validate` |
-| `import org.apache.commons.lang.StringUtils` | `import org.apache.commons.lang3.StringUtils` |
-| `import org.apache.commons.collections.MapUtils` | `import org.apache.commons.collections4.MapUtils` |
-| `import org.apache.commons.collections.CollectionUtils` | `import org.apache.commons.collections4.CollectionUtils` |
-| `import org.apache.commons.collections.ListUtils` | `import org.apache.commons.collections4.ListUtils` |
-| `import org.apache.commons.collections.SetUtils` | `import org.apache.commons.collections4.SetUtils` |
-| `import org.apache.commons.collections.` (any other) | `import org.apache.commons.collections4.` (same suffix) |
-| `import org.springframework.beans.factory.annotation.Autowired` | (do NOT auto-rewrite — flag for review; in IM 7.x sandbox, prefer constructor injection or `connectionLookup`) |
-
-Original IMigrator mapped `com.sun.jersey.api.client.GenericType` → `javax.ws.rs.core.GenericType`, but for IM 7.x (Spring Boot 3 / Jakarta EE 9) the new package is `jakarta.ws.rs.core.GenericType` — that's the form to use.
+After the rewrite pass, scan each file for **duplicate active import lines** (two non-commented `import X;` lines with the same fully-qualified name) and report them. Do not remove duplicates automatically — the rewrite operates on raw text and may leave a commented-out legacy import alongside the new active one.
 
 ## Step 4: javax → jakarta
 
@@ -140,73 +118,19 @@ Strategy: do the bulk replace, then revert specific lines with a second targeted
 
 ## Step 5: Pricefx API Method Signature Renames
 
-Apply this exact-match replacement across all files now in `classes/`:
-
-| Old call | New call |
-|---|---|
-| `.getDatamartApi().getdataloads(` | `.getDatamartApi().datamartGetdataloads(` |
-| `.getGeneralApi().asyncForcefilter(` | `.getGeneralApi().deleteAsyncBatchTypecode(` |
-| `.getGeneralApi().fetchByTypeCode(` | `.getGeneralApi().fetchByTypeCodeTypecode(` |
-| `.getFormulaApi().executeformula(` | `.getFormulaApi().formulamanagerExecuteformulaFormulaname(` |
-| `.getDatamartApi().massedit(` | `.getDatamartApi().datamartMasseditTypeid(` |
-| `.getDatamartApi().getfcs(` | `.getDatamartApi().datamartGetfcsFCtype(` |
-| `.getLookuptableApi().fetchTable(` | `.getLookuptableApi().lookuptablemanagerFetchTable(` |
-| `.getContractApi().save(` | `.getContractApi().contractmanagerSave(` |
-| `.getDatamartApi().fetch(` | `.getDatamartApi().datamartFetchObjectid(` |
-| `.getLookuptableApi().fetchValue(` | `.getLookuptableApi().lookuptablemanagerFetchValueTableid(` |
-| `.getLookuptableApi().integrate(` | `.getLookuptableApi().lookuptablemanagerIntegrateTableid(` |
-| `.getGeneralApi().loaddata(` | `.getGeneralApi().loaddataTypecode(` |
-| `.getContractApi().fetch(` | `.getContractApi().contractmanagerFetchContractid(` |
-| `.getPricegridApi().updupdateItems(` | `.getPricegridApi().pricegridmanagerUpdateItemsPGid(` |
-| `.getPricegridApi().fetchItems(` | `.getPricegridApi().pricegridmanagerFetchItemsPGid(` |
+Apply the **Pricefx API method renames** table in `references.md` — roughly 15 method renames across `getDatamartApi`, `getGeneralApi`, `getFormulaApi`, `getLookuptableApi`, `getContractApi`, and `getPricegridApi`.
 
 **These method renames change the parameter list as well as the name.** The textual rewrite produces code that compiles only if the parameter shape happens to match — usually it doesn't. Flag every rewritten call site as **REVIEW** in the report.
 
-## Step 5b: Flag Legacy Pricefx API Client Imports
+## Step 5b–5d: Additional Flag-for-Review Scans
 
-The `net.pricefx.integration.api.client.*` package (including `PriceFxClient`, `FetchFilterBuilder`, `FilterCriteriaBuilder`, `FetchRequest`, `FetchResponse`, `FilterCriteria`, `Response`, `MassEditBuilder`, `FcResponse`, `FormulaExecuteRequest`, `MasseditRequest`, `MasseditResponse`, `ApiClientRequestBuilder`) was reorganised in IM 7.x. The package paths often moved to `net.pricefx.integration.api.client.builder.*` or `net.pricefx.integration.api.client.model.*` in IM 6, and again in IM 7. There is no single mechanical rewrite that holds across all IM versions, so:
+After the imports and method-renames pass, scan the converted files for these patterns and flag every match in the report. **Do NOT auto-fix any of them** — each requires a developer judgement call about the right replacement.
 
-- **Do NOT auto-rewrite.** Flag every import that starts with `net.pricefx.integration.api.client.` as **REVIEW**.
-- Suggest the developer cross-check against the IM 7.x javadoc and replace with the correct types from `net.pricefx.integration.api.*`.
+- **Step 5b — Legacy Pricefx API client imports** (`net.pricefx.integration.api.client.*` and related internal-Pricefx package roots whose paths shifted between IM 6 and IM 7)
+- **Step 5c — Apache HttpClient 4** (`org.apache.http.*`) which Spring Boot 3 replaced with HttpClient 5 (`org.apache.hc.*`) — substantial API change, not a rename
+- **Step 5d — Class names that shadow Groovy auto-imports** (`File`, `String`, `List`, `Map`, `Set`, `Date`, etc.) — converted classes whose simple name collides with a Groovy auto-imported type cause subtle resolution bugs in inline `<groovy>` blocks elsewhere in the project
 
-Likewise flag these other internal-Pricefx package roots that have shifted between IM lines (validated against `cargill-anh-tca-integration`):
-
-- `net.pricefx.integration.command.*` (e.g. `Command`)
-- `net.pricefx.integration.component.bean.*` (e.g. `Filter`)
-- `net.pricefx.integration.filter.*` (e.g. `FilterConverter`)
-- `net.pricefx.integration.util.ExpressionUtils`
-
-These are all flag-for-review.
-
-## Step 5c: Flag Apache HttpClient 4 (`org.apache.http.*`) Usage
-
-Spring Boot 3 (IM 7.x baseline) replaced Apache HttpClient 4 with HttpClient 5. The package root changed from `org.apache.http.*` to `org.apache.hc.*` (with substantial API changes — not a pure rename). 
-
-- **Do NOT auto-rewrite** — the API differences require code changes, not just import renames.
-- Flag every import starting with `org.apache.http.` as **REVIEW**, with the suggestion: "Migrate to `org.apache.hc.client5.*` / `org.apache.hc.core5.*`. The fluent API and connection-management classes changed significantly."
-
-This was surfaced by `cargill-anh-tca-integration` where `AzureAuthentication.java` uses `CloseableHttpClient`, `HttpClientBuilder`, `BasicResponseHandler`, `UrlEncodedFormEntity`, `BasicNameValuePair` from HC4.
-
-## Step 5d: Flag Class Names That Shadow Groovy Auto-Imports
-
-When a Java class name matches a type that Groovy auto-imports for every script, the converted `.groovy` class can cause subtle resolution bugs in inline `<groovy>` blocks elsewhere in the project. Groovy auto-imports include:
-
-```
-java.io.*       (File, FileInputStream, ...)
-java.lang.*     (String, Integer, Exception, ...)
-java.util.*     (List, Map, Set, Date, ...)
-java.net.*      (URL, ...)
-java.math.*     (BigDecimal, BigInteger)
-groovy.lang.*
-groovy.util.*
-```
-
-After conversion, scan the target `classes/` for any `.groovy` file whose **simple class name** matches a Groovy auto-imported type (e.g. `File`, `String`, `List`, `Map`, `Set`, `Date`, `Exception`, `URL`).
-
-- **Do NOT rename automatically** — that would break every reference site.
-- Flag for review: "Class `{name}` shadows the Groovy auto-imported `{auto-import-target}`. Inline `<groovy>` blocks that reference `{name}` unqualified will resolve to the auto-import, not your class. Consider renaming the class (e.g. `File` → `FileService`) or always using the fully-qualified name."
-
-This was surfaced by `cargill-anh-tca-integration` where `net.pricefx.integration.cargill.service.File` shadows `java.io.File`.
+See `references.md` for the full detection rules, the affected package roots, and the per-step reviewer guidance.
 
 ## Step 6a: Manual-Action Hint — PartitionConnectionFactory
 
@@ -216,21 +140,9 @@ Search for `PartitionConnectionFactory.getPriceFxClient` in any file in `classes
 
 Do NOT auto-fix this — the call shape changes meaningfully.
 
-## Step 6b: Replacement snippet for Pricefx client lookup
+## Step 6b: Replacement Snippet for Pricefx Client Lookup
 
-When fixing the call sites flagged in Step 6a, the canonical IM 7.x replacement is:
-
-```groovy
-import org.apache.camel.spi.Registry
-import net.pricefx.integration.connection.service.ConnectionLookup
-
-Registry registry = exchange.getContext().getRegistry()
-def client = ConnectionLookup.lookupPriceFx(registry, "pricefx").getClient()
-```
-
-Use `"pricefx"` for the default connection; for multi-partition projects, pull the connection name from a header (e.g. `exchange.getIn().getHeader("partitionPfxApi", String.class)`).
-
-There is also a 2-arg overload `ConnectionLookup.lookupPriceFx(exchange, connectionName)` returning a `PriceFxConnection` if you need the connection object rather than just the client.
+When fixing the call sites flagged in Step 6a, the canonical IM 7.x replacement uses `ConnectionLookup.lookupPriceFx(...)` (with a `Registry`-based or 2-arg `exchange`-based form). See `references.md` → **ConnectionLookup snippet** for the full code template.
 
 This is **report-only** — the developer must apply the fix manually because surrounding code (state, caching, exception handling) usually needs adjustment too.
 
