@@ -411,17 +411,17 @@ Preserve any logging steps before/after the import. Remove unused aggregation st
 
 ## Quality & naming
 
-### AP-4 — Copy-pasted `apiSettings` parser
+### AP-4 — Copy-pasted Groovy block across multiple routes
 
 - **Severity:** Important
 - **Applies to:** `version-independent`
 - **Auto-fixable:** No — extraction to shared bean is a developer call
 
-**Detect:** `<groovy>` blocks across multiple routes that all assign `apiSettings` with slight variations
+**Detect:** 3+ routes share a structurally identical or near-identical `<groovy>` block body — common cases include `apiSettings` parser, date-formatting helpers, and response-shape unwrappers.
 
-**Why it matters:** Silent bugs when partial copies diverge over time.
+**Why it matters:** Silent bugs when partial copies diverge over time. A fix in one copy is not a fix anywhere else.
 
-**Fix:** Extract the canonical parser into a Groovy class under `src/main/resources/repo/classes/`. Reference via `<to uri="bean:..."/>` from every route.
+**Fix:** Extract the canonical block into a Groovy class under `src/main/resources/repo/classes/`. Reference via `<to uri="bean:..."/>` from every route.
 
 ### AP-9 — Inconsistent naming
 
@@ -434,3 +434,98 @@ Preserve any logging steps before/after the import. Remove unused aggregation st
 **Why it matters:** Maintenance and onboarding friction.
 
 **Fix:** Pick one convention (recommend kebab-case) and apply to route ids and file names. Update any cross-references.
+
+### AP-33 — Groovy expression in mapper
+
+- **Severity:** Important
+- **Applies to:** `version-independent`
+- **Auto-fixable:** No — extraction to a converter bean is a developer call
+
+**Detect:** `<groovy>` element inside a `<mapper>` / `<loadMapper>` / `<integrateMapper>`
+
+**Why it matters:** Inline Groovy in mappers is hard to debug and unit-test, and incurs per-row Groovy compilation overhead.
+
+**Fix:** Extract the expression into a converter bean under `src/main/resources/repo/classes/`. Reference from the mapper via `converterExpression="myConverter"` on the field.
+
+### AP-34 — Groovy code style smells
+
+- **Severity:** Nice-to-have
+- **Applies to:** `version-independent`
+- **Auto-fixable:** No — style is contextual
+
+**Detect:** In `.groovy` files: `def` for typed locals, `println` (or `System.out.println`) used as logging, `def` inside loop bodies, missing explicit return types on public methods.
+
+**Why it matters:** `def` weakens type safety inside the sandbox; `println` bypasses the logging framework and produces no level-filterable output.
+
+**Fix:** Use explicit types instead of `def`. Use `log.info` / `log.debug` (Camel Logger) instead of `println`. Add explicit return types on public methods.
+
+---
+
+## Performance & runtime safety
+
+### AP-28 — CFS trigger inside `<split>` body
+
+- **Severity:** Important
+- **Applies to:** `version-independent`
+- **Auto-fixable:** Yes — relocate to `<onCompletion>`
+
+**Detect:** `pfx-api:calculate`, `pfx-api:execute`, or any CFS-related URI inside a `<split>` body
+
+**Why it matters:** The trigger fires once per batch — N batches mean N CFS triggers, where one trigger after the split completes would do.
+
+**Fix:** Move the trigger into `<onCompletion>` outside the `<split>`, or to a step after `</split>`.
+
+### AP-29 — `direct2ds=true` on `pfx-api:loaddata`
+
+- **Severity:** Critical
+- **Applies to:** `version-independent`
+- **Auto-fixable:** Yes — remove the parameter
+
+**Detect:** `direct2ds=true` on a `pfx-api:loaddata` URI
+
+**Why it matters:** Long-deprecated and causes significant performance degradation in Pricefx Core — bypasses the staging mechanism that buffers writes.
+
+**Fix:** Remove `direct2ds=true` from the URI. The standard load path is correct and faster.
+
+### AP-30 — Simple `${body}` reference inside `<split>` body
+
+- **Severity:** Critical
+- **Applies to:** `version-independent`
+- **Auto-fixable:** No — refactor needed
+
+**Detect:** `${body}` or `${body.size}` / `${body.length}` etc. (Camel Simple-language references to `body`) anywhere inside a `<split>` body
+
+**Why it matters:** A Camel quirk — referencing `body` from inside a `<split>` keeps the entire input collection in memory until the split completes, defeating streaming. Causes OutOfMemoryError on large input.
+
+**Fix:** Avoid `body` references inside the split. Move whatever you need into a header or exchange property **before** the `<split>` and reference that instead (e.g. `${header.totalCount}`).
+
+---
+
+## External I/O & templates
+
+### AP-31 — Missing `<removeHeaders>` before HTTP / JMS / external endpoint
+
+- **Severity:** Important
+- **Applies to:** `version-independent`
+- **Auto-fixable:** No — the excludePattern depends on which headers the endpoint genuinely needs
+
+**Detect:** `<to uri="http..."/>`, `<to uri="https..."/>`, `<to uri="jms..."/>`, `<to uri="pfx-rest:..."/>` without a `<removeHeaders>` step in the same route
+
+**Why it matters:** Camel forwards every header to the next endpoint by default. For HTTP/JMS calls this leaks internal headers (route ids, file metadata, exchange properties) to external systems and can override headers the external system uses for routing/auth.
+
+**Fix:** Add `<removeHeaders pattern="*" excludePattern="Authorization|Content-Type|Accept|..."/>` just before the external `<to>`.
+
+### AP-32 — Missing `allowContextMapAll=true` on FreeMarker
+
+- **Severity:** Important
+- **Applies to:** `version-independent`
+- **Auto-fixable:** Yes — append the parameter
+
+**Detect:** `freemarker:` URI without `allowContextMapAll=true`
+
+**Why it matters:** Without this flag, the FreeMarker template can only access the body — exchange properties, headers, and the model are not exposed. Templates silently render `null` for those references.
+
+**Fix:** Add `allowContextMapAll=true` to the URI:
+```xml
+<to uri="freemarker:file://{{integration.data}}/repository/resources/my.ftl?allowContextMapAll=true"/>
+```

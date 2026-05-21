@@ -71,8 +71,8 @@ Apply the subset of `docs/anti-patterns.md` whose **Applies to** field includes 
 
 | Transition | Run these APs |
 |---|---|
-| `5→6` | AP-1 (Spring Boot 2.x), AP-27 (`javax.*` → `jakarta.*`), AP-12 (old connection format), plus all `version-independent` APs |
-| `6→7` | AP-1, AP-2 (Java 11), AP-2b (Camel 3 pinned), AP-12, AP-20 through AP-26 (Camel 3→4 syntax), plus all `version-independent` APs |
+| `5→6` | AP-1 (Spring Boot 2.x), AP-27 (`javax.*` → `jakarta.*`), plus all `version-independent` APs |
+| `6→7` | AP-1, AP-2 (Java 11), AP-2b (Camel 3 pinned), AP-12 (old connection format), AP-20 through AP-26 (Camel 3→4 syntax), plus all `version-independent` APs |
 | `7→7` | All `version-independent` APs only — no breaking-change set applies |
 
 The version-independent set is AP-3, AP-4, AP-5, AP-6, AP-7, AP-8, AP-9, AP-10, AP-11, AP-13, AP-14, AP-15, AP-16, AP-18, AP-19.
