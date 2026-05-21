@@ -272,6 +272,8 @@ Use `pfx-config:get/set` to persist a timestamp between runs for incremental exp
 |--------|-------------|
 | `unmarshal` | Parse JSON string into Java objects |
 | `marshal` | Convert Java objects to JSON string |
+| `transform` | Apply a JOLT-style transformation spec to the JSON body |
+| `remap` | Rename / restructure JSON fields per a mapping |
 
 ### Examples
 
@@ -412,6 +414,8 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | `selectIterator` | Streaming query |
 | `insert` | Insert records |
 | `upsert` | Insert or update records |
+| `truncate` | Truncate a table |
+| `delete` | Delete rows matching a filter |
 
 ### Key Parameters
 
@@ -439,6 +443,12 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | Method | Description |
 |--------|-------------|
 | `detectCharset` | Detect file character encoding |
+| `setupCharset` | Set the Camel charset on the exchange (so downstream readers use it) |
+| `streamCompressedFile` | Stream a zipped / gzipped file without loading it into memory |
+| `compress` | Compress the body to ZIP or GZIP |
+| `parseVirtualHeaders` | Parse a header definition string into a virtual-header structure |
+| `parseValidationSchema` | Parse a CSV/XLSX validation schema |
+| `fileSplitHelper` | Split a file into N chunks for parallel processing |
 
 ### Key Parameters
 
@@ -497,6 +507,7 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | Method | Description |
 |--------|-------------|
 | `transform` | Transform data using a mapper |
+| `query` | Query an in-memory data structure with a mapper-style projection |
 
 ### Key Parameters
 
@@ -522,6 +533,7 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | Method | Description |
 |--------|-------------|
 | `csv` | Validate CSV format |
+| `xlsx` | Validate XLSX format |
 
 ### Key Parameters
 
@@ -614,7 +626,7 @@ For full event-driven route patterns, see the `generate-event-driven-route` skil
 | `pfx-resources` | Resource management |
 | `pfx-info` | System information |
 | `pfx-hybris` | SAP Hybris integration |
-| `pfx-greenplum` | Greenplum database |
+| `pfx-gp` | Greenplum database |
 | `pfx-odata2` | OData v2 protocol |
 | `pfx-c4c` | SAP Cloud for Customers |
 | `pfx-google-shopping` | Google Shopping |

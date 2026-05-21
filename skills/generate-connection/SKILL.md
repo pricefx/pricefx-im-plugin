@@ -44,19 +44,19 @@ pfx.password={ENC}changeme
 ```
 
 ### sftp
-Required: host, port (default 22), username, auth method (password or key), remote directory.
+Required: host, port (default 22), username, password, remote path. The `SFTPConnection` class supports password auth only (no SSH key); known-hosts handling is controlled by `strictHostKeyChecking` (default `false`).
 ```json
 {
   "name": "{connection-name}",
   "type": "sftp",
   "host": "{host}",
   "port": 22,
+  "path": "/{remote/dir}",
   "username": "{{sftp.username}}",
   "password": "{{sftp.password}}",
-  "remoteDirectory": "{/remote/dir}"
+  "strictHostKeyChecking": false
 }
 ```
-For key auth, replace `"password"` with `"privateKey": "{{sftp.privateKey}}"`.
 ```properties
 sftp.username={username}
 sftp.password={ENC}changeme
