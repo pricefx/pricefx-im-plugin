@@ -10,14 +10,13 @@ Build, review, debug, and maintain Pricefx Integration Manager projects with AI-
 2. [Setup](#setup)
 3. [Quick Start](#quick-start)
 4. [Skills Reference](#skills-reference)
-5. [Pattern Catalog](#pattern-catalog)
-6. [Agents Reference](#agents-reference)
-7. [pfx CLI Tool](#pfx-cli-tool)
-8. [Usage Examples](#usage-examples)
-9. [Tips & Best Practices](#tips--best-practices)
-10. [Shared Documentation](#shared-documentation)
-11. [Plugin Structure](#plugin-structure)
-12. [Development](#development)
+5. [Agents Reference](#agents-reference)
+6. [pfx CLI Tool](#pfx-cli-tool)
+7. [Usage Examples](#usage-examples)
+8. [Tips & Best Practices](#tips--best-practices)
+9. [Shared Documentation](#shared-documentation)
+10. [Plugin Structure](#plugin-structure)
+11. [Development](#development)
 
 ---
 
@@ -175,7 +174,7 @@ Skills are interactive — they ask questions and generate files. Invoke them wi
 
 ---
 
-### Generation (14 skills)
+### Generation (15 skills)
 
 #### generate-import-integration
 
@@ -481,39 +480,9 @@ To run the full migration end-to-end, invoke the `migrate-manual-to-provisioned`
 
 ---
 
-## Pattern Catalog
-
-The plugin ships an anonymized **pattern catalog** in `docs/patterns/` — 18 reference integration patterns extracted from real-world IM deployments (all customer names and partition details removed).
-
-Skills reference the catalog automatically to apply proven implementation approaches. You can also browse it directly to understand how a particular scenario is typically built.
-
-### What the catalog covers
-
-| Category | Patterns |
-|---|---|
-| Import | Product master (CSV/SFTP), Customer master, Pricing Parameters (LTV/MLTV2), PA Data Source batch load |
-| Export | Delta sync with timestamp watermark, full extract to SFTP, export-to-REST push |
-| Event-driven | Post-calculation trigger, data-load completion chain, custom event fan-out |
-| Outbound | REST push with OAuth2, SOAP call with JAXB, Kafka publish with Avro |
-| Platform | Multi-tenant fan-out, scheduled wrapper with staggered startup, S3 polling inbound |
-| Testing | WireMock contract test, Spock data-table driven test, integration smoke test |
-
-### Using patterns in conversations
-
-You can reference patterns by name when asking for generation or review:
-
-```
-Generate an export using the delta-sync-with-watermark pattern
-Review my route and check it against the PA batch load pattern
-```
-
-Skills will apply the matching pattern as their baseline and adapt it to your project's metadata.
-
----
-
 ## Agents Reference
 
-Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **10 agents**.
+Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **11 agents**.
 
 ### debug-integration
 
@@ -668,6 +637,20 @@ Migrate this manual IM project to provisioned
 
 ```
 I have a legacy camel-context.xml project at /path/to/source, lift it into this provisioned project
+```
+
+### visualize-project
+
+**What it does:** Generates a complete visual documentation package — Mermaid flow diagrams for every route plus a project-level architecture overview and data-flow summary. Output is markdown files under `docs/diagrams/` with embedded Mermaid code blocks. No HTML, no customer names, no secrets.
+
+**How to use:**
+
+```
+Visualize this project
+```
+
+```
+Generate flow diagrams for every route
 ```
 
 ---
@@ -986,6 +969,7 @@ When inheriting an existing project, run the `onboard-project` agent first. It p
 | Assessing an existing or partner project | `analyze-project` |
 | Project quality score | `analyze-project` |
 | Full version upgrade with auto-fix | `upgrade-project` |
+| Generating Mermaid flow diagrams for routes | `visualize-project` |
 
 ### Dry-run before deploying unfamiliar routes
 
@@ -1055,7 +1039,8 @@ pricefx-im-plugin/
 │   ├── migrate-manual-to-provisioned.md
 │   ├── migrate-project.md
 │   ├── onboard-project.md
-│   └── upgrade-project.md
+│   ├── upgrade-project.md
+│   └── visualize-project.md
 ├── skills/
 │   ├── analyze/
 │   ├── compare-environments/
@@ -1073,8 +1058,10 @@ pricefx-im-plugin/
 │   ├── generate-inbound-rest-endpoint/
 │   ├── generate-rest-outbound-integration/
 │   ├── generate-s3-integration/
+│   ├── generate-salesforce-api/
 │   ├── generate-scheduling-route/
 │   ├── generate-soap-integration/
+│   ├── generate-sql-integration/
 │   ├── git-workflow/
 │   ├── list-pricefx-tables/
 │   ├── migrate-manual-to-provisioned-beans/

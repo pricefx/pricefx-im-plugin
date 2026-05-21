@@ -116,5 +116,4 @@ Report any issues found and fix them.
 
 ## References
 
-- [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md)
 - [PA Import Integration](../generate-pa-import-integration/SKILL.md) — example of a long-running route that benefits from scheduling

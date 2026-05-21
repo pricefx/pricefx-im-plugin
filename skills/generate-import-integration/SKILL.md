@@ -684,4 +684,3 @@ After generating all files, run this checklist automatically. Fix any issues BEF
    - [ ] Archive/error folder pattern is configured on file source
    - [ ] No inline Groovy exceeding 15 lines
    - [ ] All values that could change per environment use `{{pfx:...}}` properties
-   - [ ] Route references pattern catalog: [CSV/SFTP Import](../../../integration-manager/docs/patterns/import-csv-sftp.md)
