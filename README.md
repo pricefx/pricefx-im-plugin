@@ -1106,12 +1106,16 @@ pricefx-im-plugin/
 
 1. Create a feature branch from `develop`
 2. Make your changes
-3. If you changed a `description:` field on any skill or agent, re-run the relevant evals in [`evals/triggers.md`](evals/triggers.md) — description regressions are the #1 silent failure mode in this plugin
-4. Submit a merge request to `develop`
+3. **Re-run the output-quality eval** for any skill whose `SKILL.md` or referenced docs you touched — see [`evals/README.md`](evals/README.md) for the per-change-type checklist. A drop in `with_skill` pass rate vs. the last committed iteration is a regression and blocks merge.
+4. If you changed a `description:` field on any skill or agent, also smoke-test the trigger routing per [`evals/triggers.md`](evals/triggers.md) — description regressions are the #1 silent failure mode in this plugin
+5. Submit a merge request to `develop`
 
 ### Evals
 
-Manual trigger evals live at [`evals/triggers.md`](evals/triggers.md). They list `(user prompt) → (expected skill / agent)` mappings for every skill and agent. Run after any `description:` change. Future: scripted runner via the Claude SDK.
+Two complementary eval flavours live under `evals/`:
+
+- **Output-quality** ([`evals/README.md`](evals/README.md)) — automated regression net for what each skill actually produces. Run via `/skill-creator:skill-creator eval pricefx-im-plugin:<skill-name>` before committing skill changes.
+- **Trigger routing** ([`evals/triggers.md`](evals/triggers.md)) — manual smoke-test that a given user prompt picks the right skill. Run after any `description:` change.
 
 ## Repository
 

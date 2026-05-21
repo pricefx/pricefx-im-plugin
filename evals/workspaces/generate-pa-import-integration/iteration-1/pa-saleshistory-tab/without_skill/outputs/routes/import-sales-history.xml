@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+        Route: import-sales-history
+        Purpose: Daily ingest of high-volume (~10M rows/day) tab-separated sales
+                 transaction files into the Pricefx Performance Analyzer data source
+                 DMDS.SalesHistoryDS.
+
+        Pickup path : /sftp/transactions/   (local mount under {{integration.sftp.root}})
+        Format      : TSV (tab-separated), header on first line
+        Target      : DMDS.SalesHistoryDS  (Performance Analyzer data source)
+        Strategy    : Stream the file directly to Pricefx via pfx-api:loaddataFile
+                      (avoids holding 10M rows in IM memory). The DMF data feed is
+                      flushed when the route completes and an internalCopy promotes
+                      the staged data into the DMDS data source.
+    -->
+    <route id="import-sales-history">
+
+        <!--
+            File consumer - local mount of /sftp/transactions/.
+            - {{archive.file}} moves the processed file to a timestamped .archive/
+            - {{read.lock}} (readLock=changed) waits for the file size to stabilise
+            - delay=10000 polls every 10s
+            Scheduling: a cron scheduler keeps the route quiet outside the daily
+            window. Adjust {{import-sales-history.cron}} as needed.
+        -->
+        <from uri="file://{{integration.sftp.root}}/transactions?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;{{error.file}}&amp;scheduler=quartz&amp;scheduler.cron={{pfx:import-sales-history.cron}}&amp;scheduler.timeZone=UTC"/>
+
+        <log message="Picked up sales transaction file: ${header[CamelFileName]} (size=${header[CamelFileLength]} bytes)"/>
+
+        <setProperty name="CamelCharsetName">
+            <constant>UTF-8</constant>
+        </setProperty>
+
+        <!--
+            Streaming TSV parse + direct file streaming to Pricefx.
+              - delimiter=\t  → tab-separated
+              - skipHeaderRecord=true → first row is column names; parser uses it
+              - useReusableParser=true → reduce GC pressure for 10M-row file
+            Then loaddataFile streams the file directly to the Pricefx server, far
+            cheaper than loaddata for 10M rows. batchSize=200000 is a reasonable
+            default for a wide row; tune down if the row is very wide (>20 cols).
+        -->
+        <to uri="pfx-csv:streamingUnmarshal?delimiter=%09&amp;skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <to uri="pfx-api:loaddataFile?objectType=DMDS&amp;dsUniqueName=DMDS.SalesHistoryDS&amp;mapper=import-sales-history.mapper&amp;batchSize=200000&amp;direct2ds=true"/>
+
+        <log message="loaddataFile complete for ${header[CamelFileNameOnly]} - total input records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <!--
+            After the file has been streamed in, flush the staging data feed into
+            the data source so the rows are visible to PA, and trigger an internal
+            copy / refresh. internalCopy is run from onCompletion so it fires once
+            per file even if the streaming above produced no batches.
+        -->
+        <onCompletion onCompleteOnly="true">
+            <log message="Flushing DMF.SalesHistoryDF and refreshing DMDS.SalesHistoryDS"/>
+            <to uri="pfx-api:flush?dataSourceName=DMDS.SalesHistoryDS&amp;dataFeedName=DMF.SalesHistoryDF"/>
+            <to uri="pfx-api:internalCopy?label=DataSource"/>
+        </onCompletion>
+
+    </route>
+
+</routes>

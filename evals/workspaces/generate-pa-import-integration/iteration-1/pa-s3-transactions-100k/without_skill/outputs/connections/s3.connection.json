@@ -1,0 +1,8 @@
+{
+  "id": "s3.connection",
+  "discriminator": "net.pricefx.integration.component.s3.connection.S3Connection",
+  "accessKey": "REPLACE_ME_AWS_ACCESS_KEY",
+  "secretKey": "REPLACE_ME_AWS_SECRET_KEY",
+  "region": "us-east-1",
+  "bucket": "pricefx-data"
+}

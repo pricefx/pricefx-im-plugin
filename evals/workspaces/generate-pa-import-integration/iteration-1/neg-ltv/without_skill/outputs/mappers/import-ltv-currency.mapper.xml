@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-ltv-currency.mapper">
+        <body in="code" out="name"/>
+        <body in="value" out="value" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>

@@ -38,5 +38,11 @@
   "score": {
     "passed": 5,
     "total": 5
+  },
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
   }
 }

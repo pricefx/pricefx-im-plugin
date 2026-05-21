@@ -1,0 +1,24 @@
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-invoices">
+        <from uri="file://{{integration.sftp.root}}/im/inbound/invoices?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+3+*+*+?&amp;scheduler.timeZone=UTC"/>
+
+        <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
+
+        <split aggregationStrategy="recordsCountAggregation" streaming="true">
+            <tokenize group="20000" token="\n"/>
+
+            <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter=,"/>
+
+            <log loggingLevel="INFO" message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelFileName} (batch size: 20000, starting at row ${exchangeProperty.CamelSplitIndex * 20000 + 1})"/>
+
+            <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.Invoices&amp;mapper=import-invoices.mapper"/>
+        </split>
+
+        <log message="Load completed, total records: ${header.PfxTotalInputRecordsCount}" loggingLevel="INFO"/>
+
+        <onCompletion onCompleteOnly="true">
+            <toD uri="pfx-api:flush?dataFeedName=DMF.Invoices&amp;dataSourceName=DMDS.Invoices"/>
+            <log message="Flush completed for Invoices." loggingLevel="INFO"/>
+        </onCompletion>
+    </route>
+</routes>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-ltv-currency">
+        <from uri="file://{{integration.sftp.root}}/import/ltv/currency?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+        <log message="Starting LTV currency import from file: ${header.CamelFileName}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=LTV&amp;mapper=import-ltv-currency.mapper&amp;pricingParameterName=currency&amp;batchSize=500000"/>
+        <log message="Completed LTV currency import. Total records: ${header.PfxTotalInputRecordsCount}"/>
+    </route>
+</routes>

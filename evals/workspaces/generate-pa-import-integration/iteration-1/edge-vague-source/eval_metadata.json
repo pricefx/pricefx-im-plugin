@@ -1,0 +1,10 @@
+{
+  "eval_id": 6,
+  "eval_name": "edge-vague-source",
+  "category": "edge",
+  "prompt": "I need to load data from a source into Pricefx.",
+  "assertions": [
+    {"id": "asks-for-object-type", "text": "Subagent asks a clarifying question naming object types (P/PX/DMDS/LTV)", "type": "grep", "patterns": ["which object", "what object", "P / PX / DMDS / LTV", "P, PX", "DMDS", "object type", "clarify", "what data"], "match": "any", "scope": "narrative"},
+    {"id": "no-dmds-route-written", "text": "Does NOT silently generate a DMDS route", "type": "grep_absent", "patterns": ["objectType=DMDS"], "scope": "outputs"}
+  ]
+}

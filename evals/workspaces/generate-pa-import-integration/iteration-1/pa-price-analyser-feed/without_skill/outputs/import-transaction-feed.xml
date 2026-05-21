@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="import-transaction-feed">
+        <!-- Daily at 02:00 — picks up YYYYMMDD.csv from /sftp/transactions -->
+        <from uri="file://{{integration.sftp.root}}/transactions?include=.*\.csv&amp;{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+2+*+*+?"/>
+
+        <log message="Starting Price Analyser transaction feed import from ${header.CamelFileName}"/>
+
+        <!-- Stream-parse CSV: avoids loading 5M rows in memory -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <!-- Stream file directly to Pricefx data feed.
+             objectType=DMDS for Data Feed Data Source.
+             dsUniqueName references the target data source.
+             Large batchSize (100000) is appropriate for ~5M-row feeds. -->
+        <to uri="pfx-api:loaddataFile?objectType=DMDS&amp;dsUniqueName=DMDS.TransactionFeed&amp;mapper=import-transaction-feed.mapper&amp;batchSize=100000"/>
+
+        <log message="Loaded ${header.PfxTotalInputRecordsCount} transaction rows from ${header.CamelFileName}"/>
+
+        <!-- After load completes, flush the data feed and trigger calculation -->
+        <onCompletion onCompleteOnly="true">
+            <log message="Flushing data feed DMDS.TransactionFeed"/>
+            <to uri="pfx-api:flush?dataSourceName=DMDS.TransactionFeed"/>
+        </onCompletion>
+    </route>
+
+</routes>

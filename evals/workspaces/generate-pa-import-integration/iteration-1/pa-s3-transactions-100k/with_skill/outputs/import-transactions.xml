@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-transactions">
+        <from uri="pfx-s3:pricefx-data?connection=s3.connection&amp;prefix=transactions/&amp;deleteAfterRead=true&amp;scheduler=quartz&amp;scheduler.cron=0+0+2+?+*+*&amp;scheduler.timeZone=UTC"/>
+
+        <log message="Processing: ${header.CamelAwsS3Key}" loggingLevel="INFO"/>
+
+        <split aggregationStrategy="recordsCountAggregation" streaming="true">
+            <tokenize group="100000" token="\n"/>
+
+            <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter=,"/>
+
+            <log loggingLevel="INFO" message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelAwsS3Key} (batch size: 100000, starting at row ${exchangeProperty.CamelSplitIndex * 100000 + 1})"/>
+
+            <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.TransactionFeed&amp;mapper=import-transactions.mapper"/>
+        </split>
+
+        <log message="Load completed, total records: ${header.PfxTotalInputRecordsCount}" loggingLevel="INFO"/>
+
+        <onCompletion onCompleteOnly="true">
+            <toD uri="pfx-api:flush?dataFeedName=DMF.TransactionFeed&amp;dataSourceName=DMDS.TransactionFeed"/>
+            <log message="Flush completed for TransactionFeed." loggingLevel="INFO"/>
+        </onCompletion>
+    </route>
+</routes>

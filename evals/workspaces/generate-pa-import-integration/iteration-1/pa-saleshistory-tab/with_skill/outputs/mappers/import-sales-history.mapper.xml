@@ -1,0 +1,30 @@
+<mappers>
+    <loadMapper id="import-sales-history.mapper">
+        <body in="productId"      out="sku"/>
+        <body in="customerId"     out="attribute1"/>
+        <body in="invoiceNumber"  out="attribute2"/>
+        <body in="invoiceLine"    out="attribute3"/>
+        <body in="transactionDate" out="attribute4" converterExpression="stringToDate"/>
+        <body in="quantity"       out="attribute5" converterExpression="stringToDecimal"/>
+        <body in="uom"            out="attribute6"/>
+        <body in="netAmount"      out="attribute7" converterExpression="stringToDecimal"/>
+        <body in="grossAmount"    out="attribute8" converterExpression="stringToDecimal"/>
+        <body in="discountAmount" out="attribute9" converterExpression="stringToDecimal"/>
+        <body in="listPrice"      out="attribute10" converterExpression="stringToDecimal"/>
+        <body in="netPrice"       out="attribute11" converterExpression="stringToDecimal"/>
+        <body in="cost"           out="attribute12" converterExpression="stringToDecimal"/>
+        <body in="currency"       out="attribute13"/>
+        <body in="salesOrg"       out="attribute14"/>
+        <body in="distributionChannel" out="attribute15"/>
+        <body in="division"       out="attribute16"/>
+        <body in="plant"          out="attribute17"/>
+        <body in="region"         out="attribute18"/>
+        <body in="country"        out="attribute19"/>
+        <body in="salesRep"       out="attribute20"/>
+        <body in="documentType"   out="attribute21"/>
+        <body in="orderReason"    out="attribute22"/>
+        <body in="paymentTerms"   out="attribute23"/>
+        <body in="incoterms"      out="attribute24"/>
+        <body in="material"       out="attribute25"/>
+    </loadMapper>
+</mappers>
