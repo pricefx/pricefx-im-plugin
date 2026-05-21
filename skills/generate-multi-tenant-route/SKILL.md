@@ -280,7 +280,6 @@ Fix any issues silently and report corrections.
 
 ## References
 
-- [Multi-Tenant Partitions Pattern](../../../integration-manager/docs/patterns/multi-tenant-partitions.md)
 - [S3 Integration Skill](../generate-s3-integration/SKILL.md) — for partition-specific S3 key path generation
 - [Event-Driven Route Skill](../generate-event-driven-route/SKILL.md) — for single-partition event handling
 - [Export Integration Skill](../generate-export-integration/SKILL.md) — for the Pricefx fetch/export steps used in the shared export handler

@@ -246,5 +246,4 @@ The `-k` flag is needed for local development because IM uses a self-signed cert
 
 ## References
 
-- [Inbound REST API Pattern](../../../integration-manager/docs/patterns/inbound-rest-api.md)
 - [REST Outbound Skill](../generate-rest-outbound-integration/SKILL.md) - for calling external REST APIs from IM

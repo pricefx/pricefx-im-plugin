@@ -226,6 +226,5 @@ Fix any issues silently and report corrections.
 
 ## References
 
-- [S3 Integration Pattern](../../../integration-manager/docs/patterns/s3-integration.md)
 - [Import Integration Skill](../generate-import-integration/SKILL.md) — for the Pricefx load steps after reading the S3 file
 - [Multi-Tenant Route Skill](../generate-multi-tenant-route/SKILL.md) — for partition-specific S3 key paths in multi-tenant setups

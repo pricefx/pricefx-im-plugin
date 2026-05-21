@@ -216,8 +216,6 @@ Use `seda:` instead of `direct:` when:
 - Multiple events may arrive simultaneously
 - You want backpressure and configurable concurrency
 
-See [Event-Driven Routes Pattern](../../../integration-manager/docs/patterns/event-driven-routes.md).
-
 ## Multiple Event Types in One Route
 
 For handling multiple related events with shared logic:

@@ -170,8 +170,6 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
 
 The `${headers.lastExportTimestamp}` is populated by `pfx-config:get` with the stored timestamp. On first run (no stored value), all records are exported.
 
-**Reference:** [Incremental Timestamp Export Pattern](../../../integration-manager/docs/patterns/export-incremental-timestamp.md)
-
 **Note:** Always use UTC timestamps and set timezone explicitly on Quartz (e.g., `trigger.timeZone=UTC`).
 
 ## Step 4c: Smart Field Selection (for PX/CX with metadata)
@@ -371,8 +369,6 @@ When exporting to both SFTP and S3, or writing multiple file formats:
   <to uri="direct:export-to-s3"/>
 </multicast>
 ```
-
-See [Chained Routes Pattern](../../../integration-manager/docs/patterns/chained-routes-direct.md).
 
 ## Batch Size
 

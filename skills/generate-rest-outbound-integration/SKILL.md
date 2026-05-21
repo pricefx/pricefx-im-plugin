@@ -812,5 +812,4 @@ Fix any issues silently and report what was corrected.
 
 ## References
 
-- [REST Outbound Pattern](../../../integration-manager/docs/patterns/rest-outbound.md)
-- [Chained Routes Pattern](../../../integration-manager/docs/patterns/chained-routes-direct.md)
+- [Inbound REST Endpoint Skill](../generate-inbound-rest-endpoint/SKILL.md) — for exposing a REST endpoint from IM (the inverse direction)

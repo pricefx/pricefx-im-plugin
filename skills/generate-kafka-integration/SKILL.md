@@ -263,6 +263,5 @@ When a file-based import route already exists for the same entity:
 
 ## References
 
-- [Kafka Dual Pipeline Pattern](../../../integration-manager/docs/patterns/kafka-dual-pipeline.md)
 - [PA Import Integration Skill](../generate-pa-import-integration/SKILL.md) — for the DMDS loaddata pattern used in the shared load route
-- [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md) — if initial catch-up load needs a time window
+- [Scheduling Route Skill](../generate-scheduling-route/SKILL.md) — if initial catch-up load needs a time window
