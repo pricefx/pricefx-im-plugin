@@ -7,6 +7,8 @@ description: Use when a Pricefx Integration Manager route reads from or writes t
 
 You are generating an AWS S3 integration for a Pricefx Integration Manager project. Follow the steps below. Never hardcode AWS credentials — always use encrypted property placeholders.
 
+> **Camel version note:** route templates reference the Camel 4 `aws2-s3:` URI scheme and (when the import-style per-batch logging variant is selected) the Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap `aws2-s3:` → `aws-s3:` and `aggregationStrategy=` → `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
+
 ## Step 1: Gather Information
 
 Ask the user for the following (or read from `$ARGUMENTS` if already provided):

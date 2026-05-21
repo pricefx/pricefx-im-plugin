@@ -7,6 +7,8 @@ description: Use when Pricefx Integration Manager must push data to an external 
 
 You are generating an outbound REST API integration for a Pricefx Integration Manager project. Follow the steps below precisely. Never hardcode credentials or customer-specific values.
 
+> **Camel version note:** templates below use **Camel 4** (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). If the target is Camel 3 (IM ≤ 6.x), swap the version-sensitive attributes — `redeliveryPolicy`, `errorHandler` (used here) — to their `*Ref` form per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption in the final report.
+
 ## Step 1: Gather Information
 
 Ask the user for the following (or read from `$ARGUMENTS` if already provided):

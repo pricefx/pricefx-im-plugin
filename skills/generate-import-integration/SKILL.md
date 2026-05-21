@@ -8,6 +8,8 @@ description: Use when the user wants to load or import data INTO Pricefx for Pro
 You are generating an import integration for a Pricefx Integration Manager project. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
 
 **Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension), SL (Seller), SX (Seller Extension).
+
+> **Camel version note:** the loaddata-with-split template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
 For PA Data Source (DMDS) imports, use the `/generate-pa-import-integration` skill instead.
 
 ## Step 1: Check Credentials

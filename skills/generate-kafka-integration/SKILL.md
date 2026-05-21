@@ -7,6 +7,8 @@ description: Use when the user wants to consume Kafka CDC (change-data-capture) 
 
 You are generating a Kafka consumer integration for a Pricefx Integration Manager project. Follow the steps below. This skill creates a Kafka consumer route that reads CDC events, deduplicates them, groups by OPCO, and loads batches into a Pricefx DMDS table.
 
+> **Camel version note:** the `<aggregate>` block uses Camel 4 `aggregationStrategy=` and `aggregationRepository=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` and `aggregationRepositoryRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
+
 ## Step 1: Gather Information
 
 Ask the user for the following (or read from `$ARGUMENTS` if already provided):

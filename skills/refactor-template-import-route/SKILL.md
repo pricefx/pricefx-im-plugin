@@ -7,6 +7,8 @@ description: Use when the user wants to flatten a templated Pricefx Integration 
 
 You are refactoring a Pricefx Integration Manager FTP-to-Pricefx import route that was generated from a template heavy with `{{pfx:<route-id>.*}}` property placeholders and branching `<choice>` blocks for objectType / charset / business keys / virtual headers / DMDS flush / internal copy. The goal is a short, hardwired, straight-line route that does exactly what the property values say it does — nothing more.
 
+> **Camel version note:** the refactored `<split>` template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing the file, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption. If the input route already uses `*Ref` form, preserve it as-is rather than rewriting (this skill is a flatten, not a Camel-version upgrade — for the latter use the migration agents).
+
 ## When to use
 
 The route looks like a template with most of these traits:
