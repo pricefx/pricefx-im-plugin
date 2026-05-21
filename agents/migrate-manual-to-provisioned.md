@@ -94,113 +94,15 @@ If the target directories don't exist yet, plan to create them on first write.
 
 ### Detect framework versions (source AND target)
 
-Real IM `pom.xml` files use **inconsistent property names** (`im.version` vs `pricefx-im-version` vs `pricefx-integration-manager.version`; `spring-boot.version` vs `spring-boot-version`; `java.version` vs `version.Java`) and **rarely pin Camel explicitly** — Camel comes through transitive resolution from the IM parent BOM. Use the layered detection below; fall through each layer until a version is found. **Do this for both `$SOURCE_DIR/pom.xml` and `$TARGET_DIR/pom.xml`.**
+For each of `$SOURCE_DIR/pom.xml` and `$TARGET_DIR/pom.xml`, follow the **Version detection (layered)** recipe in the `migrate-manual-to-provisioned-pom` skill (Step 1 of that skill). It covers:
 
-#### Layer 1 — Explicit property in `<properties>`
+- Inconsistent IM property names (`im.version` vs `pricefx-im-version` vs `pricefx-integration-manager.version`; `spring-boot.version` vs `spring-boot-version`; `java.version` vs `version.Java`)
+- Parent-BOM lookups
+- The hardened `camel-*` dependency awk that handles XML comments and `<dependency>` boundaries (validated against `bosch-rexroth-integration`)
+- IM-major → Camel inference table (validated against real customer projects)
+- A `mvn dependency:list` fallback for when Camel comes via a BOM import (`help:evaluate` returns `null` in that case)
 
-Scan for the common variants:
-
-```bash
-# Camel
-grep -oE '<camel(\.|-)?version>[^<]+</' "$pom" | head -1
-
-# Spring Boot
-grep -oE '<spring-boot(\.|-)?version>[^<]+</' "$pom" | head -1
-
-# Java
-grep -oE '<(java(\.|-)?version|maven\.compiler\.source|version\.Java)>[^<]+</' "$pom" | head -1
-
-# IM
-grep -oE '<(im|pricefx-im|pricefx-integration-manager)(\.|-)?version>[^<]+</' "$pom" | head -1
-```
-
-#### Layer 2 — `<parent>` BOM reference
-
-If no explicit property is present, the parent often pins everything. Read the `<parent>` block:
-
-```bash
-awk '/<parent>/,/<\/parent>/' "$pom"
-```
-
-If the parent is `pricefx-integration-manager-parent` or `spring-boot-starter-parent`, the version field gives you the BOM version which implies Camel/Spring Boot.
-
-#### Layer 3 — Explicit `<version>` on a `camel-*` dependency
-
-A few projects pin one specific Camel artifact. Use this awk that:
-- resets the flag on every `<dependency>` open and on `</dependencies>` close (so it never bleeds into `<build><plugins>`)
-- skips XML comment blocks (so a commented-out `<dependency>` doesn't leave the flag set)
-
-```bash
-awk '
-  BEGIN { flag=0; incomment=0 }
-  # XML comment handling
-  /<!--/  { incomment=1 }
-  incomment && /-->/ { incomment=0; next }
-  incomment           { next }
-  # Reset flag on each new dependency block and at the end of <dependencies>
-  /<dependency>/      { flag=0 }
-  /<\/dependencies>/  { flag=0 }
-  # Set flag inside an org.apache.camel dependency
-  /<groupId>org\.apache\.camel/  { flag=1 }
-  # First explicit <version> after the camel groupId wins
-  flag && /<version>[^$<]/ {
-    line=$0
-    sub(/.*<version>/, "", line)
-    sub(/<\/version>.*/, "", line)
-    print line
-    exit
-  }
-  /<\/dependency>/    { flag=0 }
-' "$pom"
-```
-
-This recipe was hardened after a real-world false positive on `bosch-rexroth-integration` where a commented-out `<!-- camel-xpath -->` block left the flag set and the awk printed `maven-compiler-plugin` 3.8.1 as if it were Camel.
-
-#### Layer 4 — Infer Camel from IM version
-
-Use this approximate mapping when Camel cannot be resolved directly:
-
-| IM major | Camel line | Java | Spring Boot | Validated against |
-|---|---|---|---|---|
-| 1.0–1.1 | 2.20–2.25 | 8 / 11 | 1.5 / 2.1 | bosch-rexroth-integration (IM 1.1.18.15 → Camel 2.25.0); cargill-anh-tca (IM 1.1.18.15 → Camel 2.25.0) |
-| 1.4 | 3.5 (transition point) | 11 | 2.3 | dieteren-integration (IM 1.4.4 → Camel 3.5.0). IM 1.4 is the Camel 2→3 transition; do NOT assume Camel 2.x just because the IM major is 1. Check `mvn dependency:list` to confirm. |
-| 2.x | 3.11 | 11 | 2.3 | bridgestone-integration (IM 2.6.3 → Camel 3.11.0). Same Camel line as IM 4.0–4.5. |
-| 4.0–4.5 | 3.10–3.14 | 11 | 2.5 | fiskars-integration (IM 4.5.1 → Camel 3.11.3); amd-integration (IM 4.5.0 → Camel 3.11.1) |
-| 4.6+ | 3.14–3.18 | 11 | 2.5–2.7 | mohawk-integration (IM 4.6.0) |
-| 5.x | 3.18+ | 11 | 2.7 | — |
-| 6.x | 3.18–3.20 | 11 | 2.7 | — |
-| 7.0 | 4.0 | 17 | 3.1 | — |
-| 7.1+ | 4.1–4.4 LTS | 17 | 3.2+ | — |
-
-State the inference clearly: `"Camel ~3.11 (inferred from IM 4.5)"`. The "Validated against" column lists the actual Camel version observed in real customer projects — extend the table when new project samples surface a different mapping.
-
-#### Layer 5 — Maven fallback
-
-If the user has `mvn` installed and the Maven settings can resolve dependencies, ask Maven. **Order matters here**: when Camel comes through a BOM `<dependency-management><scope>import</scope>` (very common in IM projects — the IM parent BOM pins Camel), `help:evaluate -Dexpression=camel.version` returns `null` because there is no `camel.version` *property*. Use `dependency:list` first:
-
-```bash
-# PRIMARY — works whether camel.version is a property or comes via BOM import
-JAVA_HOME=... mvn -f "$pom" dependency:list -DincludeGroupIds=org.apache.camel \
-  --no-transfer-progress 2>&1 \
-  | grep -E 'org\.apache\.camel:camel-core' \
-  | head -1 \
-  | grep -oE ':[0-9]+\.[0-9]+(\.[0-9]+)?:' \
-  | tr -d ':'
-
-# FALLBACK — only works when camel.version is an explicit property
-JAVA_HOME=... mvn -f "$pom" help:evaluate -Dexpression=camel.version \
-  -q -DforceStdout 2>/dev/null
-
-# Same pattern for Spring Boot
-JAVA_HOME=... mvn -f "$pom" dependency:list -DincludeGroupIds=org.springframework.boot \
-  --no-transfer-progress 2>&1 \
-  | grep -E 'org\.springframework\.boot:spring-boot' | head -1 \
-  | grep -oE ':[0-9]+\.[0-9]+(\.[0-9]+)?(\.RELEASE)?:' | tr -d ':'
-```
-
-Validated on `bosch-rexroth-integration`: this returns `2.25.0` for Camel — matching the actual transitive resolution. The `help:evaluate` form returned `null` for the same project because the IM parent BOM (not a `<camel.version>` property) supplies the version.
-
-Use this layer only as a last resort — `mvn dependency:list` is slow (10–60s) and may fail on private-Nexus auth issues.
+Run the recipe twice — once with `$pom=$SOURCE_DIR/pom.xml`, once with `$pom=$TARGET_DIR/pom.xml`. State which layer resolved each value (e.g. `"Camel 3.20 (layer 4 — inferred from IM 6.5)"`). If anything is still unresolved after layer 5, **ask the user** before continuing.
 
 ### Summary
 
