@@ -255,27 +255,9 @@ Treat the migration skills as the source of truth for these eleven anti-patterns
 
 ### Step 5b — Agent-owned anti-patterns (run these directly)
 
-These patterns are not detected by any individual migration skill. For each, glob the relevant files in `$TARGET_DIR/src/main/resources/repo/` and record affected files + line numbers + severity.
+For the patterns no individual migration skill detects, run AP-3 through AP-19 from `docs/anti-patterns.md` against `$TARGET_DIR/src/main/resources/repo/`. The catalog provides the regex/glob detect rule, severity, "why it matters", and fix recipe for each. Record affected files + line numbers + severity per finding.
 
-| # | Check | Detect | Severity | Why it matters |
-|---|---|---|---|---|
-| AP-3 | Missing `streaming="true"` on splits | `<split>` without `streaming="true"` paired with `<tokenize token="\n"/>` | Critical | OutOfMemoryError on >100MB CSVs |
-| AP-4 | Copy-pasted apiSettings parser | `<groovy>` blocks that all assign `apiSettings` with slight variations across routes | Important | Silent bugs from drift |
-| AP-5 | Hardcoded values not using `{{pfx:...}}` | Numeric literals in `<tokenize group=...>`, hostnames/IPs in `uri=` attributes | Important | No per-env config without redeploy |
-| AP-6 | Missing error handling | File routes without `moveFailed=` / `{{error.file}}` AND without `<doCatch>` / `<onException>` | Critical | Silent failures with no audit trail |
-| AP-7 | No archive folder | File routes without `move=.archive` / `{{archive.file}}` | Important | No reprocess; no audit trail |
-| AP-8 | Inline Groovy > 15 lines | `<groovy>` or `<script language="groovy">` block longer than 15 lines | Important | No IDE support, no unit tests |
-| AP-9 | Inconsistent naming | Route IDs mixing camelCase / kebab-case / PascalCase | Nice-to-have | Maintenance friction |
-| AP-10 | Routes > 200 lines | Route XML longer than 200 lines | Important | High blast radius on edits |
-| AP-11 | Missing flush on DMDS | `pfx-api:loaddata objectType=DMDS` without a following `pfx-api:flush` (or with flush inside a `<split>`) | Critical | Partial data visible in PA |
-| AP-12 | Old connection format | `pfx-api:*` calls relying on `integration.pfx.*` properties when no `connections/pricefx.json` is present | Important | Property-based connections deprecated |
-| AP-13 | split+tokenize+loaddata for P/PX/CX/C | `<split>` + `<tokenize>` + `pfx-api:loaddata` for objectType P/PX/CX/C (NOT DMDS) | Important | `loaddataFile` handles batching internally |
-| AP-14 | `pfx-sftp` with `default-sftp-connection` | `pfx-sftp:` URI with `connection=default-sftp-connection` | Important | Use `file://{{integration.sftp.root}}/...` instead |
-| AP-15 | Redundant `connection=pricefx` | Any `pfx-api:*`/`pfx-csv:*`/`pfx-config:*`/`pfx-model:*` URI with `connection=pricefx` | Nice-to-have | `pricefx` is the default |
-| AP-16 | Route ID with `pfx:` prefix | Route ID starts with `pfx:` | Important | Non-standard; affects monitoring |
-| AP-17 | Old path placeholder | `{{integration.data}}` or `{{data.directory}}` in file URIs | Important | Use `{{integration.sftp.root}}` |
-| AP-18 | `extensionName` parameter | `pfx-api:fetch/loaddata/loaddataFile` with `extensionName=...` | Important | Silently ignored — set `name` in mapper/filter instead |
-| AP-19 | `noop=true` on file consumer | `noop=true` on a `from uri="file://..."/>` | Critical | File reprocessed forever; no archive |
+(AP-1, AP-2, AP-2b, AP-2c, AP-20 through AP-26 are aggregated from skills in Step 5a above — do not re-run those here. AP-27 (`javax.*` → `jakarta.*`) is covered by the `migrate-manual-to-provisioned-java-code` skill's Step 4.)
 
 ### Performance checklist
 

@@ -64,18 +64,20 @@ grep -rn "pfx-csv:streamingUnmarshal" src/main/resources/repo/routes/ --include=
 ```
 
 ### Legacy Pattern Scan
-Glob all files in `src/main/resources/repo/routes/`, `src/main/resources/repo/mappers/`, `src/main/resources/repo/filters/`. Read every file. Identify:
 
-| # | Pattern to find | Migration action |
-|---|-----------------|-----------------|
-| L1 | `javax.` imports in Groovy blocks | Replace with `jakarta.` (required for 6.x → 7.x) |
-| L2 | `<split>` without `streaming="true"` paired with `<tokenize token="\n"/>` | Add `streaming="true"` |
-| L3 | `file:` consumer missing `move=` (archive) or `moveFailed=` | Add both parameters |
-| L4 | Groovy apiSettings parser duplicated across routes | Flag for manual extraction to shared bean |
-| L5 | Property placeholder using old syntax `${pfx:...}` | Replace with `{{pfx:...}}` |
-| L6 | `connection=pricefx` on any component when `pricefx` is the default | Remove the redundant parameter |
-| L7 | Manual split+tokenize+loaddata for P/PX/CX imports | Recommend migration to `loaddataFile` |
-| L8 | Route ID with `pfx:` prefix | Remove the prefix |
+Glob all files in `src/main/resources/repo/routes/`, `src/main/resources/repo/mappers/`, `src/main/resources/repo/filters/`. Read every file.
+
+Apply the subset of `docs/anti-patterns.md` whose **Applies to** field includes the detected transition:
+
+| Transition | Run these APs |
+|---|---|
+| `5→6` | AP-1 (Spring Boot 2.x), AP-27 (`javax.*` → `jakarta.*`), AP-12 (old connection format), plus all `version-independent` APs |
+| `6→7` | AP-1, AP-2 (Java 11), AP-2b (Camel 3 pinned), AP-12, AP-20 through AP-26 (Camel 3→4 syntax), plus all `version-independent` APs |
+| `7→7` | All `version-independent` APs only — no breaking-change set applies |
+
+The version-independent set is AP-3, AP-4, AP-5, AP-6, AP-7, AP-8, AP-9, AP-10, AP-11, AP-13, AP-14, AP-15, AP-16, AP-18, AP-19.
+
+For each AP, the catalog gives the regex/glob detect rule, the severity, the "why it matters", and the fix recipe.
 
 ---
 
@@ -116,49 +118,13 @@ Effort: XS < 5 min · S 5–15 min · M 15–60 min · L 1–4 h · XL > 4 h
 
 Apply only the fixes the user approved. Use Edit (not Write) for targeted changes. Show a summary of every change made.
 
-### Auto-fix rules
+For each AP, follow the **Fix** section in `docs/anti-patterns.md`. The catalog's `Auto-fixable:` field tells you which entries are safe to apply mechanically:
 
-**L1 — javax → jakarta** (5.x → 6.x boundary only)
-- In Groovy script blocks and Java/Groovy files, replace `import javax.` with `import jakarta.`
-- Safe, mechanical replacement:
-  ```bash
-  find src/ -name "*.java" -o -name "*.groovy" | xargs sed -i 's/import javax\./import jakarta\./g'
-  ```
-- Always show what was changed before and after. Never modify route XML automatically without user confirmation.
+- Auto-fix every AP marked `Auto-fixable: Yes` (or `Yes (with caveat)`).
+- For `Auto-fixable: No`, list the finding under "Manual action required" with the catalog's fix recipe as guidance.
+- Always show a before/after diff for each auto-fix before saving.
 
-**L2 — Add streaming="true"**
-```xml
-<!-- Before -->
-<split>
-    <tokenize group="..." token="\n"/>
-
-<!-- After -->
-<split streaming="true">
-    <tokenize group="..." token="\n"/>
-```
-
-**L3 — Add archive and error folders**
-```xml
-<!-- Before -->
-<from uri="file://{{integration.sftp.root}}/input/route-name"/>
-
-<!-- After -->
-<from uri="file://{{integration.sftp.root}}/input/route-name
-    ?move=../archive/${date:now:yyyyMMdd}/${file:name}
-    &amp;moveFailed=../error/${file:name}"/>
-```
-
-**L5 — Fix property placeholder syntax**
-- Replace `${pfx:` with `{{pfx:` and close `}` with `}}` throughout route XMLs
-
-**L6 — Remove redundant connection parameter**
-- Remove `connection=pricefx` from all `pfx-api:*`, `pfx-model:*`, `pfx-csv:*` URIs
-- Only when there is a single `PriceFxConnection` named `pricefx`
-
-**L8 — Remove pfx: route ID prefix**
-- In each `<route id="pfx:...">`, strip the `pfx:` prefix
-
-Do NOT auto-fix L4 (shared bean extraction) or L7 (loaddataFile migration) — these require developer judgment.
+`pom.xml` version bumps (AP-1, AP-2) are intentionally `No` in the catalog — apply them only when the user explicitly confirms, since the JVM and Spring Boot bumps need manual testing.
 
 ---
 
