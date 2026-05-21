@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-camel-syntax
-description: Apply mechanical Apache Camel syntax fixes for the Camel 3.3.5 → 4.1+ upgrade — Simple-expression renames (property[]→exchangeProperty[]), attribute renames (setHeader headerName→name, setProperty propertyName→name, all `*Ref`→non-Ref), removed elements (`<inOnly>`, `<inOut>`, `<routeContext>` wrapper), property-placeholder syntax (`${pfx:foo}`→`{{pfx:foo}}`), URI-scheme renames (quartz2→quartz, aws-s3→aws2-s3, direct-vm→direct, vm→seda), plus reports for `useList=`, `synchronous=`, `startDelayedSeconds=`, `transferException=`, `tracerEnabled=`, `LoggingLevel.OFF`, `org.joda`, `@Autowired`, `@PropertyInject`.
+description: Use when migrating from manual to provisioned and the source project uses Apache Camel 3.3.5 patterns that break on Camel 4.1+ — `${pfx:foo}` property placeholders, `<inOnly>` / `<inOut>` / `<routeContext>` elements, `setHeader headerName=` / `setProperty propertyName=` / any `*Ref` attributes, `quartz2:` / `aws-s3:` / `direct-vm:` / `vm:` URI schemes, or `useList=` / `synchronous=` / `startDelayedSeconds=` / `transferException=` / `tracerEnabled=` / `LoggingLevel.OFF` options.
 ---
 
 # Migrate Manual → Provisioned: Camel Syntax (3.3.5 → 4.1+)

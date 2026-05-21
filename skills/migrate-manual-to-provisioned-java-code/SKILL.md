@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-java-code
-description: Move Java and Groovy custom code from a manual IM project into the provisioned `src/main/resources/repo/classes/` Groovy class folder, converting `.java` files to `.groovy`. Applies IM 7.x package/import renames (com.sun.jersey, io.swagger.client, commons-lang, AggregationStrategy, ProducerUtils), javax→jakarta with a keep-as-javax revert list, and Pricefx Java API method-signature renames.
+description: Use when migrating from manual to provisioned and the source project has custom `.java` or `.groovy` code under `src/main/java/`, Pricefx legacy package imports (`com.sun.jersey`, `io.swagger.client`, `commons-lang`, `AggregationStrategy`, `ProducerUtils`), `javax.*` imports that need to move to `jakarta.*`, or pre-IM-7.x Pricefx Java API method signatures.
 ---
 
 # Migrate Manual → Provisioned: Java & Groovy Code

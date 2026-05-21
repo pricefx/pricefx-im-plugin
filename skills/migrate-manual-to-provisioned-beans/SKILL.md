@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-beans
-description: Extract every Spring `<bean>` from a manual IM project's bundled XML files into one-bean-per-file under `src/main/resources/repo/beans/`, transform legacy event-route beans (rename priceFxConnection→priceFxClientName), rewrite property placeholders from `${...}` to `#{environment['...']}`, and add the `bean:` prefix to bare bean references in `<to uri="myBean"/>`.
+description: Use when migrating from manual to provisioned and the source project has Spring `<bean>` definitions bundled into shared XML files (e.g. `camel-context.xml`), legacy event-route beans using `priceFxConnection`, `${...}` property placeholders inside bean configs, or `<to uri="myBean"/>` references to beans without the `bean:` prefix.
 ---
 
 # Migrate Manual → Provisioned: Beans
