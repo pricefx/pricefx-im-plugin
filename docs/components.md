@@ -334,6 +334,8 @@ Use `pfx-config:get/set` to persist a timestamp between runs for incremental exp
 **Syntax:** `pfx-rest:method?params`
 
 **KB:** https://knowledge.pricefx.com/space/IM/10551435/pfx-rest+Component
+When using pfx-rest to call Pricefx always look at Pricefx REST API for details.
+**API Docs** https://api.pricefx.com/rest-api
 
 ### Methods
 
