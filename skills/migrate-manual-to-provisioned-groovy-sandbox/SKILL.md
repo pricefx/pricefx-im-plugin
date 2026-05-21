@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-groovy-sandbox
-description: Walk every Java and Groovy file in the target project, collect every type referenced in `import` statements, and produce the `integration.groovy-sandbox.custom-allowed-types` application property — the comma-separated allow-list IM 7.x uses to whitelist types for Groovy script execution.
+description: Use when migrating from manual to provisioned and the target project will run on IM 7.x with the Groovy sandbox enabled — IM 7.x requires `integration.groovy-sandbox.custom-allowed-types` to whitelist every type referenced via `import` statements in Java/Groovy classes.
 ---
 
 # Migrate Manual → Provisioned: Groovy Sandbox Allow-list

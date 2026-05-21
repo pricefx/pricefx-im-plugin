@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-routes
-description: Extract every `<route>` element from a manual IM project's bundled XML files and split them into one-route-per-file under `src/main/resources/repo/routes/` in the target provisioned project. Use this when migrating from a manual integration where many routes share a single `camel-context.xml` (or similar) to provisioned IM where each route lives in its own file.
+description: Use when migrating from manual to provisioned and the source project has multiple `<route>` elements bundled into a single shared XML file (e.g. `camel-context.xml`) instead of one-route-per-file under `src/main/resources/repo/routes/`.
 ---
 
 # Migrate Manual → Provisioned: Routes

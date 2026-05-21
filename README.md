@@ -171,7 +171,7 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **25 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **35 skills** covering the full integration development lifecycle.
 
 ---
 
@@ -450,6 +450,37 @@ Quick metadata lookup — no files generated, just displays information.
 
 ---
 
+### Migration & Refactoring (11 skills)
+
+#### refactor-template-import-route
+
+Refactors a templated FTP-to-Pricefx import route into a straight-line route — hardwires `{{pfx:...}}` property placeholders, drops dead branches, and switches `pfx-sftp` to the `file` component with `{{integration.sftp.root}}`.
+
+```
+/pricefx-im-plugin:refactor-template-import-route
+```
+
+#### migrate-manual-to-provisioned-* (10 sub-skills)
+
+These ten skills are the building blocks of the `migrate-manual-to-provisioned` agent and are not normally invoked directly — the agent orchestrates them in the right order. Each handles one slice of a legacy "manual" IM project (everything bundled into `camel-context.xml`, Java sources under `src/main/java/`) to the modern "provisioned" layout:
+
+| Skill | Slice it owns |
+|---|---|
+| `migrate-manual-to-provisioned-routes` | Extracts `<route>` elements into `repo/routes/` |
+| `migrate-manual-to-provisioned-mappers` | Extracts `<loadMapper>` / `<integrateMapper>` into `repo/mappers/` |
+| `migrate-manual-to-provisioned-filters` | Extracts `<filter>` / `<pfx:filter>` into `repo/filters/` |
+| `migrate-manual-to-provisioned-beans` | Extracts Spring `<bean>` into `repo/beans/` |
+| `migrate-manual-to-provisioned-connections` | Converts `<pfx:connection>` / legacy `pfx.*` properties to JSON connections |
+| `migrate-manual-to-provisioned-camel-syntax` | Camel 3.3.5 → 4.1+ XML/URI/attribute renames |
+| `migrate-manual-to-provisioned-java-code` | Moves Java/Groovy into `repo/classes/`, applies IM 7.x package + API renames |
+| `migrate-manual-to-provisioned-properties` | Modernises `application.properties` to the `integration.*` shape |
+| `migrate-manual-to-provisioned-pom` | Bumps `pom.xml` to Java 17 / Spring Boot 3 / Camel 4 / IM 7.x |
+| `migrate-manual-to-provisioned-groovy-sandbox` | Builds the IM 7.x Groovy-sandbox allow-list from import statements |
+
+To run the full migration end-to-end, invoke the `migrate-manual-to-provisioned` agent (see Agents Reference).
+
+---
+
 ## Pattern Catalog
 
 The plugin ships an anonymized **pattern catalog** in `docs/patterns/` — 18 reference integration patterns extracted from real-world IM deployments (all customer names and partition details removed).
@@ -482,7 +513,7 @@ Skills will apply the matching pattern as their baseline and adapt it to your pr
 
 ## Agents Reference
 
-Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **9 agents**.
+Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **10 agents**.
 
 ### debug-integration
 
@@ -623,6 +654,20 @@ Upgrade this project to IM 7.3
 
 ```
 Apply all safe upgrades and tell me what still needs manual work
+```
+
+### migrate-manual-to-provisioned
+
+**What it does:** End-to-end lift of a legacy "manual" IM project (everything bundled into `camel-context.xml`, Java sources under `src/main/java/`) to the modern "provisioned" layout (one route/mapper/filter/bean/connection per file under `src/main/resources/repo/`, Groovy classes under `repo/classes/`). Orchestrates the ten `migrate-manual-to-provisioned-*` sub-skills, modernises Camel 3.3.5 → 4.1+ / Spring Boot 2 → 3 / IM 6 → 7 patterns, converts Java to Groovy, and finishes with an anti-pattern and performance scan.
+
+**How to use:**
+
+```
+Migrate this manual IM project to provisioned
+```
+
+```
+I have a legacy camel-context.xml project at /path/to/source, lift it into this provisioned project
 ```
 
 ---
@@ -934,6 +979,7 @@ When inheriting an existing project, run the `onboard-project` agent first. It p
 | Impact of a field or connection rename | `impact-analysis` |
 | Documenting routes for stakeholders | `document-project` |
 | Migrating outdated patterns | `migrate-project` |
+| Lifting a legacy `camel-context.xml` project to provisioned layout | `migrate-manual-to-provisioned` |
 | Creating test data | `generate-test-data` |
 | Understanding an inherited project | `onboard-project` |
 | End-to-end integration from a requirement | `build-integration` |
@@ -999,6 +1045,7 @@ pricefx-im-plugin/
 │   ├── document-project.md
 │   ├── generate-test-data.md
 │   ├── impact-analysis.md
+│   ├── migrate-manual-to-provisioned.md
 │   ├── migrate-project.md
 │   ├── onboard-project.md
 │   └── upgrade-project.md
@@ -1023,6 +1070,17 @@ pricefx-im-plugin/
 │   ├── generate-soap-integration/
 │   ├── git-workflow/
 │   ├── list-pricefx-tables/
+│   ├── migrate-manual-to-provisioned-beans/
+│   ├── migrate-manual-to-provisioned-camel-syntax/
+│   ├── migrate-manual-to-provisioned-connections/
+│   ├── migrate-manual-to-provisioned-filters/
+│   ├── migrate-manual-to-provisioned-groovy-sandbox/
+│   ├── migrate-manual-to-provisioned-java-code/
+│   ├── migrate-manual-to-provisioned-mappers/
+│   ├── migrate-manual-to-provisioned-pom/
+│   ├── migrate-manual-to-provisioned-properties/
+│   ├── migrate-manual-to-provisioned-routes/
+│   ├── refactor-template-import-route/
 │   ├── run-integration-wizard/
 │   └── simulate-dry-run/
 ├── docs/

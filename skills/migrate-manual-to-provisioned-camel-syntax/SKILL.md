@@ -86,7 +86,7 @@ In Camel 4 routes XML, the `<routeContext>` wrapper has been replaced by the fil
 - Replace `<routeContext\s+id="[^"]+">` with empty string
 - Replace `</routeContext>` with empty string
 
-### 3e — `<routeContextRef ref="X"/>` references
+### 3d — `<routeContextRef ref="X"/>` references
 
 `<routeContextRef ref="X"/>` was the Camel-3 way to import a routeContext defined in another file (typical inside `<camelContext>...</camelContext>` in `camel-context.xml`). Camel 4 has no `routeContext` and provisioned IM auto-discovers routes from `repo/routes/`, so every `<routeContextRef>` becomes dead config.
 
@@ -95,7 +95,7 @@ In Camel 4 routes XML, the `<routeContext>` wrapper has been replaced by the fil
 
 After deletion, the `<camelContext>` block in the target's `camel-context.xml` may end up almost empty. That's expected — provisioned IM does not need a `<camelContext>` declaration at all (it's auto-configured), so the file can be removed entirely once empty. Flag this in the report.
 
-### 3d — `<setBody><expression><simple>...</simple></expression></setBody>` (verbose form)
+### 3e — `<setBody><expression><simple>...</simple></expression></setBody>` (verbose form)
 
 Camel 4 simplified the inline-language form. The verbose `<expression><simple>...</simple></expression>` wrapper is still accepted, but the recommended form is just `<simple>...</simple>` directly inside `<setBody>` / `<setHeader>` / `<filter>` / `<when>`.
 
@@ -113,7 +113,7 @@ These are anti-patterns or removed features. Do **not** auto-fix — the right r
 | `transferException=true` parameter on `http`/`http4` | route XMLs | Removed for security in Camel 3.x. Catch the exception locally instead. |
 | `tracerEnabled=` route attribute | route XMLs | Route-level tracing removed in Camel 3. Configure via `CamelContext` or a route policy. |
 | `<log loggingLevel="OFF"/>` | route XMLs | `OFF` removed from `LoggingLevel` enum. Use `TRACE` (or remove the `<log>`). |
-| Verbose `<setBody><expression><simple>...</simple></expression></setBody>` | route XMLs | Simplify to `<setBody><simple>...</simple></setBody>` (covered in 3d). |
+| Verbose `<setBody><expression><simple>...</simple></expression></setBody>` | route XMLs | Simplify to `<setBody><simple>...</simple></setBody>` (covered in 3e). |
 | `org.joda` import | Java/Groovy | `joda-time` removed. Use `java.time` or Camel Simple `${date:now-24h}`. |
 | `@Autowired` annotation | Java/Groovy | Discouraged in IM 7.x sandbox. Use constructor injection or `connectionLookup`. |
 | `@PropertyInject` annotation | Java/Groovy | Removed. Use Camel Simple `${properties:my.key}` in routes, or `@Value` in Spring beans. |
