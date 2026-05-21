@@ -1,0 +1,48 @@
+{
+  "eval_id": 4,
+  "eval_name": "px-rename-loaddatafile",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-PX",
+      "text": "Generated route uses objectType=PX",
+      "passed": true,
+      "evidence": "matched: 'objectType=PX'"
+    },
+    {
+      "id": "uses-loaddatafile",
+      "text": "Generated route uses pfx-api:loaddataFile (explicitly requested over loaddata)",
+      "passed": true,
+      "evidence": "matched: 'pfx-api:loaddataFile'"
+    },
+    {
+      "id": "mapper-rename-partnumber",
+      "text": "Mapper renames partNumber -> sku (in=partNumber out=sku)",
+      "passed": true,
+      "evidence": "matched: 'in=\"partNumber\"[^>]*out=\"sku\"'"
+    },
+    {
+      "id": "mapper-listprice-attribute",
+      "text": "Mapper maps listPrice to an attribute slot",
+      "passed": true,
+      "evidence": "matched: 'in=\"listPrice\"[^>]*out=\"attribute'"
+    },
+    {
+      "id": "mapper-costcenter-attribute",
+      "text": "Mapper maps costCenter to an attribute slot",
+      "passed": true,
+      "evidence": "matched: 'in=\"costCenter\"[^>]*out=\"attribute'"
+    },
+    {
+      "id": "px-name-constant",
+      "text": "PX mapper has <constant ... expression=\"Pricing\" out=\"name\"/>",
+      "passed": true,
+      "evidence": "matched: '<constant[^>]*expression=\"Pricing\"[^>]*out=\"name\"'"
+    }
+  ],
+  "score": {
+    "passed": 6,
+    "total": 6
+  }
+}

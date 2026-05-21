@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="import-customers">
+        <!-- Poll the external SFTP server daily at 6:00 AM.
+             File: /upload/customer-master.csv
+             Uses Quartz scheduling on top of pfx-sftp consumer. -->
+        <from uri="pfx-sftp://upload?connection=sftp.connection&amp;fileName=customer-master.csv&amp;delete=true&amp;scheduler=quartz&amp;scheduler.cron=0+0+6+*+*+?"/>
+
+        <log message="Picked up customer master file: ${header.CamelFileName}"/>
+
+        <!-- Stream-parse CSV row-by-row to keep memory low for large files. -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <!-- Stream the file straight into Pricefx using loaddataFile.
+             objectType=C  (Customer Master)
+             businessKeys=customerId  (upsert key) -->
+        <to uri="pfx-api:loaddataFile?objectType=C&amp;mapper=import-customers.mapper&amp;businessKeys=customerId&amp;batchSize=100000"/>
+
+        <log message="Customer master import finished. Total records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <!-- Trigger internal copy so dependent calculations refresh. -->
+        <onCompletion onCompleteOnly="true">
+            <to uri="pfx-api:internalCopy?label=Customer"/>
+        </onCompletion>
+    </route>
+
+</routes>

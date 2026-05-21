@@ -1,0 +1,30 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-ltv-exchange-rates",
+  "category": "negative",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-ppv-skill",
+      "text": "Subagent recognizes LTV use case and refers to generate-ppv-import-integration",
+      "passed": true,
+      "evidence": "matched: 'generate-ppv-import-integration' | 'ppv-import' | 'Pricing Parameter[s]?'"
+    },
+    {
+      "id": "no-wrong-objecttype-pcx",
+      "text": "Does NOT generate objectType=P / PX / C / CX for what is an LTV table",
+      "passed": true,
+      "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+    },
+    {
+      "id": "no-px-name-constant",
+      "text": "Does NOT produce a PX/CX <constant out=\"name\"/> table-name mapper line",
+      "passed": true,
+      "evidence": "none of: '<constant[^>]*expression=\"ExchangeRates\"[^>]*out=\"name\"' present"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 3
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "eval_id": 4,
+  "eval_name": "px-rename-loaddatafile",
+  "category": "positive",
+  "prompt": "Got a new CSV with product extensions for Pricing table. Three columns: partNumber, listPrice, costCenter. Map partNumber to sku and load via loaddataFile.",
+  "assertions": [
+    {"id": "uses-objectType-PX", "text": "Generated route uses objectType=PX", "type": "grep", "patterns": ["objectType=PX"]},
+    {"id": "uses-loaddatafile", "text": "Generated route uses pfx-api:loaddataFile (explicitly requested over loaddata)", "type": "grep", "patterns": ["pfx-api:loaddataFile"]},
+    {"id": "mapper-rename-partnumber", "text": "Mapper renames partNumber -> sku (in=partNumber out=sku)", "type": "grep", "patterns": ["in=\"partNumber\"[^>]*out=\"sku\""]},
+    {"id": "mapper-listprice-attribute", "text": "Mapper maps listPrice to an attribute slot", "type": "grep", "patterns": ["in=\"listPrice\"[^>]*out=\"attribute"]},
+    {"id": "mapper-costcenter-attribute", "text": "Mapper maps costCenter to an attribute slot", "type": "grep", "patterns": ["in=\"costCenter\"[^>]*out=\"attribute"]},
+    {"id": "px-name-constant", "text": "PX mapper has <constant ... expression=\"Pricing\" out=\"name\"/>", "type": "grep", "patterns": ["<constant[^>]*expression=\"Pricing\"[^>]*out=\"name\""]}
+  ]
+}

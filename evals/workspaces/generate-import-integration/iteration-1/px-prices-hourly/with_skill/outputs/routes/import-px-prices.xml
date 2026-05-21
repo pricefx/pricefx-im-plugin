@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-px-prices">
+        <from uri="file:///home/im/inbound/prices?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;{{error.file}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+0/1+*+*+?+*"/>
+
+        <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
+
+        <!-- Streaming CSV parse -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true&amp;delimiter=,"/>
+
+        <!-- Import to Pricefx via streaming file upload (PX/Prices extension table set via mapper constant out="name") -->
+        <to uri="pfx-api:loaddataFile?objectType=PX&amp;mapper=import-px-prices.mapper&amp;batchSize=200000"/>
+
+        <log message="Import completed for file: ${header.CamelFileName}. Records: ${header.PfxTotalInputRecordsCount}" loggingLevel="INFO"/>
+    </route>
+</routes>

@@ -1,0 +1,5 @@
+{
+  "id": "erp",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.NoopConnection",
+  "url": "https://erp.internal"
+}

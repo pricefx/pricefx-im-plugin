@@ -1,0 +1,10 @@
+{
+  "eval_id": 8,
+  "eval_name": "edge-no-type-specified",
+  "category": "edge",
+  "prompt": "Import this data into Pricefx.",
+  "assertions": [
+    {"id": "asks-for-object-type", "text": "Subagent asks a clarifying question naming object types (P/PX/C/CX/DMDS/LTV/MLTV2 etc.) before committing", "type": "grep", "patterns": ["which object", "what object", "P / PX", "P, PX", "Product Master", "object type", "P,PX,C", "Customer", "Seller"], "match": "any", "scope": "narrative"},
+    {"id": "did-not-write-route-file", "text": "Subagent did NOT silently generate a route XML file", "type": "no_route_file_written"}
+  ]
+}

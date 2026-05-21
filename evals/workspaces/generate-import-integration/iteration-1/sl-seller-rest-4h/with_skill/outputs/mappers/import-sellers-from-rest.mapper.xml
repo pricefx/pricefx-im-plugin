@@ -1,0 +1,31 @@
+<mappers>
+    <!--
+        Seller Master (SL) mapper.
+
+        NOTE: pfx CLI metadata is not available for SL — this mapping is synthesized
+        from a plausible ERP seller payload shape. Adjust attribute slots to match
+        the partition's actual SL configuration once metadata is known.
+
+        Key field for SL is `sellerId` (referenced by businessKeys= in the route).
+        Unlike PX/CX/SX, SL master does NOT need a `<constant out="name"/>` table marker.
+    -->
+    <loadMapper id="import-sellers-from-rest.mapper">
+        <!-- Business key -->
+        <body in="sellerId"     out="sellerId"/>
+
+        <!-- Display label -->
+        <body in="name"         out="label"/>
+
+        <!-- Common seller attributes (synthesized — adjust to real schema) -->
+        <body in="firstName"    out="attribute1"/>
+        <body in="lastName"     out="attribute2"/>
+        <body in="email"        out="attribute3"/>
+        <body in="phone"        out="attribute4"/>
+        <body in="region"       out="attribute5"/>
+        <body in="territory"    out="attribute6"/>
+        <body in="department"   out="attribute7"/>
+        <body in="managerId"    out="attribute8"/>
+        <body in="status"       out="attribute9"/>
+        <body in="hireDate"     out="attribute10" converterExpression="stringToDate"/>
+    </loadMapper>
+</mappers>

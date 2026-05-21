@@ -1,0 +1,30 @@
+{
+  "eval_id": 6,
+  "eval_name": "neg-dmds-sales-history",
+  "category": "negative",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-pa-skill",
+      "text": "Subagent recognizes DMDS use case and refers to generate-pa-import-integration",
+      "passed": true,
+      "evidence": "matched: 'generate-pa-import-integration' | 'pa-import-integration' | 'PA Data Source'"
+    },
+    {
+      "id": "no-wrong-objecttype-pcx",
+      "text": "Does NOT generate objectType=P/PX/C/CX/SL/SX for a DMDS file",
+      "passed": true,
+      "evidence": "none of: 'objectType=P[^X]' | 'objectType=PX' | 'objectType=C[^X]' present"
+    },
+    {
+      "id": "no-loaddatafile-for-dmds",
+      "text": "Does NOT use pfx-api:loaddataFile for DMDS (DMDS needs split+tokenize+loaddata+flush)",
+      "passed": true,
+      "evidence": "none of: 'pfx-api:loaddataFile' present"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 3
+  }
+}

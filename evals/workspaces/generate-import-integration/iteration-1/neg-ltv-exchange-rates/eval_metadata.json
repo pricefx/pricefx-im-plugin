@@ -1,0 +1,11 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-ltv-exchange-rates",
+  "category": "negative",
+  "prompt": "I need to load LTV exchange rates from a CSV — single column key value pairs USD/EUR conversions. Target Pricefx Pricing Parameter table called ExchangeRates.",
+  "assertions": [
+    {"id": "redirects-to-ppv-skill", "text": "Subagent recognizes LTV use case and refers to generate-ppv-import-integration", "type": "grep", "patterns": ["generate-ppv-import-integration", "ppv-import", "Pricing Parameter[s]?", "LTV is.*different skill", "use.*ppv"], "match": "any", "scope": "narrative"},
+    {"id": "no-wrong-objecttype-pcx", "text": "Does NOT generate objectType=P / PX / C / CX for what is an LTV table", "type": "grep_absent", "patterns": ["objectType=P[^X]", "objectType=PX", "objectType=C[^X]", "objectType=CX"], "scope": "outputs"},
+    {"id": "no-px-name-constant", "text": "Does NOT produce a PX/CX <constant out=\"name\"/> table-name mapper line", "type": "grep_absent", "patterns": ["<constant[^>]*expression=\"ExchangeRates\"[^>]*out=\"name\""], "scope": "outputs"}
+  ]
+}

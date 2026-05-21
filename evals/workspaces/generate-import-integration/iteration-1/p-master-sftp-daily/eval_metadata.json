@@ -1,0 +1,14 @@
+{
+  "eval_id": 0,
+  "eval_name": "p-master-sftp-daily",
+  "category": "positive",
+  "prompt": "I have a CSV file products.csv in /import folder with columns sku, name, price, uom. Need to load this into Pricefx as Product master via SFTP daily.",
+  "assertions": [
+    {"id": "uses-objectType-P", "text": "Generated route URI contains objectType=P", "type": "grep", "patterns": ["objectType=P"]},
+    {"id": "uses-loaddatafile-or-loaddata", "text": "Generated route uses pfx-api:loaddataFile or pfx-api:loaddata", "type": "grep", "patterns": ["pfx-api:loaddataFile", "pfx-api:loaddata"], "match": "any"},
+    {"id": "mapper-file-present", "text": "A mapper XML file is produced (loadMapper or integrateMapper)", "type": "grep", "patterns": ["loadMapper", "integrateMapper"], "match": "any"},
+    {"id": "daily-schedule", "text": "Daily schedule wired (quartz cron, scheduler param, or property placeholder)", "type": "grep", "patterns": ["quartz", "cron=", "scheduler"], "match": "any"},
+    {"id": "no-dmds-pattern", "text": "No DMDS / flush / dataSourceName pattern leaks into the generated route/mapper", "type": "grep_absent", "patterns": ["DMDS", "pfx-api:flush", "dataSourceName="], "scope": "outputs"},
+    {"id": "no-ltv-mltv2-pattern", "text": "No LTV / MLTV2 / pricingParameterName pattern leaks into the generated route/mapper", "type": "grep_absent", "patterns": ["objectType=LTV", "objectType=MLTV2", "pricingParameterName="], "scope": "outputs"}
+  ]
+}

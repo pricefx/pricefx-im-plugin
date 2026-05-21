@@ -1,0 +1,26 @@
+<mappers>
+    <loadMapper id="import-customers.mapper">
+        <!-- Business key -->
+        <body in="customerId"   out="customerId"/>
+
+        <!-- Standard customer fields -->
+        <body in="name"         out="name"/>
+        <body in="status"       out="status"/>
+
+        <!-- Address fields -->
+        <body in="address"      out="attribute1"/>
+        <body in="city"         out="attribute2"/>
+        <body in="state"        out="attribute3"/>
+        <body in="postalCode"   out="attribute4"/>
+        <body in="country"      out="attribute5"/>
+
+        <!-- Contact fields -->
+        <body in="email"        out="attribute6"/>
+        <body in="phone"        out="attribute7"/>
+
+        <!-- Classification fields -->
+        <body in="segment"      out="attribute8"/>
+        <body in="industry"     out="attribute9"/>
+        <body in="salesRep"     out="attribute10"/>
+    </loadMapper>
+</mappers>

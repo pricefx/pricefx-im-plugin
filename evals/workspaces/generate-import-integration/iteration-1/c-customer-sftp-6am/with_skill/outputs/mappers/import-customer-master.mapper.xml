@@ -1,0 +1,22 @@
+<mappers>
+    <loadMapper id="import-customer-master.mapper">
+        <!-- Customer Master fields. Adjust the `in` attributes to match the
+             actual CSV header names. Defaults below assume a typical
+             customer-master export with these columns:
+             customerId, name, customerType, status, street, city, state,
+             postalCode, country, phone, email, salesRep, createdDate -->
+        <body in="customerId"   out="customerId"/>
+        <body in="name"         out="name"/>
+        <body in="customerType" out="customerType"/>
+        <body in="status"       out="status"/>
+        <body in="street"       out="street"/>
+        <body in="city"         out="city"/>
+        <body in="state"        out="state"/>
+        <body in="postalCode"   out="postalCode"/>
+        <body in="country"      out="country"/>
+        <body in="phone"        out="phone"/>
+        <body in="email"        out="email"/>
+        <body in="salesRep"     out="salesRep"/>
+        <body in="createdDate"  out="createdDate" converterExpression="stringToDate"/>
+    </loadMapper>
+</mappers>

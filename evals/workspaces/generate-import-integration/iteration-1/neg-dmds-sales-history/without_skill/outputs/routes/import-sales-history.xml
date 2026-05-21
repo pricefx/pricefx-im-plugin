@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+        Import Sales History (DMDS)
+        ===========================
+        - Source: /sftp/transactions/YYYYMMDD.csv (daily, ~5M rows)
+        - Trigger: nightly at 02:00 (local server time)
+        - Target: DMDS.SalesHistory (Data Feed Data Source)
+        - Strategy: stream the file straight to Pricefx via pfx-api:loaddataFile
+                    to avoid loading 5M rows into IM heap.
+        - After load: flush the data feed so the rows become visible in the
+                      data source/data mart.
+    -->
+
+    <route id="import-sales-history">
+        <!--
+            Quartz cron: at 02:00 every day.
+            Camel URIs replace spaces in cron with '+'.
+            stateful=true prevents overlapping fires if a run is still running.
+        -->
+        <from uri="quartz://import/sales-history?cron=0+0+2+*+*+?&amp;stateful=true&amp;trigger.timeZone={{integration.timezone}}"/>
+
+        <!-- Build the dated filename: YYYYMMDD.csv for "today" (the 2am run loads the same calendar day).
+             If the upstream system writes the file with the prior business day's date instead,
+             change ${date:now:yyyyMMdd} to ${date:now-1d:yyyyMMdd}. -->
+        <setHeader name="salesHistoryFileName">
+            <simple>${date:now:yyyyMMdd}.csv</simple>
+        </setHeader>
+
+        <setHeader name="salesHistoryFilePath">
+            <simple>{{pfx:import-sales-history.inboundPath}}/${header.salesHistoryFileName}</simple>
+        </setHeader>
+
+        <log message="Sales history import starting for file: ${header.salesHistoryFilePath}"/>
+
+        <!--
+            Poll the specific dated file once (consume + delete).
+            - fileName pins the exact filename produced by the upstream system.
+            - readLock=changed waits until the file size stabilises (no .done marker assumed).
+            - delete=true removes the file after successful processing; archiving is
+              handled by the move= sub-option built into {{archive.file}} below.
+        -->
+        <pollEnrich>
+            <simple>file://{{pfx:import-sales-history.inboundPath}}?fileName=${header.salesHistoryFileName}&amp;{{archive.file}}&amp;{{read.lock}}&amp;delete=true</simple>
+            <!-- timeout=300000ms = 5 min — if the file is not present yet, fail loudly. -->
+            <constant>300000</constant>
+        </pollEnrich>
+
+        <log message="Streaming ${header[CamelFileNameOnly]} (size=${header[CamelFileLength]} bytes) into DMDS.SalesHistory"/>
+
+        <!--
+            Stream the CSV to Pricefx. streamingUnmarshal keeps the file off the IM heap.
+            useReusableParser=true reuses the parser across batches for a small perf win.
+        -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <!--
+            loaddataFile = file-stream upload to the Pricefx server.
+            objectType=DMDS targets a Data Feed Data Source.
+            targetName=SalesHistory selects the data source unique name (DMDS.SalesHistory).
+            mapper=import-sales-history.mapper maps the CSV columns onto the DMDS fields.
+            batchSize=100000 is in the recommended range for 10-20 fields per row.
+        -->
+        <to uri="pfx-api:loaddataFile?objectType=DMDS&amp;targetName=SalesHistory&amp;mapper=import-sales-history.mapper&amp;batchSize=100000"/>
+
+        <log message="Sales history load finished. Total input records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <!--
+            Flush the data feed so the newly loaded rows are exposed via DMDS.SalesHistory.
+            onCompleteOnly=true so we do NOT flush a partial load if loaddataFile threw.
+        -->
+        <onCompletion onCompleteOnly="true">
+            <log message="Flushing data feed for SalesHistory"/>
+            <to uri="pfx-api:flush?dataSourceName=DMDS.SalesHistory&amp;dataFeedName=DMF.SalesHistory"/>
+        </onCompletion>
+    </route>
+
+</routes>

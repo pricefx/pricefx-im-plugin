@@ -1,0 +1,8 @@
+<mappers>
+    <loadMapper id="import-pricing.mapper">
+        <constant expression="Pricing" out="name"/>
+        <body in="partNumber" out="sku"/>
+        <body in="listPrice" out="attribute1" converterExpression="stringToDecimal"/>
+        <body in="costCenter" out="attribute2"/>
+    </loadMapper>
+</mappers>

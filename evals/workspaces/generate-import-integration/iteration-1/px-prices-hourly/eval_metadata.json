@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "px-prices-hourly",
+  "category": "positive",
+  "prompt": "Set me up an import that reads PX Prices table data from /home/im/inbound/prices/ and loads into Pricefx with proper field mapping. Schedule: every hour.",
+  "assertions": [
+    {"id": "uses-objectType-PX", "text": "Generated route uses objectType=PX", "type": "grep", "patterns": ["objectType=PX"]},
+    {"id": "px-name-constant", "text": "Mapper contains <constant ... out=\"name\"/> with table name Prices (required for PX)", "type": "grep", "patterns": ["<constant[^>]*expression=\"Prices\"[^>]*out=\"name\""]},
+    {"id": "hourly-cron", "text": "Schedule is hourly (cron pattern roughly every hour or every 60 minutes)", "type": "grep", "patterns": ["0\\+0\\+\\*\\+", "0\\+0/60", "0\\+0\\+0/1", "0 0 \\*", "cron=0\\+\\*", "quartz.*hour"], "match": "any"},
+    {"id": "file-component", "text": "Route reads from file:// or pfx-sftp:// source", "type": "grep", "patterns": ["file:", "pfx-sftp:"], "match": "any"},
+    {"id": "no-dmds-pattern", "text": "No DMDS / flush pattern in route/mapper", "type": "grep_absent", "patterns": ["DMDS", "pfx-api:flush"], "scope": "outputs"}
+  ]
+}

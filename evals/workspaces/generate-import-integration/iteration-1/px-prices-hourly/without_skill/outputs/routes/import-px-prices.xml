@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="import-px-prices">
+        <!-- Poll the inbound directory every hour via Quartz scheduler.
+             - stateful=true prevents overlapping runs.
+             - {{archive.file}} moves processed files to a timestamped archive.
+             - {{read.lock}} waits until file size stabilizes before reading. -->
+        <from uri="file:/home/im/inbound/prices/?scheduler=quartz&amp;scheduler.cron=0+0+0/1+*+*+?&amp;scheduler.stateful=true&amp;{{archive.file}}&amp;{{read.lock}}"/>
+
+        <log message="Starting PX Prices import from ${header[CamelFileName]}"/>
+
+        <!-- Stream CSV directly to Pricefx for best performance on large files. -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <!-- Load into Product Extension (PX). The extension table name is set
+             in the mapper via <constant out="name"/>. Business key = sku. -->
+        <to uri="pfx-api:loaddataFile?objectType=PX&amp;mapper=import-px-prices.mapper&amp;businessKeys=sku&amp;batchSize=100000"/>
+
+        <log message="PX Prices import finished. Total records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <!-- Trigger an internal copy so dependent data marts pick up the new data. -->
+        <onCompletion onCompleteOnly="true">
+            <to uri="pfx-api:internalCopy?label=Product"/>
+        </onCompletion>
+    </route>
+
+</routes>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-customer-master">
+        <!-- Poll external SFTP for /upload/customer-master.csv every day at 06:00 -->
+        <from uri="pfx-sftp://upload?connection=customerMasterSftp&amp;fileName=customer-master.csv&amp;scheduler=quartz&amp;scheduler.cron=0+0+6+*+*+?&amp;delete=true&amp;readLock=changed&amp;streamDownload=true&amp;stepwise=false"/>
+
+        <log message="[${routeId}] Processing file: ${header.CamelFileName}" loggingLevel="INFO"/>
+
+        <!-- Streaming CSV parse -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true&amp;delimiter=,"/>
+
+        <!-- Stream-load into Pricefx Customer Master -->
+        <to uri="pfx-api:loaddataFile?objectType=C&amp;mapper=import-customer-master.mapper&amp;batchSize=200000&amp;businessKeys=customerId"/>
+
+        <log message="[${routeId}] Import complete. Records: ${header.PfxTotalInputRecordsCount}" loggingLevel="INFO"/>
+    </route>
+</routes>
