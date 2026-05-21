@@ -17,3 +17,4 @@ The following docs are NOT auto-loaded — read them when the topic comes up:
 
 - `docs/faq.md` — operational FAQs (file streaming, encrypted properties, env separation, scheduling pitfalls, etc.). Source: [Confluence – Provisioned Integration FAQs](https://pricefx.atlassian.net/wiki/spaces/CUST/pages/4697128997/Provisioned+Integration+FAQs).
 - `docs/anti-patterns.md` — canonical catalog of legacy patterns (AP-1..AP-27) shared by the `migrate-project`, `upgrade-project`, and `migrate-manual-to-provisioned` agents. Each entry has detection rule, severity, applicability, auto-fix policy, and fix recipe.
+- `docs/smart-auto-mapping.md` — algorithm for proposing a CSV → Pricefx field mapping automatically, shared by `generate-import-integration` and `generate-pa-import-integration`. Covers the 4-tier matching priority, confidence display, converter-expression auto-detection, and LLM-enhanced semantic reasoning.
