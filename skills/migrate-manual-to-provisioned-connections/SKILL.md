@@ -112,7 +112,7 @@ becomes `connections/mulesoftConn.json`:
 {
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.BasicConnection",
   "id": "mulesoftConn",
-  "uri": "${bridgestone.mulesoft.url}",
+  "url": "${bridgestone.mulesoft.url}",
   "username": "${bridgestone.mulesoft.username}",
   "password": "${bridgestone.mulesoft.password}"
 }
