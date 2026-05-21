@@ -1,6 +1,6 @@
 ---
 name: build-integration
-description: End-to-end agent that takes a business requirement (from a doc or wizard) and produces a complete, tested, and documented Pricefx Integration Manager integration. Covers route, mapper, filter, scheduling, connection, test, and documentation. Use when the user says "build an integration", "create complete integration", "generate from requirement", "build from spec", "end to end", or "from scratch".
+description: Use when the user wants to build a complete Pricefx Integration Manager integration end-to-end from a business requirement (doc or wizard) — says "build an integration", "create complete integration", "generate from requirement", "build from spec", "end to end", or "from scratch", and needs route + mapper + filter + scheduling + connection + test + documentation produced together.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write, Edit
 maxTurns: 50

@@ -1,6 +1,6 @@
 ---
 name: generate-inbound-rest-endpoint
-description: Generate a Pricefx Integration Manager inbound REST endpoint using Camel REST DSL. Use this skill whenever the user wants to expose an HTTP endpoint from IM, create a REST API, add a health check, build a webhook receiver, accept incoming POST/GET requests, or let an external system call into IM. Covers GET and POST endpoints, mandatory field validation, Pricefx formula execution, structured error responses, and property configuration across environments.
+description: Use when the user wants to expose an HTTP endpoint from Pricefx Integration Manager — says "create a REST API", "add a health check", "build a webhook receiver", "accept incoming POST/GET requests", "expose endpoint from IM", or "let an external system call into IM". For an OUTBOUND call to an external API use `generate-rest-outbound-integration` instead.
 ---
 
 # Generate Inbound REST Endpoint

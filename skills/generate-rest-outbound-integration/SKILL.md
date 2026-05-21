@@ -1,6 +1,6 @@
 ---
 name: generate-rest-outbound-integration
-description: Generate a Pricefx Integration Manager route that calls an external REST API (POST, PUT, PATCH) as the outbound leg of an integration. Use this skill whenever IM must push data to an external system via HTTP — e.g., after a Pricefx event, on a schedule, or as part of an export pipeline. Covers OAuth 2.0 client-credentials, API-key, and HTTP Basic auth, with error classification, dry-run toggle, throttling, and retry.
+description: Use when Pricefx Integration Manager must push data to an external system via HTTP (POST, PUT, PATCH) — says "call an external REST API", "outbound REST", "push to ERP", "send to webhook", "POST to external system", or needs OAuth 2.0 / API-key / HTTP Basic / mTLS / SAP JWT auth, with optional throttling, retry, and dry-run toggle. For an INBOUND endpoint exposed from IM use `generate-inbound-rest-endpoint`.
 ---
 
 # Generate REST Outbound Integration

@@ -1,6 +1,6 @@
 ---
 name: generate-sql-integration
-description: Generate a Pricefx Integration Manager route that reads from or writes to a relational/cloud SQL database (Snowflake, SQL Server, Postgres, MySQL, Oracle, etc.). Use this skill when data is fetched from or pushed to a database — e.g., loading product/customer master from Snowflake, calling a SQL Server stored procedure for incremental customer changes, exporting Pricefx Pricing Parameters back into a database table, or doing an initial bulk load via Snowflake stage + gzipped CSV. Covers JDBC datasource beans, paginated SELECT loops, stored procedure calls (`sql-stored:`), incremental sync via `pfx-config`, batch INSERT with named parameters, and Snowflake `COPY INTO` stage exports.
+description: Use when a Pricefx Integration Manager route reads from or writes to a relational/cloud SQL database (Snowflake, SQL Server, Postgres, MySQL, Oracle) — says "load from Snowflake", "call stored procedure", "export to database table", "bulk load via Snowflake stage", "JDBC connection", or names a SQL source/target. Covers JDBC datasource beans, paginated SELECT loops, `sql-stored:` calls, incremental sync via `pfx-config`, batch INSERT, and Snowflake `COPY INTO` stage exports.
 ---
 
 # Generate SQL Integration

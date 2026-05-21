@@ -1,6 +1,6 @@
 ---
 name: generate-ppv-import-integration
-description: Generate a Pricefx Pricing Parameter (Company Parameter) import integration for LTV (single-key lookup table) or MLTV2 (multi-key matrix table). Use this skill whenever the user wants to import pricing parameters, company parameters, lookup tables, exchange rates, discount matrices, or any key/value configuration data into Pricefx. Fetches real metadata from the partition via pfx CLI.
+description: Use when the user wants to import Pricefx Pricing Parameters / Company Parameters into LTV (single-key lookup) or MLTV2 (multi-key matrix) tables — mentions "pricing parameters", "company parameters", "lookup tables", "exchange rates", "discount matrices", or any key/value configuration data. For P/PX/C/CX use `generate-import-integration`; for PA/DMDS use `generate-pa-import-integration`.
 ---
 
 # Generate Pricing Parameter Import Integration

@@ -1,6 +1,6 @@
 ---
 name: visualize-project
-description: Generates a complete visual documentation package for a Pricefx Integration Manager project. Creates Mermaid flow diagrams for every route plus a project-level architecture overview and data-flow summary. Use when the user wants to visualize the project, generate diagrams, create flow charts, document flows, or draw the architecture.
+description: Use when the user wants to visualise a Pricefx Integration Manager project as Mermaid diagrams — says "visualize the project", "generate diagrams", "create flow charts", "document flows", "draw the architecture", or wants per-route flow diagrams plus a project-level overview and data-flow summary.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write
 maxTurns: 80

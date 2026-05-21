@@ -1,6 +1,6 @@
 ---
 name: generate-event-driven-route
-description: Generate a Pricefx event-driven integration route that reacts to Pricefx events (data load completion, calculation completion, custom events). Use this skill when the user wants to trigger a route after a Pricefx operation completes, react to events, set up event listeners, or create reactive integrations. Supports properties-based event mapping (recommended), direct pfx-event:fetch polling, and custom event publishing.
+description: Use when the user wants a Pricefx Integration Manager route that reacts to a Pricefx event — says "trigger a route after X completes", "react to events", "set up event listener", "create reactive integration", or names a specific event (data-load completion, calculation completion, custom event).
 ---
 
 # Generate Event-Driven Route

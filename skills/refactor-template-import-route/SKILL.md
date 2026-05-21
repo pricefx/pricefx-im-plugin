@@ -1,6 +1,6 @@
 ---
 name: refactor-template-import-route
-description: Refactor a templated Pricefx Integration Manager FTP-to-Pricefx import route into a straight-line route — hardwire properties, drop dead branches, switch pfx-sftp to file with {{integration.sftp.root}}, and delete the now-unused properties. Use when the user says "refactor this route", "hardwire the properties", "remove the {{pfx:...}} placeholders", "straight route without properties", or "convert templated import route to plain".
+description: Use when the user wants to flatten a templated Pricefx Integration Manager FTP-to-Pricefx import route into a straight-line route — says "refactor this route", "hardwire the properties", "remove the {{pfx:...}} placeholders", "straight route without properties", or "convert templated import route to plain", and the source route has heavy `{{pfx:...}}` parameterisation and dead-branch logic.
 ---
 
 # Refactor Templated Import Route

@@ -1,6 +1,6 @@
 ---
 name: analyze-project
-description: Comprehensive project analyzer for Pricefx Integration Manager projects. Produces a health dashboard, route inventory, route-by-route findings, anti-pattern report, cross-file consistency issues, quality score, and top 3 actions. Combines project scanning, code review, and health scoring into one assessment. Use when the user says "analyze", "review project", "scan integration", "project health", "health check", "quality score", "full code review", or points at a pim-* directory.
+description: Use when the user wants a full assessment of an existing Pricefx Integration Manager project — says "analyze", "review project", "scan integration", "project health", "health check", "quality score", "full code review", or points at a pim-* directory and asks for a health dashboard, route inventory, anti-pattern report, or top-3 actions.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 maxTurns: 40

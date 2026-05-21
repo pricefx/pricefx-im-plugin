@@ -1,6 +1,6 @@
 ---
 name: impact-analysis
-description: Analyzes the impact of field, table, or configuration changes across all IM routes, mappers, and filters. Use when planning schema changes, renaming fields, or removing tables.
+description: Use when the user is planning a Pricefx schema or configuration change and asks "what breaks if I…" or "impact of…" — renaming an attribute, removing a table, retiring a connection, changing a property — across all Pricefx Integration Manager routes, mappers, and filters.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 maxTurns: 20

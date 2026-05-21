@@ -1,6 +1,6 @@
 ---
 name: generate-integration-test
-description: Generate a Spock integration test for a Pricefx Integration Manager route using WireMock + Spring CamelContext. Use this skill whenever the user wants to test a route, create test cases, write tests, verify an import/export route works correctly, or generate test data and expected JSON payloads. Produces a Groovy Spock test class, sample CSV data, and expected request JSON.
+description: Use when the user wants to test a Pricefx Integration Manager route — says "test a route", "create test cases", "write tests", "verify import/export works", or needs a Spock + WireMock + Spring CamelContext harness with sample CSV data and expected JSON payloads.
 ---
 
 # Generate Integration Test
