@@ -340,7 +340,7 @@ For auth patterns beyond the common four (no-auth, API-key, OAuth 2.0 client-cre
 | **5c — Mutual TLS / Client Certificate** (`mtls`) | API authenticates clients with an X.509 certificate (no bearer token). Adds `sslContextParameters` bean + JKS keystore resources; business route passes `sslContextParameters=#sslContextParameters` on the HTTP URI. |
 | **5d — SAP-style JWT + CSRF + Cookies** (`sap-jwt-csrf`) | SAP OData / Gateway POST/PUT/PATCH requires bearer token + CSRF token + session cookie. Combines the `simpleCache` bean from 5b with an `instanceCookieHandler` bean and a CSRF-fetch route. |
 | **5e — Detailed error-body extraction** | Capture the failure reason from JSON/SAP-OData error envelopes into `ApiErrorMessage` header for downstream logic (status writeback, etc.). |
-| **5f — Status writeback** (`pfx-api:massedit` on DMDS) | Write per-record API success/failure back to a Pricefx DMDS that tracks integration state. Includes the writeback route + its mapper + filter. |
+| **5f — Status writeback** (`pfx-api:massEdit` on DMDS) | Write per-record API success/failure back to a Pricefx DMDS that tracks integration state. Includes the writeback route + its mapper + filter. |
 
 Do **not** copy these sections inline into the SKILL — keep the canonical version in `references.md` so the auth variants can grow without bloating the main flow.
 
@@ -362,7 +362,7 @@ See `references.md` → "Step 5d". Reuses the `simpleCache` bean from 5b and add
 
 See `references.md` → "Step 5e". Pattern-matches the response body (plain text, JSON `message`, SAP OData `error.message.value`) into `ApiErrorMessage` and `CamelHttpResponseCode` headers. Requires the business route to stash `${body}` into an exchange property (`originalPayload`) before the call so the writeback step can recover the business keys.
 
-## Step 5f: Status Writeback Callback (`pfx-api:massedit` on DMDS)
+## Step 5f: Status Writeback Callback (`pfx-api:massEdit` on DMDS)
 
 See `references.md` → "Step 5f". Adds a `writeback-api-status` route + matching mapper + filter that update DMDS attributes for the current record with `ApiCallResult` / `CamelHttpResponseCode` / `ApiErrorMessage` / `ExternalRecordId` / timestamp. Uses `defaultErrorHandler` to avoid inheriting the caller's redelivery policy.
 
@@ -449,7 +449,7 @@ If the user requested retry on transient errors, add a Spring bean file `src/mai
 
 Then reference it in the business route's `<onException>`:
 ```xml
-<onException redeliveryPolicyRef="restOutboundRedeliveryPolicy">
+<onException redeliveryPolicy="restOutboundRedeliveryPolicy">
   <exception>java.lang.Exception</exception>
   <handled><constant>false</constant></handled>
   <log loggingLevel="ERROR"
@@ -472,7 +472,7 @@ After generating all files, verify automatically:
 9. For `oauth2-cached` and `sap-jwt-csrf`: `simpleCache` bean exists, refresh timer is configured, business route reads via `${bean:simpleCache.getOrDefault('JWT','')}`.
 10. For `sap-jwt-csrf`: the same `cookieHandler=#instanceCookieHandler` is on both the CSRF fetch `<toD>` and the business write `<toD>`.
 11. For `mtls`: `sslContextParameters=#sslContextParameters` is on the business `<toD>`; `keystore.password` / `truststore.password` are NOT in `application.properties` (env vars only).
-12. For writeback callback: route uses `errorHandlerRef="defaultErrorHandler"` so it does not inherit the caller's redelivery policy.
+12. For writeback callback: route uses `errorHandler="defaultErrorHandler"` so it does not inherit the caller's redelivery policy.
 
 Fix any issues silently and report what was corrected.
 
@@ -491,7 +491,7 @@ Fix any issues silently and report what was corrected.
 - **Token caching (`oauth2-cached`, `sap-jwt-csrf`):** Reuse a single `simpleCache` bean across all routes — do not declare it twice. The refresh timer route (`refresh-api-tokens`) should be the only entry point that mutates the cache.
 - **SAP CSRF + cookies:** The CSRF fetch and the write call MUST share the same `instanceCookieHandler` bean reference. SAP binds the CSRF token to the session cookie returned by the fetch; using a fresh cookie jar (or omitting `cookieHandler=#instanceCookieHandler`) returns HTTP 403.
 - **mTLS:** Store `keystore.password` and `truststore.password` as environment variables, never in `application.properties` or the route XML. Use `#{environment['keystore.password']}` in `sslContext.xml`.
-- **Status writeback:** The writeback route must use `errorHandlerRef="defaultErrorHandler"`. If it inherits the caller's redelivery policy, a transient `pfx-api:massedit` failure will trigger the caller's retry loop and re-send the outbound API call.
+- **Status writeback:** The writeback route must use `errorHandler="defaultErrorHandler"`. If it inherits the caller's redelivery policy, a transient `pfx-api:massEdit` failure will trigger the caller's retry loop and re-send the outbound API call.
 - Route IDs must match file names without `.xml`: file `export-approvals-to-erp.xml` → `id="export-approvals-to-erp"`
 - All `&` in URI parameters must be escaped as `&amp;` in XML attributes
 

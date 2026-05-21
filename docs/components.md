@@ -19,7 +19,8 @@ The primary component for all Pricefx server interactions.
 | `loaddata` | Bulk load data (replace). IM parses and maps data, sends via JSON API. Requires `objectType`, `mapper`. |
 | `loaddataFile` | Stream file directly to Pricefx server. More efficient for large files. Supports `mapper` for field mapping. Requires `objectType`. |
 | `integrate` | Upsert data (insert or update). Requires `objectType`, `mapper`. |
-| `fetch` | Query data. Requires `objectType` and either `sql` or `filter`. |
+| `fetch` | Query data. Requires `objectType` and either `sql` or `filter`. When called with `batchedMode=true`, returns a list of batch references; iterate with a `<split>` and call `fetchIterator` (no params) inside the split to retrieve each batch's rows. |
+| `fetchIterator` | Inside a `<split>` over a previous `pfx-api:fetch?batchedMode=true` result — retrieves the current batch's rows. Takes no parameters; the batch reference comes from the exchange body set by the outer `fetch`. |
 | `delete` | Delete records. Requires `objectType` and `filter`. |
 | `flush` | Flush data feed to data source. Requires `dataSourceName`, `dataFeedName`. |
 | `truncate` | Truncate data mart/feed/source. Requires `targetName`. |

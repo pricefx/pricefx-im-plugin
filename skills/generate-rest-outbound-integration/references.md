@@ -325,7 +325,7 @@ The route must stash the original payload before the call so the writeback has a
 
 ---
 
-## Step 5f: Status Writeback Callback (`pfx-api:massedit` on DMDS)
+## Step 5f: Status Writeback Callback (`pfx-api:massEdit` on DMDS)
 
 When the upstream Pricefx flow needs to know which records succeeded/failed, write the API result back to a DMDS that tracks integration state. The writeback route uses `defaultErrorHandler` to avoid interfering with the caller's redelivery policy.
 
@@ -333,13 +333,13 @@ When the upstream Pricefx flow needs to know which records succeeded/failed, wri
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="writeback-api-status" errorHandlerRef="defaultErrorHandler">
+  <route id="writeback-api-status" errorHandler="defaultErrorHandler">
     <description>Update integration-status fields on the source DMDS after an outbound API call. Uses defaultErrorHandler so it does not inherit the caller's redelivery policy.</description>
     <from uri="direct:writeback-api-status"/>
 
     <log message="Writeback messageID=${id} correlationId=${header.correlationId} status=${header.ApiCallResult}"/>
 
-    <toD uri="pfx-api:massedit?mapper={{ext.api.writeback.mapper}}&amp;filter={{ext.api.writeback.filter}}&amp;objectType=DMDS&amp;dataSourceName=DMDS.${header.source}"/>
+    <toD uri="pfx-api:massEdit?mapper={{ext.api.writeback.mapper}}&amp;filter={{ext.api.writeback.filter}}&amp;objectType=DMDS&amp;dataSourceName=DMDS.${header.source}"/>
 
     <log message="${header.source} writeback complete: ${body}"/>
   </route>

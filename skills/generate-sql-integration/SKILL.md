@@ -278,7 +278,7 @@ For multi-million-row initial loads, paginated SELECT is too slow and creates Sn
     <log message="Loading ${header.target} file ${header.CamelFileNameOnly}"/>
     <to uri="pfx-io:streamCompressedFile"/>
 
-    <split streaming="true" strategyRef="recordsCountAggregation" stopOnException="true">
+    <split streaming="true" aggregationStrategy="recordsCountAggregation" stopOnException="true">
       <tokenize token="\n" group="{{my.{object}.csv.batch-size}}"/>
       <toD uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={{my.pfx.csv.delimiter}}&amp;recordSeparator={{my.pfx.csv.eol}}&amp;trim=true&amp;header=${header.CSVHeader}"/>
       <toD uri="pfx-api:loaddata?objectType=DM&amp;dsUniqueName=${header.target}&amp;mapper=import-${header.target}-Mapper"/>
