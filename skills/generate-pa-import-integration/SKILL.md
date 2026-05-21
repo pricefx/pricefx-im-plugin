@@ -246,7 +246,7 @@ Generate the route and mapper files using the conventions below.
 
             <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={DELIMITER}"/>
 
-            <log loggingLevel="INFO" message="Running batch number# ${exchangeProperty.CamelSplitIndex}"/>
+            <log loggingLevel="INFO" message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelFileName} (batch size: {BATCH_SIZE}, starting at row ${exchangeProperty.CamelSplitIndex * {BATCH_SIZE} + 1})"/>
 
             <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{DataSourceName}&amp;mapper={route-name}.mapper"/>
         </split>
@@ -348,23 +348,20 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 
 ## Scheduling for Long-Running DS Loads
 
-For large data sources that take hours to load, add start/stop scheduling:
+For large data sources that should only poll during off-peak hours, use the `file://` URI's built-in quartz scheduler instead of a separate controlbus start/stop pair. This restricts polling to the scheduled window without ever starting/stopping the route itself, so the route can't get stuck in a half-started state.
+
+Add `scheduler=quartz`, `scheduler.cron`, and `scheduler.timeZone` to the file URI:
 
 ```xml
-<!-- Start route at 23:00 UTC -->
-<route id="start-{{ROUTE_ID}}">
-  <from uri="quartz://scheduler-start?cron=0+0+23+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
-  <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=start"/>
-</route>
-
-<!-- Stop route at 06:00 UTC -->
-<route id="stop-{{ROUTE_ID}}">
-  <from uri="quartz://scheduler-stop?cron=0+0+6+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
-  <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=stop"/>
-</route>
+<from uri="file://{{integration.sftp.root}}/{path}?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+23-5+?+*+*&amp;scheduler.timeZone=UTC"/>
 ```
 
-See [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md).
+The cron expression `0+0+23-5+?+*+*` polls hourly between 23:00 and 05:00 UTC. Adjust to your maintenance window.
+
+**Why this is safer  than controlbus start/stop:**
+- One route, one URI — no risk of the stop route firing while a load is mid-batch
+- No orphaned state if one of the start/stop quartz triggers misfires
+- Polling pauses cleanly outside the window; any in-flight exchange completes before the next poll is skipped
 
 ## Important Rules
 

@@ -62,6 +62,16 @@ File: `src/main/resources/repo/routes/{route-name}.xml`
 </routes>
 ```
 
+> ⚠️ **Heads-up — observability trade-off for the inbound load:**
+>
+> `streamingUnmarshal` + `loaddataFile` streams the S3 object to Pricefx as a single opaque upload. IM logs show only the start and end of the load — **no per-batch progress, no row counts mid-stream, no per-batch timings**. If the load takes hours or partially fails, you cannot tell from IM logs how far it got.
+>
+> Before generating, **ask the user**:
+>
+> > **The default S3 inbound template uses `loaddataFile` (fast, but no per-batch progress in IM logs). For large or long-running S3 imports, would you prefer the split/tokenize+`loaddata` pattern with batch-level logging instead?**
+>
+> If they want per-batch logging, replace the unmarshal+loaddataFile pair with a `<split aggregationStrategy="recordsCountAggregation" streaming="true">` containing `<tokenize group="N" token="\n"/>` + `pfx-csv:unmarshal` + a batch log + `pfx-api:loaddata` (see `generate-import-integration` for the full template).
+
 ## Step 3b: Generate Outbound Route (S3 Producer)
 
 File: `src/main/resources/repo/routes/{route-name}.xml`
