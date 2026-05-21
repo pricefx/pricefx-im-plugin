@@ -360,11 +360,8 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
         <!-- Unmarshal CSV -->
         <to uri="pfx-csv:unmarshal?skipHeaderRecord={true|false}&amp;delimiter={DELIMITER}"/>
 
-        <!-- Map fields -->
-        <to uri="pfx-mapper:{route-name}Mapper"/>
-
-        <!-- Import to Pricefx -->
-        <to uri="pfx-api:loaddata?objectType={TYPE}&amp;batchSize={BATCH_SIZE}"/>
+        <!-- Import to Pricefx (mapper is passed as a parameter — there is no separate pfx-mapper component) -->
+        <to uri="pfx-api:loaddata?objectType={TYPE}&amp;mapper={route-name}.mapper&amp;batchSize={BATCH_SIZE}&amp;businessKeys={KEY_FIELD}"/>
 
         <log message="Import completed for file: ${header.CamelFileName}" loggingLevel="INFO"/>
     </route>

@@ -32,7 +32,7 @@ Required: partition URL, partition name, username, password.
 {
   "name": "pricefx",
   "type": "pricefx",
-  "url": "{partition-url}",
+  "uri": "{partition-url}",
   "partition": "{partition-name}",
   "username": "{{pfx.username}}",
   "password": "{{pfx.password}}"
@@ -49,7 +49,7 @@ Required: host, port (default 22), username, auth method (password or key), remo
 {
   "name": "{connection-name}",
   "type": "sftp",
-  "url": "{host}",
+  "host": "{host}",
   "port": 22,
   "username": "{{sftp.username}}",
   "password": "{{sftp.password}}",

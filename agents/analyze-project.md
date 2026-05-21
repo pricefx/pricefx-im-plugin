@@ -27,7 +27,7 @@ Read each route file. Classify by the `from` URI and route ID pattern:
 | Type | Detection rule |
 |---|---|
 | **Import** | `pfx-api:loaddataFile` or `pfx-api:loaddata` in route, or route ID contains `import` |
-| **Export** | `pfx-api:fetch` or `pfx-api:fetchStream` or route ID contains `export` |
+| **Export** | `pfx-api:fetch` or `pfx-api:fetchIterator` or route ID contains `export` |
 | **Event-driven** | `from uri="pfx-event:` or route ID contains `event` or `on-` |
 | **Utility/chained** | `from uri="direct:` or `from uri="timer:` without import/export pattern |
 | **Scheduled** | `quartz:` or `cron:` in `from` URI |

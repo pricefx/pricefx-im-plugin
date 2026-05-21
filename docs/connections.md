@@ -2,6 +2,19 @@
 
 Connections define how IM connects to external systems (Pricefx, SFTP servers, REST APIs, databases). They are stored as JSON files in `config/connections/`.
 
+## Endpoint-field naming (READ THIS FIRST)
+
+The JSON field name for the connection's endpoint is **not** uniform across discriminator classes — it depends on the Java class the discriminator points at:
+
+| Discriminator | Endpoint field(s) |
+|---|---|
+| `PriceFxConnection` | `uri` |
+| `SftpConnection` | `host` + `port` |
+| `OAuth2Connection`, `BasicConnection`, `JwtConnection`, `NoopConnection` (REST family) | `url` (+ `authUrl` for token-based variants) |
+| `S3Connection` | `region` + `bucket` (no URL field — endpoint is derived) |
+
+These are the actual Spring/Jackson deserialization keys from the IM Java sources (`net.pricefx.integration.component.rest.domain.connection.*`). Using `uri` on an `OAuth2Connection` JSON, or `url` on a `PriceFxConnection` JSON, will silently drop the value at deserialization time — the connection will fail to authenticate with a confusing null-pointer or "host not configured" error.
+
 ## Pricefx Connection (JSON)
 
 ```json
@@ -42,8 +55,8 @@ For connecting to REST APIs with OAuth2 authentication (e.g., Salesforce):
 {
   "id": "salesforce.connection",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.OAuth2Connection",
-  "uri": "https://customer.my.salesforce.com",
-  "authUri": "https://customer.my.salesforce.com/services/oauth2/token",
+  "url": "https://customer.my.salesforce.com",
+  "authUrl": "https://customer.my.salesforce.com/services/oauth2/token",
   "clientId": "your-client-id",
   "clientSecret": "your-client-secret",
   "username": "integrationuser@company.com",
@@ -58,7 +71,7 @@ For connecting to REST APIs with OAuth2 authentication (e.g., Salesforce):
 {
   "id": "basic.connection",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.BasicConnection",
-  "uri": "https://api.example.com",
+  "url": "https://api.example.com",
   "username": "user",
   "password": "password"
 }
@@ -70,8 +83,8 @@ For connecting to REST APIs with OAuth2 authentication (e.g., Salesforce):
 {
   "id": "jwt.connection",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.JwtConnection",
-  "uri": "https://api.example.com",
-  "authUri": "https://api.example.com/auth/token",
+  "url": "https://api.example.com",
+  "authUrl": "https://api.example.com/auth/token",
   "clientId": "your-client-id",
   "clientSecret": "your-client-secret"
 }
@@ -85,7 +98,7 @@ For APIs that don't require authentication:
 {
   "id": "public-api",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.NoopConnection",
-  "uri": "https://public-api.example.com"
+  "url": "https://public-api.example.com"
 }
 ```
 
