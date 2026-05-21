@@ -116,103 +116,14 @@ Present the fields to the user in a clear table.
 
 ## Step 3b: Smart Auto-Mapping (when CSV sample data AND PX/CX metadata are available)
 
-When you have BOTH a CSV sample/header AND target PX/CX metadata (with labels from `product-extension-metadata` or `customer-extension-metadata`), automatically propose field mappings using the algorithm below. **Do NOT ask the user to manually map fields** — propose the mapping and let them confirm or adjust.
+When you have BOTH a CSV sample/header AND target PX/CX metadata (with labels from `product-extension-metadata` or `customer-extension-metadata`), apply the **Smart Auto-Mapping algorithm in `docs/smart-auto-mapping.md`** to propose field mappings. **Do NOT ask the user to manually map fields** when the algorithm is applicable — propose, then let the user confirm or adjust.
 
-### Auto-Mapping Algorithm
+Key field for this skill:
+- P / PX → `sku`
+- C / CX → `customerId`
+- SL / SX → `sellerId`
 
-For each CSV column, find the best matching Pricefx field using these rules in priority order:
-
-**Priority 1 — Exact key field match (confidence: HIGH)**
-- CSV column name contains `id`, `sku`, `key`, `code`, `product_id`, `item_number` → map to key field:
-  - For P/PX: map to `sku`
-  - For C/CX: map to `customerId`
-- CSV column name contains `name`, `description`, `label`, `title` (and is not a category/hierarchy) → map to `label`
-
-**Priority 2 — Fuzzy match against attribute labels (confidence: HIGH or MEDIUM)**
-Compare each CSV column name against PX/CX attribute labels using these matching techniques:
-1. **Exact match** (case-insensitive): `"Product Name"` = `"Product Name"` → HIGH confidence
-2. **Normalized match** (remove spaces, underscores, hyphens, lowercase): `"product_name"` = `"ProductName"` → HIGH confidence
-3. **Contains match**: CSV `"Hierarchy Level 1"` contains label `"Hierarchy 1"` → MEDIUM confidence
-4. **Word overlap**: CSV `"Product Cost USD"` shares words with label `"Product Costs"` → MEDIUM confidence (≥50% word overlap)
-5. **Abbreviation match**: CSV `"Prod Name"` ↔ label `"Product Name"` → MEDIUM confidence
-
-**Priority 3 — Type-based matching (confidence: LOW)**
-If no label match found, match by data type compatibility:
-- CSV column with decimal values → attribute with type `REAL`/`NUMERIC`
-- CSV column with dates → attribute with type `DATE`/`DATETIME`
-- Only use if there's a single compatible unmatched attribute of that type
-
-**Priority 4 — Sequential fallback (confidence: LOW)**
-Remaining unmatched CSV columns → assign to next available `attributeN` in order.
-
-### Confidence Display
-
-Present the proposed mapping as a table with confidence indicators:
-
-```
-Smart Auto-Mapping Result:
-| # | CSV Column          | → | Pricefx Field | Label          | Confidence | Match Reason              |
-|---|---------------------|---|---------------|----------------|------------|---------------------------|
-| 1 | Product ID          | → | sku           | —              | ✅ HIGH    | Key field (contains "ID") |
-| 2 | Product Name        | → | attribute1    | Product Name   | ✅ HIGH    | Exact label match         |
-| 3 | Hierarchy Level 1   | → | attribute2    | Product Hier 1 | 🟡 MEDIUM | Word overlap (73%)        |
-| 4 | Cost                | → | attribute9    | Product Costs  | 🟡 MEDIUM | Word overlap + type match |
-| 5 | Internal Code       | → | attribute11   | —              | 🔴 LOW    | Sequential fallback       |
-```
-
-Ask: **Does this mapping look correct? You can adjust any row.**
-
-### Converter Expression Auto-Detection
-
-When proposing the mapping, also detect and suggest converter expressions based on:
-1. **Target field type** from metadata (e.g., `NUMERIC` → `stringToDecimal`)
-2. **CSV sample data** patterns (e.g., date formats → `stringToDate`)
-
-| Target Type | Suggested Converter |
-|---|---|
-| `NUMERIC`, `MONEY`, `PERCENT` | `converterExpression="stringToDecimal"` |
-| `INTEGER` | `converterExpression="stringToInteger"` |
-| `DATE` | `converterExpression="stringToDate"` (detect format from sample) |
-| `DATETIME` | `converterExpression="stringToDateTime"` |
-| `TEXT`, `STRING` | none needed |
-
-### When Auto-Mapping is NOT possible
-
-- **No CSV sample data available** → fall back to manual mapping (Step 8)
-- **No attribute labels set** (all labels empty in metadata) → fall back to sequential mapping + ask user
-- **P, C objects** (no `*-metadata` command available) → fall back to manual mapping
-
-### LLM-Enhanced Mapping Reasoning
-
-When the 4-tier automatic matching produces LOW confidence results, apply semantic reasoning:
-
-1. **Analyze field semantics** — don't just match names, understand meaning:
-   - `Cust_Num`, `Customer_Number`, `KUNNR`, `customer_id`, `cust_no` → all map to `customerId`
-   - `Mat_No`, `Material`, `SKU`, `ItemCode`, `product_code` → all map to `sku`
-   - `Desc`, `Description`, `Label`, `Name`, `Title` → likely maps to `label`
-   - `Cat`, `Category`, `Group`, `Class`, `Segment` → likely maps to an attribute
-
-2. **Analyze data values** — if header matching is ambiguous, sample the data:
-   - Column with values like "PRD-001", "SKU-123" → product identifier → `sku`
-   - Column with values like "C-1001", "CUST-42" → customer identifier → `customerId`
-   - Column with numeric values and 2 decimal places → likely a price/cost → needs `stringToDecimal` converter
-   - Column with dates → needs `stringToDate` converter with detected format
-
-3. **Cross-reference with Pricefx metadata** — if connected to a partition:
-   - Fetch existing field labels and descriptions
-   - Match CSV headers against field descriptions, not just field names
-   - Example: Pricefx field `attribute3` has label "Product Category" → CSV column "Category" maps here
-
-4. **Confidence display with reasoning:**
-   ```
-   CSV Column          → Pricefx Field    Confidence  Reasoning
-   Customer_Number     → customerId       HIGH        Semantic match: customer identifier
-   Mat_Desc            → label            MEDIUM      "Desc" commonly maps to description/label
-   Unit_Price          → attribute1       MEDIUM      Numeric with decimals, likely price field
-   XYZABC              → ???              LOW         No semantic match — ask user
-   ```
-
-5. **Always ask for confirmation** — display the proposed mapping and let user adjust before generating.
+For P / C / SL master objects (no `*-metadata` command available), fall back to manual mapping (Step 8). Same fallback when the CSV has no header sample or all attribute labels are empty.
 
 ## Step 4: Determine Data Source
 
