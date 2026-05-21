@@ -332,6 +332,4 @@ Fix any issues silently and report corrections.
 
 ## References
 
-- [SOAP Outbound Pattern](../../../integration-manager/docs/patterns/soap-outbound.md)
-- [Chained Routes Pattern](../../../integration-manager/docs/patterns/chained-routes-direct.md)
 - [REST Outbound Skill](../generate-rest-outbound-integration/SKILL.md) — for REST/JSON target APIs
