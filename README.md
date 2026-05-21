@@ -1026,6 +1026,12 @@ Reference docs loaded into context for all skills via `CLAUDE.md`:
 | `docs/connections.md` | Connection types (PriceFx, OAuth2, SFTP, S3), best practices |
 | `docs/project.md` | IM project structure and conventions |
 
+On-demand (NOT auto-loaded — read when the topic comes up):
+
+| Doc | Content |
+|-----|---------|
+| `docs/faq.md` | Operational FAQs (large-file SFTP streaming, encrypted properties, env separation, scheduling pitfalls) — sourced from [Confluence – Provisioned Integration FAQs](https://pricefx.atlassian.net/wiki/spaces/CUST/pages/4697128997/Provisioned+Integration+FAQs) |
+
 Also includes `docs/CLAUDE.md.template` for bootstrapping `CLAUDE.md` in IM projects.
 
 ---
