@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-mappers
-description: Extract every `<loadMapper>`, `<integrateMapper>`, and legacy `<pfx:loadMapper>` / `<pfx:integrateMapper>` element from a manual IM project's bundled XML files and split them into one-mapper-per-file under `src/main/resources/repo/mappers/` in the target provisioned project. Also rewrites legacy `<pfx:simple>` to `<pfx:constant>` inside mappers.
+description: Use when migrating from manual to provisioned and the source project has `<loadMapper>`, `<integrateMapper>`, or legacy `<pfx:loadMapper>` / `<pfx:integrateMapper>` elements bundled into shared XML files (e.g. `camel-context.xml`) instead of standalone `*.mapper.xml` files under `src/main/resources/repo/mappers/`.
 ---
 
 # Migrate Manual → Provisioned: Mappers

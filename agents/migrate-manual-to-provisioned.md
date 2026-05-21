@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned
-description: End-to-end migration of a Pricefx Integration Manager project from the legacy "manual" layout (everything bundled into `camel-context.xml`, Java sources in `src/main/java/`) to the modern "provisioned" layout (one route/mapper/filter/bean/connection per file under `src/main/resources/repo/`, Groovy classes under `src/main/resources/repo/classes/`). Orchestrates the `migrate-manual-to-provisioned-*` skills, copies code from a source manual project into the current target project, modernises Camel 3.3.5→4.1+ / Spring Boot 2→3 / IM 6→7 patterns, converts Java to Groovy, and finishes with an anti-pattern + performance scan. Use when the user says "migrate manual to provisioned", "convert old IM project", "lift legacy IM to provisioned", or has a `camel-context.xml` style project to bring forward.
+description: Use when the user wants to migrate a legacy "manual" Pricefx Integration Manager project (everything bundled into `camel-context.xml`, Java sources under `src/main/java/`) to the modern "provisioned" layout, or says "migrate manual to provisioned", "convert old IM project", "lift legacy IM to provisioned", or hands over a `camel-context.xml`-style source project.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Edit, Write
 maxTurns: 80

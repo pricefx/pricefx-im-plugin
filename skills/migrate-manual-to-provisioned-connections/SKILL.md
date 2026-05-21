@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-connections
-description: Extract Pricefx connection definitions from a manual IM project — both the XML form (`<pfx:connection .../>`) and the legacy properties form (`pfx.url=`, `pfx.partition=`, `pfx.username=`, `pfx.password=` in `application-{env}.properties`) — and convert them to provisioned IM JSON files under `src/main/resources/repo/connections/`. Always ensures a default `pricefx` connection JSON file exists.
+description: Use when migrating from manual to provisioned and the source project defines Pricefx connections via `<pfx:connection .../>` XML elements or the legacy properties form (`pfx.url=`, `pfx.partition=`, `pfx.username=`, `pfx.password=` in `application-{env}.properties`) instead of provisioned JSON files under `src/main/resources/repo/connections/`.
 ---
 
 # Migrate Manual → Provisioned: Connections
