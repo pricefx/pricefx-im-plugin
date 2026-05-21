@@ -1,0 +1,36 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-ltv",
+  "category": "negative",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-ppv-skill",
+      "text": "Subagent recognizes this is the wrong skill and refers to generate-ppv-import-integration",
+      "passed": true,
+      "evidence": "matched: 'LTV'"
+    },
+    {
+      "id": "no-dmds-pattern",
+      "text": "Does NOT generate objectType=DMDS / flush",
+      "passed": true,
+      "evidence": "none of: 'objectType=DMDS' | 'pfx-api:flush' present"
+    },
+    {
+      "id": "no-split-tokenize-for-ltv",
+      "text": "Does NOT generate split+tokenize (DMDS-only pattern)",
+      "passed": true,
+      "evidence": "none of: '<tokenize' present"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 3
+  },
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

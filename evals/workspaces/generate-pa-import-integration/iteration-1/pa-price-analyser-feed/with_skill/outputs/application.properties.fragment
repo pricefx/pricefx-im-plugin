@@ -1,0 +1,11 @@
+# Add these properties to src/main/resources/repo/config/application.properties
+# (only if not already present in the target project).
+
+# Move processed files to a timestamped archive folder under .archive/YYYY/MM/
+archive.file=move=.archive/%24%7Bdate:now:yyyy%7D/%24%7Bdate:now:MM%7D/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd_HHmmss%7D.%24%7Bfile:ext%7D
+
+# Wait until file size stabilises before pickup (used because upstream does not write a .done marker)
+read.lock=readLock=changed
+
+# Optional — move failed files to .error/
+# error.file=moveFailed=.error/%24%7Bfile:name.noext%7D__%24%7Bdate:now:yyyyMMdd-HHmmss%7D.%24%7Bfile:ext%7D

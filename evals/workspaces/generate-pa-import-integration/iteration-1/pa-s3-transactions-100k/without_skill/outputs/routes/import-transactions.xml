@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="import-transactions">
+        <from uri="aws2-s3://pricefx-data?prefix=transactions/&amp;connection=s3.connection&amp;deleteAfterRead=true&amp;scheduler=quartz&amp;scheduler.cron=0+0+2+*+*+?&amp;includeBody=true"/>
+
+        <log message="Picked up transaction file from S3: ${header.CamelAwsS3Key}"/>
+
+        <to uri="pfx-io:detectCharset"/>
+        <to uri="pfx-io:setupCharset"/>
+
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <to uri="pfx-api:loaddataFile?objectType=DMDS&amp;targetName=DMDS.TransactionFeed&amp;mapper=import-transactions.mapper&amp;batchSize=100000"/>
+
+        <log message="Transaction load complete for file ${header.CamelAwsS3Key}. Total records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <onCompletion onCompleteOnly="true">
+            <log message="Triggering flush for DMDS.TransactionFeed"/>
+            <to uri="pfx-api:flush?targetName=DMDS.TransactionFeed"/>
+        </onCompletion>
+    </route>
+
+</routes>

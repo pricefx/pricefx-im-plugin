@@ -1,0 +1,25 @@
+<mappers>
+    <loadMapper id="import-transaction-feed.mapper">
+        <!--
+            PLACEHOLDER MAPPING — pfx CLI was not configured for this generation, and no CSV
+            header/sample was provided. Replace the <body> elements below with the real CSV
+            columns → DMDS.TransactionFeed fields once metadata is available.
+
+            Run:
+              pfx data-source TransactionFeed
+              pfx data-source-metadata TransactionFeed
+            …then update this mapper.
+
+            Reminder: the DMDS key field is `sku`. Use `converterExpression` for typed columns
+            (e.g. converterExpression="stringToDecimal" for prices, "stringToDateTime" for
+            timestamps). Do NOT add <constant out="name"/> — DMDS is keyed by dsUniqueName on
+            the route URI, not by the mapper.
+        -->
+        <body in="sku" out="sku"/>
+        <body in="invoiceDate" out="attribute1" converterExpression="stringToDateTime"/>
+        <body in="customerId" out="attribute2"/>
+        <body in="quantity" out="attribute3" converterExpression="stringToDecimal"/>
+        <body in="netPrice" out="attribute4" converterExpression="stringToDecimal"/>
+        <body in="currency" out="attribute5"/>
+    </loadMapper>
+</mappers>

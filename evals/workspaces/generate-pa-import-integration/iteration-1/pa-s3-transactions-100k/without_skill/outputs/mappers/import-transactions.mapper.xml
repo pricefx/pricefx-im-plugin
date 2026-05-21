@@ -1,0 +1,19 @@
+<mappers>
+    <loadMapper id="import-transactions.mapper">
+        <!-- Generic placeholder mapping for transactions feed.
+             Real field names must be derived from the DMDS.TransactionFeed schema
+             (use `pfx data-source-metadata DMDS.TransactionFeed`) and from a sample CSV.
+
+             The names below assume a typical transaction CSV with these columns:
+               transactionId, sku, customerId, transactionDate, quantity, unitPrice, currency, invoiceNumber
+        -->
+        <body in="transactionId"   out="transactionId"/>
+        <body in="sku"             out="sku"/>
+        <body in="customerId"      out="customerId"/>
+        <body in="transactionDate" out="transactionDate" converterExpression="stringToDate"/>
+        <body in="quantity"        out="quantity"        converterExpression="stringToDecimal"/>
+        <body in="unitPrice"       out="unitPrice"       converterExpression="stringToDecimal"/>
+        <body in="currency"        out="currency"/>
+        <body in="invoiceNumber"   out="invoiceNumber"/>
+    </loadMapper>
+</mappers>

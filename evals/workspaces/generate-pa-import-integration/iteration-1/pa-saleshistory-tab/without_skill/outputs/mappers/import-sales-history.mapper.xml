@@ -1,0 +1,51 @@
+<mappers>
+    <!--
+        Mapper for DMDS.SalesHistoryDS (Performance Analyzer data source).
+
+        NOTE: pfx CLI is not configured in this eval, so the source column names
+        are placeholders aligned to the typical Pricefx PA "sales history" schema.
+        Replace the in="..." attributes with the actual TSV header names before
+        deployment. The out="..." names follow the standard PA SalesHistory DS
+        attribute layout (invoiceDate, sku, customerId, quantity, etc.).
+
+        - converterExpression="stringToDate" / stringToDecimal handle the textual
+          TSV values (everything is a string when read from TSV).
+        - convertEmptyStringToNull="true" prevents empty TSV cells being stored as
+          the literal string "".
+    -->
+    <loadMapper id="import-sales-history.mapper" convertEmptyStringToNull="true" skipInvalidRecords="false">
+
+        <!-- Required PA fields - replace 'in' names with actual TSV columns -->
+        <body in="invoiceDate"    out="invoiceDate"    converterExpression="stringToDate"/>
+        <body in="invoiceNumber"  out="invoiceNumber"/>
+        <body in="invoiceLine"    out="invoiceLine"/>
+
+        <body in="sku"            out="sku"/>
+        <body in="customerId"     out="customerId"/>
+
+        <body in="quantity"       out="quantity"       converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netPrice"       out="netPrice"       converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netAmount"      out="netAmount"      converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="cost"           out="cost"           converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="discount"       out="discount"       converterExpression="stringToDecimal(us,0,4)"/>
+
+        <body in="currency"       out="currency"/>
+        <body in="uom"            out="uom"/>
+
+        <!-- Common PA dimension attributes - rename to match your TSV columns -->
+        <body in="salesOrg"       out="attribute1"/>
+        <body in="distChannel"    out="attribute2"/>
+        <body in="region"         out="attribute3"/>
+        <body in="country"        out="attribute4"/>
+        <body in="salesRep"       out="attribute5"/>
+        <body in="orderType"      out="attribute6"/>
+        <body in="productGroup"   out="attribute7"/>
+        <body in="customerGroup"  out="attribute8"/>
+        <body in="brand"          out="attribute9"/>
+        <body in="plant"          out="attribute10"/>
+
+        <!-- Optional: track the source file name for traceability -->
+        <header in="CamelFileNameOnly" out="attribute50"/>
+
+    </loadMapper>
+</mappers>

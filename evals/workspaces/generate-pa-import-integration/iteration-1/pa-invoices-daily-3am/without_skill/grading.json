@@ -1,0 +1,48 @@
+{
+  "eval_id": 2,
+  "eval_name": "pa-invoices-daily-3am",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-DMDS",
+      "text": "Generated route uses objectType=DMDS",
+      "passed": false,
+      "evidence": "missing: 'objectType=DMDS'"
+    },
+    {
+      "id": "has-split-tokenize-loaddata",
+      "text": "Route has split + tokenize + loaddata pattern",
+      "passed": false,
+      "evidence": "missing: '<split' | '<tokenize' | 'pfx-api:loaddata\\\\?'"
+    },
+    {
+      "id": "flush-present",
+      "text": "pfx-api:flush is present (user asked for it)",
+      "passed": true,
+      "evidence": "matched: 'pfx-api:flush'"
+    },
+    {
+      "id": "3am-cron",
+      "text": "Quartz cron fires at 3 AM",
+      "passed": true,
+      "evidence": "matched: '\\\\+3\\\\+'"
+    },
+    {
+      "id": "no-loaddatafile",
+      "text": "Does NOT use loaddataFile",
+      "passed": false,
+      "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 5
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 3,
+    "total": 5,
+    "pass_rate": 0.4
+  }
+}

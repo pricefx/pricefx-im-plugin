@@ -1,0 +1,754 @@
+{
+  "metadata": {
+    "skill_name": "generate-pa-import-integration",
+    "skill_path": "/Users/mnagas/Documents/pricefx/pricefx-im-plugin/skills/generate-pa-import-integration",
+    "executor_model": "claude-opus-4-7",
+    "analyzer_model": "claude-opus-4-7",
+    "timestamp": "2026-05-21T15:36:15.498757+00:00",
+    "evals_run": [
+      "edge-vague-source",
+      "neg-ltv",
+      "neg-p-master",
+      "pa-invoices-daily-3am",
+      "pa-price-analyser-feed",
+      "pa-s3-transactions-100k",
+      "pa-saleshistory-tab"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 6,
+      "eval_name": "edge-vague-source",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 60.59,
+        "tokens": 54439,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-for-object-type",
+          "text": "Subagent asks a clarifying question naming object types (P/PX/DMDS/LTV)",
+          "passed": true,
+          "evidence": "matched: 'DMDS' | 'object type' | 'clarify'"
+        },
+        {
+          "id": "no-dmds-route-written",
+          "text": "Does NOT silently generate a DMDS route",
+          "passed": true,
+          "evidence": "none of: 'objectType=DMDS' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "edge-vague-source",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 104.88,
+        "tokens": 49664,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-for-object-type",
+          "text": "Subagent asks a clarifying question naming object types (P/PX/DMDS/LTV)",
+          "passed": true,
+          "evidence": "matched: 'P, PX' | 'DMDS' | 'object type'"
+        },
+        {
+          "id": "no-dmds-route-written",
+          "text": "Does NOT silently generate a DMDS route",
+          "passed": true,
+          "evidence": "none of: 'objectType=DMDS' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-ltv",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 45.85,
+        "tokens": 53032,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-ppv-skill",
+          "text": "Subagent recognizes this is the wrong skill and refers to generate-ppv-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-ppv-import-integration' | 'ppv-import' | 'Pricing Parameter'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "Does NOT generate objectType=DMDS / flush",
+          "passed": true,
+          "evidence": "none of: 'objectType=DMDS' | 'pfx-api:flush' present"
+        },
+        {
+          "id": "no-split-tokenize-for-ltv",
+          "text": "Does NOT generate split+tokenize (DMDS-only pattern)",
+          "passed": true,
+          "evidence": "none of: '<tokenize' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-ltv",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 67.9,
+        "tokens": 46873,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-ppv-skill",
+          "text": "Subagent recognizes this is the wrong skill and refers to generate-ppv-import-integration",
+          "passed": true,
+          "evidence": "matched: 'LTV'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "Does NOT generate objectType=DMDS / flush",
+          "passed": true,
+          "evidence": "none of: 'objectType=DMDS' | 'pfx-api:flush' present"
+        },
+        {
+          "id": "no-split-tokenize-for-ltv",
+          "text": "Does NOT generate split+tokenize (DMDS-only pattern)",
+          "passed": true,
+          "evidence": "none of: '<tokenize' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "neg-p-master",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 35.83,
+        "tokens": 52815,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-import-skill",
+          "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-import-integration' | 'import-integration' | 'use.*standard.*import'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "Does NOT generate objectType=DMDS / flush / dsUniqueName for a P import",
+          "passed": true,
+          "evidence": "none of: 'objectType=DMDS' | 'pfx-api:flush' present"
+        },
+        {
+          "id": "no-split-tokenize-for-p",
+          "text": "Does NOT generate split+tokenize wrapper (DMDS-only pattern)",
+          "passed": true,
+          "evidence": "none of: '<tokenize' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "neg-p-master",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 70.12,
+        "tokens": 47051,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-import-skill",
+          "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration",
+          "passed": true,
+          "evidence": "matched: 'loaddataFile'"
+        },
+        {
+          "id": "no-dmds-pattern",
+          "text": "Does NOT generate objectType=DMDS / flush / dsUniqueName for a P import",
+          "passed": true,
+          "evidence": "none of: 'objectType=DMDS' | 'pfx-api:flush' present"
+        },
+        {
+          "id": "no-split-tokenize-for-p",
+          "text": "Does NOT generate split+tokenize wrapper (DMDS-only pattern)",
+          "passed": true,
+          "evidence": "none of: '<tokenize' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "pa-invoices-daily-3am",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 98.69,
+        "tokens": 58150,
+        "tool_calls": 9,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "has-split-tokenize-loaddata",
+          "text": "Route has split + tokenize + loaddata pattern",
+          "passed": false,
+          "evidence": "missing: 'pfx-api:loaddata&'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present (user asked for it)",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "3am-cron",
+          "text": "Quartz cron fires at 3 AM",
+          "passed": true,
+          "evidence": "matched: '\\\\+3\\\\+'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use loaddataFile",
+          "passed": true,
+          "evidence": "none of: 'pfx-api:loaddataFile' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "pa-invoices-daily-3am",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4,
+        "passed": 2,
+        "failed": 3,
+        "total": 5,
+        "time_seconds": 113.0,
+        "tokens": 50251,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route uses objectType=DMDS",
+          "passed": false,
+          "evidence": "missing: 'objectType=DMDS'"
+        },
+        {
+          "id": "has-split-tokenize-loaddata",
+          "text": "Route has split + tokenize + loaddata pattern",
+          "passed": false,
+          "evidence": "missing: '<split' | '<tokenize' | 'pfx-api:loaddata\\\\?'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present (user asked for it)",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "3am-cron",
+          "text": "Quartz cron fires at 3 AM",
+          "passed": true,
+          "evidence": "matched: '\\\\+3\\\\+'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use loaddataFile",
+          "passed": false,
+          "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "pa-price-analyser-feed",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 101.33,
+        "tokens": 56707,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "uses-targetname-transactionfeed",
+          "text": "Targets TransactionFeed",
+          "passed": true,
+          "evidence": "matched: 'TransactionFeed'"
+        },
+        {
+          "id": "split-tokenize-loaddata",
+          "text": "split + tokenize + loaddata pattern",
+          "passed": true,
+          "evidence": "matched: '<split' | '<tokenize' | 'pfx-api:loaddata'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "dated-filename-handling",
+          "text": "Route handles dated filename (YYYYMMDD.csv) via simple/groovy/include/fileName",
+          "passed": true,
+          "evidence": "matched: 'yyyyMMdd' | 'date:now'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use loaddataFile",
+          "passed": true,
+          "evidence": "none of: 'pfx-api:loaddataFile' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "pa-price-analyser-feed",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 86.69,
+        "tokens": 48310,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "uses-targetname-transactionfeed",
+          "text": "Targets TransactionFeed",
+          "passed": true,
+          "evidence": "matched: 'TransactionFeed'"
+        },
+        {
+          "id": "split-tokenize-loaddata",
+          "text": "split + tokenize + loaddata pattern",
+          "passed": false,
+          "evidence": "missing: '<split' | '<tokenize'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "dated-filename-handling",
+          "text": "Route handles dated filename (YYYYMMDD.csv) via simple/groovy/include/fileName",
+          "passed": true,
+          "evidence": "matched: 'yyyyMMdd' | 'date:now' | 'include='"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use loaddataFile",
+          "passed": false,
+          "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "pa-s3-transactions-100k",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 83.23,
+        "tokens": 56543,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "uses-targetname-transactionfeed",
+          "text": "Uses targetName / dsUniqueName referring to TransactionFeed",
+          "passed": true,
+          "evidence": "matched: 'TransactionFeed'"
+        },
+        {
+          "id": "s3-consumer",
+          "text": "Route reads from S3 (pfx-s3 or aws2-s3)",
+          "passed": true,
+          "evidence": "matched: 'pfx-s3:'"
+        },
+        {
+          "id": "tokenize-100k",
+          "text": "Tokenize group is 100000 as requested",
+          "passed": true,
+          "evidence": "matched: 'group=\"100000\"'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use loaddataFile",
+          "passed": true,
+          "evidence": "none of: 'pfx-api:loaddataFile' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "pa-s3-transactions-100k",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 4,
+        "failed": 2,
+        "total": 6,
+        "time_seconds": 81.22,
+        "tokens": 48205,
+        "tool_calls": 7,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "uses-targetname-transactionfeed",
+          "text": "Uses targetName / dsUniqueName referring to TransactionFeed",
+          "passed": true,
+          "evidence": "matched: 'TransactionFeed'"
+        },
+        {
+          "id": "s3-consumer",
+          "text": "Route reads from S3 (pfx-s3 or aws2-s3)",
+          "passed": true,
+          "evidence": "matched: 'aws2-s3:'"
+        },
+        {
+          "id": "tokenize-100k",
+          "text": "Tokenize group is 100000 as requested",
+          "passed": false,
+          "evidence": "missing: 'group=\"100000\"' | 'group=100000'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use loaddataFile",
+          "passed": false,
+          "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "pa-saleshistory-tab",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 105.5,
+        "tokens": 57335,
+        "tool_calls": 8,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route URI uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "has-split-streaming",
+          "text": "Route has <split streaming=\"true\"> for handling the 10M-row file",
+          "passed": true,
+          "evidence": "matched: '<split[^>]*streaming=\"true\"' | 'streaming=\"true\"'"
+        },
+        {
+          "id": "has-tokenize",
+          "text": "Route uses <tokenize ... group=N> chunking",
+          "passed": true,
+          "evidence": "matched: '<tokenize'"
+        },
+        {
+          "id": "uses-loaddata-not-loaddatafile",
+          "text": "Uses pfx-api:loaddata (NOT loaddataFile) for DMDS",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:loaddata\\\\?'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use pfx-api:loaddataFile (forbidden for DMDS)",
+          "passed": true,
+          "evidence": "none of: 'pfx-api:loaddataFile' present"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present after the load",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "tab-delimiter",
+          "text": "CSV unmarshal is configured for tab delimiter",
+          "passed": true,
+          "evidence": "matched: 'delimiter=%09' | 'tab'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "pa-saleshistory-tab",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.4286,
+        "passed": 3,
+        "failed": 4,
+        "total": 7,
+        "time_seconds": 99.52,
+        "tokens": 48855,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-DMDS",
+          "text": "Generated route URI uses objectType=DMDS",
+          "passed": true,
+          "evidence": "matched: 'objectType=DMDS'"
+        },
+        {
+          "id": "has-split-streaming",
+          "text": "Route has <split streaming=\"true\"> for handling the 10M-row file",
+          "passed": false,
+          "evidence": "missing: '<split[^>]*streaming=\"true\"' | 'streaming=\"true\"'"
+        },
+        {
+          "id": "has-tokenize",
+          "text": "Route uses <tokenize ... group=N> chunking",
+          "passed": false,
+          "evidence": "missing: '<tokenize'"
+        },
+        {
+          "id": "uses-loaddata-not-loaddatafile",
+          "text": "Uses pfx-api:loaddata (NOT loaddataFile) for DMDS",
+          "passed": false,
+          "evidence": "missing: 'pfx-api:loaddata\\\\?' | 'pfx-api:loaddata&'"
+        },
+        {
+          "id": "no-loaddatafile",
+          "text": "Does NOT use pfx-api:loaddataFile (forbidden for DMDS)",
+          "passed": false,
+          "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+        },
+        {
+          "id": "flush-present",
+          "text": "pfx-api:flush is present after the load",
+          "passed": true,
+          "evidence": "matched: 'pfx-api:flush'"
+        },
+        {
+          "id": "tab-delimiter",
+          "text": "CSV unmarshal is configured for tab delimiter",
+          "passed": true,
+          "evidence": "matched: 'delimiter=\\\\\\\\t' | 'delimiter=%09' | '\\\\\\\\t'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 0.9714,
+        "stddev": 0.07,
+        "min": 0.8,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 75.86,
+        "stddev": 26.2922,
+        "min": 35.83,
+        "max": 105.5
+      },
+      "tokens": {
+        "mean": 55574.4286,
+        "stddev": 1975.6234,
+        "min": 52815,
+        "max": 58150
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.7374,
+        "stddev": 0.2467,
+        "min": 0.4,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 89.0471,
+        "stddev": 16.064,
+        "min": 67.9,
+        "max": 113.0
+      },
+      "tokens": {
+        "mean": 48458.4286,
+        "stddev": 1159.1055,
+        "min": 46873,
+        "max": 50251
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.2340",
+      "time_seconds": "-13.2",
+      "tokens": "+7116"
+    }
+  },
+  "notes": [
+    "Output-quality benchmark for the PA Data Source (DMDS) generator. The DMDS pattern is genuinely different from standard imports \u2014 split + tokenize + loaddata + flush \u2014 so the test asks whether Claude reliably picks the right pattern with vs without the skill.",
+    "Positive cases test that the skill produces the canonical DMDS pattern (no loaddataFile, flush present, split with streaming).",
+    "Negative cases (P master, LTV) test that the skill recognizes it's the wrong fit and defers to generate-import-integration / generate-ppv-import-integration.",
+    "Edge case (vague 'load data into Pricefx') tests whether the skill asks for object type rather than silently picking DMDS.",
+    "Trigger evals NOT measured here \u2014 see evals/benchmarks/config.md. This benchmark is output-quality only.",
+    "Caveat: pfx CLI was unavailable (no .env), so any partition-metadata-dependent steps use synthetic defaults. The DMDS pattern itself is independent of partition metadata."
+  ]
+}

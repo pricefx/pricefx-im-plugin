@@ -26,5 +26,11 @@
   "score": {
     "passed": 2,
     "total": 3
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6667
   }
 }

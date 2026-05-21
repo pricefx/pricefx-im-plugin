@@ -1,0 +1,36 @@
+{
+  "eval_id": 4,
+  "eval_name": "neg-p-master",
+  "category": "negative",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-import-skill",
+      "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration",
+      "passed": true,
+      "evidence": "matched: 'generate-import-integration' | 'import-integration' | 'use.*standard.*import'"
+    },
+    {
+      "id": "no-dmds-pattern",
+      "text": "Does NOT generate objectType=DMDS / flush / dsUniqueName for a P import",
+      "passed": true,
+      "evidence": "none of: 'objectType=DMDS' | 'pfx-api:flush' present"
+    },
+    {
+      "id": "no-split-tokenize-for-p",
+      "text": "Does NOT generate split+tokenize wrapper (DMDS-only pattern)",
+      "passed": true,
+      "evidence": "none of: '<tokenize' present"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 3
+  },
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

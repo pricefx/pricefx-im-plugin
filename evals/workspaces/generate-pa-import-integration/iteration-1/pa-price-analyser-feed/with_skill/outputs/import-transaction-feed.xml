@@ -1,0 +1,24 @@
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-transaction-feed">
+        <from uri="file://{{integration.sftp.root}}/transactions?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+
+        <log message="Processing: ${header.CamelFileName}" loggingLevel="INFO"/>
+
+        <split aggregationStrategy="recordsCountAggregation" streaming="true">
+            <tokenize group="50000" token="\n"/>
+
+            <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter=,"/>
+
+            <log loggingLevel="INFO" message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelFileName} (batch size: 50000, starting at row ${exchangeProperty.CamelSplitIndex * 50000 + 1})"/>
+
+            <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.TransactionFeed&amp;mapper=import-transaction-feed.mapper"/>
+        </split>
+
+        <log message="Load completed, total records: ${header.PfxTotalInputRecordsCount}" loggingLevel="INFO"/>
+
+        <onCompletion onCompleteOnly="true">
+            <toD uri="pfx-api:flush?dataFeedName=DMF.TransactionFeed&amp;dataSourceName=DMDS.TransactionFeed"/>
+            <log message="Flush completed for TransactionFeed." loggingLevel="INFO"/>
+        </onCompletion>
+    </route>
+</routes>

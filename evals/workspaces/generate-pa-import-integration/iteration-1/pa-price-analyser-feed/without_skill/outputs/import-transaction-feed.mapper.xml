@@ -1,0 +1,18 @@
+<mappers>
+    <!-- Placeholder mapper for Price Analyser transaction feed.
+         Adjust field names to match the actual CSV header and the
+         DMDS.TransactionFeed schema. Typical PA transaction fields:
+         invoiceDate, invoiceNumber, customerId, sku, quantity, netPrice,
+         listPrice, currency, salesRep, etc. -->
+    <loadMapper id="import-transaction-feed.mapper">
+        <body in="invoiceDate"    out="invoiceDate"    converterExpression="stringToDate"/>
+        <body in="invoiceNumber"  out="invoiceNumber"/>
+        <body in="customerId"     out="customerId"/>
+        <body in="sku"            out="sku"/>
+        <body in="quantity"       out="quantity"       converterExpression="stringToDecimal"/>
+        <body in="netPrice"       out="netPrice"       converterExpression="stringToDecimal"/>
+        <body in="listPrice"      out="listPrice"      converterExpression="stringToDecimal"/>
+        <body in="currency"       out="currency"/>
+        <body in="salesRep"       out="salesRep"/>
+    </loadMapper>
+</mappers>

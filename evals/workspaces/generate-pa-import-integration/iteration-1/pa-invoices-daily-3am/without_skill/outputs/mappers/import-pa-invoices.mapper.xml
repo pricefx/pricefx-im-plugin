@@ -1,0 +1,43 @@
+<mappers>
+    <!--
+        Mapper for line-item invoice import into DM Data Source DMDS.Invoices.
+
+        NOTE: Without pfx CLI configured we cannot inspect DMDS.Invoices field
+        metadata. The mapping below is a best-effort scaffold using common
+        line-item invoice fields. Adjust `in` (source CSV column) and `out`
+        (Pricefx data source field) names to match the actual source file and
+        the DMDS.Invoices column definitions before deploying.
+
+        Converter expressions normalise CSV strings → typed values.
+    -->
+    <loadMapper id="import-pa-invoices.mapper">
+        <!-- Invoice header keys -->
+        <body in="invoiceId"        out="invoiceId"/>
+        <body in="invoiceNumber"    out="invoiceNumber"/>
+        <body in="invoiceLineId"    out="invoiceLineId"/>
+        <body in="invoiceDate"      out="invoiceDate"      converterExpression="stringToDate"/>
+
+        <!-- Customer / product identifiers -->
+        <body in="customerId"       out="customerId"/>
+        <body in="sku"              out="sku"/>
+
+        <!-- Quantities and amounts -->
+        <body in="quantity"         out="quantity"         converterExpression="stringToDecimal"/>
+        <body in="uom"              out="uom"/>
+        <body in="unitPrice"        out="unitPrice"        converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netAmount"        out="netAmount"        converterExpression="stringToDecimal(us,0,2)"/>
+        <body in="grossAmount"      out="grossAmount"      converterExpression="stringToDecimal(us,0,2)"/>
+        <body in="discountAmount"   out="discountAmount"   converterExpression="stringToDecimal(us,0,2)"/>
+        <body in="taxAmount"        out="taxAmount"        converterExpression="stringToDecimal(us,0,2)"/>
+        <body in="cost"             out="cost"             converterExpression="stringToDecimal(us,0,4)"/>
+
+        <!-- Currency / region -->
+        <body in="currency"         out="currency"/>
+        <body in="country"          out="country"/>
+        <body in="region"           out="region"/>
+
+        <!-- Audit -->
+        <simple expression="${date:now:yyyy-MM-dd'T'HH:mm:ss}" out="loadDate"/>
+        <header in="CamelFileName"  out="sourceFile"/>
+    </loadMapper>
+</mappers>

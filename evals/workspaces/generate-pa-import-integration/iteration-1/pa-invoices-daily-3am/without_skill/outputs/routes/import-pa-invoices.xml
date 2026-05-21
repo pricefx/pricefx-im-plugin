@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+        PA Data Source import — line-item invoice data
+        Source:    {{integration.sftp.root}}/im/inbound/invoices/
+        Target:    Pricefx DM Data Source DMDS.Invoices (data feed DMF.Invoices)
+        Schedule:  Daily at 03:00 (Quartz cron)
+        Flow:      file → pfx-csv:streamingUnmarshal → pfx-api:loaddataFile (direct2ds)
+                   → pfx-api:flush (onCompletion)
+    -->
+    <route id="import-pa-invoices">
+        <from uri="file://{{integration.sftp.root}}/im/inbound/invoices/?{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron={{import-pa-invoices.cron}}"/>
+
+        <log message="Picked up invoice file: ${header.CamelFileName}"/>
+
+        <to uri="pfx-io:detectCharset"/>
+        <to uri="pfx-io:setupCharset"/>
+
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+
+        <to uri="pfx-api:loaddataFile?objectType=DM&amp;mapper=import-pa-invoices.mapper&amp;dsUniqueName=DMDS.Invoices&amp;direct2ds=true&amp;batchSize=100000"/>
+
+        <log message="Loaded invoice batch from ${header.CamelFileName} (total: ${header.PfxTotalInputRecordsCount})"/>
+
+        <onCompletion onCompleteOnly="true">
+            <log message="Flushing data feed DMF.Invoices into data source DMDS.Invoices"/>
+            <to uri="pfx-api:flush?dataSourceName=DMDS.Invoices&amp;dataFeedName=DMF.Invoices"/>
+        </onCompletion>
+    </route>
+
+</routes>

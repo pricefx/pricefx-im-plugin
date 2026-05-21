@@ -1,0 +1,33 @@
+<mappers>
+    <loadMapper id="import-invoices.mapper">
+        <!--
+            Placeholder mapping for an invoice line-item PA Data Source.
+            pfx CLI not configured for this run, so real DMDS.Invoices field
+            metadata could not be fetched. Replace the placeholder source
+            column names below (left side, `in="..."`) with the actual CSV
+            header names, and confirm/adjust the Pricefx target fields
+            (right side, `out="..."`) against the live DMDS.Invoices schema
+            (e.g., via `pfx data-source-metadata Invoices`).
+
+            Key field for DMDS is `sku`. NEVER include
+            <constant out="name"/> — the data source is identified by
+            dsUniqueName on the route URI, not in the mapper.
+        -->
+        <body in="sku"             out="sku"/>
+        <body in="invoiceNumber"   out="attribute1"/>
+        <body in="invoiceLine"     out="attribute2"/>
+        <body in="customerId"      out="attribute3"/>
+        <body in="customerName"    out="attribute4"/>
+        <body in="invoiceDate"     out="attribute5" converterExpression="stringToDate"/>
+        <body in="quantity"        out="attribute6" converterExpression="stringToDecimal"/>
+        <body in="uom"             out="attribute7"/>
+        <body in="unitPrice"       out="attribute8" converterExpression="stringToDecimal"/>
+        <body in="discount"        out="attribute9" converterExpression="stringToDecimal"/>
+        <body in="netAmount"       out="attribute10" converterExpression="stringToDecimal"/>
+        <body in="cost"            out="attribute11" converterExpression="stringToDecimal"/>
+        <body in="margin"          out="attribute12" converterExpression="stringToDecimal"/>
+        <body in="currency"        out="attribute13"/>
+        <body in="region"          out="attribute14"/>
+        <body in="salesRep"        out="attribute15"/>
+    </loadMapper>
+</mappers>
