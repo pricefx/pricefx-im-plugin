@@ -227,18 +227,38 @@ The recommended order: 6 → 7 → 8 → 9 → 10.
 
 ## Step 5 — Anti-Pattern + Performance Scan
 
-After all skills complete, run a final read-only scan against `$TARGET_DIR/src/main/resources/repo/` using the legacy-pattern checks from the `migrate-project` and `upgrade-project` agents. **This is report-only — do not auto-fix here.** The earlier extraction skills produced files that preserve the original semantics, so we want the developer to review each anti-pattern in context before fixing.
+After all migration skills complete, build the final anti-pattern + performance report. **This is read-only — do not auto-fix here.** The migration skills produced files that preserve the original semantics; the developer should review each finding in context before fixing.
 
-For each check, glob the relevant files and record affected files + line numbers + severity.
+The work splits in two:
+1. **Aggregate** the anti-patterns the migration skills already detected, and
+2. **Detect** the agent-owned patterns no individual skill covers.
 
-### Anti-pattern checklist
+### Step 5a — Aggregate skill-owned findings
+
+Each migration skill emits its own findings in its report. Pull them through into the agent's final report **without re-detecting them in the agent** — re-implementing the detection in two places guarantees the agent and the skill will drift the moment one is updated and the other is not.
+
+| Anti-pattern | Owned by skill |
+|---|---|
+| AP-1 — Spring Boot 2.x in `pom.xml` | `migrate-manual-to-provisioned-pom` (P-2 / P-3) |
+| AP-2 — Java 11 in `pom.xml` | `migrate-manual-to-provisioned-pom` (P-1) |
+| AP-2b — Camel 3.x pinned in `pom.xml` | `migrate-manual-to-provisioned-pom` (P-4) |
+| AP-2c — Java sources still under `src/main/java/` after migration | `migrate-manual-to-provisioned-java-code` (Step 7) |
+| AP-20 — Old property syntax `${pfx:...}` | `migrate-manual-to-provisioned-camel-syntax` (Step 3a) |
+| AP-21 — `<inOnly>` / `<inOut>` elements | `migrate-manual-to-provisioned-camel-syntax` (Step 3a / 3b) |
+| AP-22 — `*Ref` attributes on EIPs | `migrate-manual-to-provisioned-camel-syntax` (Step 2) |
+| AP-23 — `<routeContext>` wrapper | `migrate-manual-to-provisioned-camel-syntax` (Step 3c) |
+| AP-24 — `vm:` / `direct-vm:` URI scheme | `migrate-manual-to-provisioned-camel-syntax` (Step 1) |
+| AP-25 — `transferException=true` on http/http4 | `migrate-manual-to-provisioned-camel-syntax` (Step 4) |
+| AP-26 — `tracerEnabled=` on a route | `migrate-manual-to-provisioned-camel-syntax` (Step 4) |
+
+Treat the migration skills as the source of truth for these eleven anti-patterns. Map their findings to the AP-N labels above when building the final report.
+
+### Step 5b — Agent-owned anti-patterns (run these directly)
+
+These patterns are not detected by any individual migration skill. For each, glob the relevant files in `$TARGET_DIR/src/main/resources/repo/` and record affected files + line numbers + severity.
 
 | # | Check | Detect | Severity | Why it matters |
 |---|---|---|---|---|
-| AP-1 | Old Spring Boot 2.x | `pom.xml` parent or `<spring-boot.version>2.` | Critical | EOL; IM 7.x requires 3.x |
-| AP-2 | Java 11 | `pom.xml` `<java.version>11` or `<maven.compiler.source>11` | Critical | IM 7.x requires Java 17 |
-| AP-2b | Camel 3.x still pinned | `pom.xml` `<camel.version>3.` | Critical | Camel 4.1+ required by IM 7.x |
-| AP-2c | Java sources still in src/main/java | Any `.java` file in target after migration | Critical | Provisioned IM does not compile Java; convert to Groovy in `src/main/resources/repo/classes/` |
 | AP-3 | Missing `streaming="true"` on splits | `<split>` without `streaming="true"` paired with `<tokenize token="\n"/>` | Critical | OutOfMemoryError on >100MB CSVs |
 | AP-4 | Copy-pasted apiSettings parser | `<groovy>` blocks that all assign `apiSettings` with slight variations across routes | Important | Silent bugs from drift |
 | AP-5 | Hardcoded values not using `{{pfx:...}}` | Numeric literals in `<tokenize group=...>`, hostnames/IPs in `uri=` attributes | Important | No per-env config without redeploy |
@@ -256,13 +276,6 @@ For each check, glob the relevant files and record affected files + line numbers
 | AP-17 | Old path placeholder | `{{integration.data}}` or `{{data.directory}}` in file URIs | Important | Use `{{integration.sftp.root}}` |
 | AP-18 | `extensionName` parameter | `pfx-api:fetch/loaddata/loaddataFile` with `extensionName=...` | Important | Silently ignored — set `name` in mapper/filter instead |
 | AP-19 | `noop=true` on file consumer | `noop=true` on a `from uri="file://..."/>` | Critical | File reprocessed forever; no archive |
-| AP-20 | Old property syntax `${pfx:...}` | `${pfx:` placeholder syntax in route XML | Important | Camel 4.x uses `{{pfx:...}}` |
-| AP-21 | `<inOnly>` / `<inOut>` elements | `<inOnly\|inOut uri=` in route XML | Critical | Removed in Camel 4 — use `<to ... pattern="InOnly\|InOut"/>` |
-| AP-22 | `*Ref` attributes on EIPs | `executorServiceRef=`, `aggregationRepositoryRef=`, `onRedeliveryRef=`, `redeliveryPolicyRef=`, `routePolicyRef=`, etc. | Critical | Renamed in Camel 4 — drop the `Ref` suffix |
-| AP-23 | `<routeContext>` wrapper still present | `<routeContext\|</routeContext>` in XML | Critical | Removed in Camel 4 — files use `<routes>` root only |
-| AP-24 | `vm:` or `direct-vm:` URI scheme | `vm:` / `direct-vm:` in `uri=` | Critical | Components removed in Camel 4 — use `seda:` / `direct:` |
-| AP-25 | `transferException=true` on http/http4 | `transferException=` in `uri=` | Important | Removed in Camel 3 for security |
-| AP-26 | `tracerEnabled=` on a route | `tracerEnabled=` in `<route>` attributes | Important | Removed in Camel 3 — configure on the CamelContext or via a route policy |
 
 ### Performance checklist
 
