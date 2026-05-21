@@ -255,7 +255,7 @@ Treat the migration skills as the source of truth for these eleven anti-patterns
 
 ### Step 5b — Agent-owned anti-patterns (run these directly)
 
-For the patterns no individual migration skill detects, run AP-3 through AP-19 from `docs/anti-patterns.md` against `$TARGET_DIR/src/main/resources/repo/`. The catalog provides the regex/glob detect rule, severity, "why it matters", and fix recipe for each. Record affected files + line numbers + severity per finding.
+For the patterns no individual migration skill detects, run AP-3 through AP-19 and AP-28 through AP-34 from `docs/anti-patterns.md` against `$TARGET_DIR/src/main/resources/repo/`. The catalog provides the regex/glob detect rule, severity, "why it matters", and fix recipe for each. Record affected files + line numbers + severity per finding.
 
 (AP-1, AP-2, AP-2b, AP-2c, AP-20 through AP-26 are aggregated from skills in Step 5a above — do not re-run those here. AP-27 (`javax.*` → `jakarta.*`) is covered by the `migrate-manual-to-provisioned-java-code` skill's Step 4.)
 

@@ -34,7 +34,7 @@ If IM version cannot be detected from `pom.xml`, ask: **What IM version is this 
 
 Glob all files in `src/main/resources/repo/routes/`, `src/main/resources/repo/mappers/`, `src/main/resources/repo/filters/`. Also read `src/main/resources/repo/config/application.properties` and any `application-*.properties`, and scan connection config files in `config/connections/` and `src/main/resources/repo/config/connections/`.
 
-Run the **version-independent** subset of `docs/anti-patterns.md` against every route, mapper, and filter file — that is AP-1, AP-2 (versioning checks), AP-3 through AP-19 (route shape, file handling, properties, hygiene), and AP-27 (`javax.*` → `jakarta.*`). For each AP, the catalog provides the regex/glob detect rule, the severity, the "why it matters", and the fix recipe.
+Run the **version-independent** subset of `docs/anti-patterns.md` against every route, mapper, and filter file — that is AP-1, AP-2 (versioning checks), AP-3 through AP-19 (route shape, file handling, properties, hygiene), AP-27 (`javax.*` → `jakarta.*`), and AP-28 through AP-34 (CFS-inside-split, `direct2ds=true`, `${body}` inside split, missing `<removeHeaders>`, missing `allowContextMapAll=true`, Groovy in mapper, Groovy code style smells). For each AP, the catalog provides the regex/glob detect rule, the severity, the "why it matters", and the fix recipe.
 
 Skip the manual→provisioned-only checks (AP-2c, AP-17) and the Camel 3→4 syntax checks (AP-20..AP-26) — those belong to the `migrate-manual-to-provisioned` agent. If this project still has them, run that agent instead.
 
