@@ -1,6 +1,6 @@
 ---
 name: generate-soap-integration
-description: Generate a Pricefx Integration Manager integration that calls an external SOAP/XML web service. Use this skill when the target system requires a SOAP envelope and returns an XML response — e.g., pushing approved contracts or price lists to an ERP, or sending batch updates to a legacy system via WSDL-defined operations. Covers three-layer separation (business route, FreeMarker template, shared SOAP call route), request/response archiving, application-level fault detection, and auth options.
+description: Use when the target system requires a SOAP envelope and returns an XML response — says "call a SOAP service", "push to ERP via WSDL", "XML web service", "send to legacy SOAP API", and needs three-layer separation (business route + FreeMarker template + shared SOAP call route) with request/response archiving and application-level fault detection.
 ---
 
 # Generate SOAP Integration

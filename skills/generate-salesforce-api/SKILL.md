@@ -1,6 +1,6 @@
 ---
 name: generate-salesforce-api
-description: Generate a Pricefx Integration Manager route that calls the Salesforce REST API — fetching SObject records via SOQL into Pricefx (Customer/Product master, PA Data Sources) or pushing data back to Salesforce via the SObject REST endpoints. Use this skill when the source or target system is Salesforce. Covers the OAuth2 client-credentials connection JSON, API-version discovery, SOQL queries with cursor-based pagination (`done` / `nextRecordsUrl`), `Sforce-Query-Options` batch size override, and bearer-token re-auth on 401.
+description: Use when the source or target system is Salesforce — needs to fetch SObject records via SOQL into Pricefx (Customer/Product master, PA Data Sources) or push data back via the SObject REST endpoints, with OAuth2 client-credentials, API-version discovery, cursor-based pagination (`done` / `nextRecordsUrl`), `Sforce-Query-Options` batch override, and bearer-token re-auth on 401.
 ---
 
 # Generate Salesforce API Integration

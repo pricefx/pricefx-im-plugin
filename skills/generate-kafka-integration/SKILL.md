@@ -1,6 +1,6 @@
 ---
 name: generate-kafka-integration
-description: Generate a Pricefx Integration Manager Kafka consumer route that reads CDC (change-data-capture) events from a Kafka topic and loads them into a Pricefx Data Source (DMDS) table. Use this skill when the user needs near-real-time data ingestion from Kafka, multi-tenant OPCO grouping, sequence-based deduplication, or a dual-pipeline setup alongside an existing file-based import route.
+description: Use when the user wants to consume Kafka CDC (change-data-capture) events into a Pricefx Data Source (DMDS) — says "Kafka consumer", "near-real-time ingestion", "CDC events", "stream into PA", or needs multi-tenant OPCO grouping, sequence-based deduplication, or a dual-pipeline setup alongside an existing file-based import route.
 ---
 
 # Generate Kafka Integration

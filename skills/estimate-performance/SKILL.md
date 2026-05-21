@@ -1,6 +1,6 @@
 ---
 name: estimate-performance
-description: Estimate processing time and resource usage for an IM route based on data volume, batch size, and route complexity. Use when the user says "how long will this take", "estimate performance", "performance", "sizing", "capacity".
+description: Use when the user wants a runtime or resource estimate for a Pricefx Integration Manager route — says "how long will this take", "estimate performance", "performance", "sizing", "capacity", "how many records per hour", or needs to size a planned import/export by volume + batch size + route complexity.
 ---
 
 # Estimate Performance

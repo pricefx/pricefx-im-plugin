@@ -1,6 +1,6 @@
 ---
 name: generate-scheduling-route
-description: Add Quartz-based start/stop scheduling to an existing Pricefx Integration Manager route, so it only runs during a defined time window (e.g., 23:00-06:00 UTC). Use this skill when the user wants to restrict a long-running import or export route to off-peak hours, avoid overlap with business hours, or reduce resource contention by controlling route activation via a cron schedule.
+description: Use when an existing Pricefx Integration Manager route should only run during a defined time window (e.g., 23:00-06:00 UTC) — says "restrict to off-peak hours", "avoid overlap with business hours", "reduce resource contention", "add start/stop schedule", or wants Quartz-based activation control around an existing long-running route.
 ---
 
 # Generate Scheduling Route (Start/Stop Time Window)

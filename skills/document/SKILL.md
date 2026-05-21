@@ -1,6 +1,6 @@
 ---
 name: document
-description: Document IM routes with plain-language explanations, Mermaid data flow diagrams, and full project documentation. Use when the user says "explain this route", "what does this do", "document", "diagram", "visualize", "show flow", "data flow", "draw route", or needs to document a route for handoff.
+description: Use when the user wants a Pricefx Integration Manager route explained in plain language with a Mermaid data-flow diagram — says "explain this route", "what does this do", "document", "diagram", "visualize", "show flow", "data flow", "draw route", or needs a handoff doc for a single route. For full-project diagrams use the `visualize-project` agent.
 ---
 
 # Document Route

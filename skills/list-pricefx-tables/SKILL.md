@@ -1,6 +1,6 @@
 ---
 name: list-pricefx-tables
-description: List available Pricefx tables, fields, and attribute metadata for any object type (P, PX, CX, SL, SX, DS, PPV/LTV/MLTV2). Use this skill whenever the user asks "what tables exist", "show me the fields", "list extensions", "what attributes does X have", "list pricing parameters", "show company parameters", "list sellers", or wants to browse partition metadata. Quick lookup — no file generation, just displays information.
+description: Use when the user wants to browse Pricefx partition metadata — asks "what tables exist", "show me the fields", "list extensions", "what attributes does X have", "list pricing parameters", "show company parameters", "list sellers", or wants a quick lookup of any object type (P, PX, CX, SL, SX, DS, PPV/LTV/MLTV2) without generating files.
 ---
 
 # List Pricefx Tables

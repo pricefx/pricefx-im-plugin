@@ -1,6 +1,6 @@
 ---
 name: compare-environments
-description: Compare IM project files between two environments, branches, or directories. Shows what changed in routes, mappers, filters, properties. Use when the user says "diff", "compare environments", "what changed", "dev vs prod", "branch diff".
+description: Use when the user wants to compare a Pricefx Integration Manager project across two environments, branches, or directories — says "diff", "compare environments", "what changed", "dev vs prod", "branch diff", or asks which routes/mappers/filters/properties differ.
 ---
 
 # Compare Environments

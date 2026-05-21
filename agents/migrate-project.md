@@ -1,6 +1,6 @@
 ---
 name: migrate-project
-description: Scan a Pricefx Integration Manager project for legacy patterns, generate a prioritized migration report, and automatically apply fixes. Use when the user says "migrate", "modernize", "upgrade patterns", or wants to modernize an existing IM project.
+description: Use when the user wants to modernise an existing Pricefx Integration Manager project's legacy patterns (without changing the IM version) — says "migrate", "modernize", "upgrade patterns", "fix legacy patterns", or asks to scan for anti-patterns and apply auto-fixes. For an IM version bump use `upgrade-project`; for lifting a manual project to provisioned use `migrate-manual-to-provisioned`.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Edit, Write
 maxTurns: 40

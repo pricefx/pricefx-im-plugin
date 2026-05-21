@@ -1,6 +1,6 @@
 ---
 name: analyze
-description: Analyze a single IM route for quality issues, anti-patterns, and naming convention violations. Like a linter for IM routes. Use when the user says "analyze route", "check my route", "lint", "compliance check", "check route quality", "compare to best practice".
+description: Use when the user wants to lint or quality-check a single Pricefx Integration Manager route — says "analyze route", "check my route", "lint", "compliance check", "check route quality", "compare to best practice". For a full project assessment use the `analyze-project` agent instead.
 ---
 
 # Analyze Route Quality

@@ -1,6 +1,6 @@
 ---
 name: upgrade-project
-description: Complete upgrade workflow for a Pricefx Integration Manager project — from version analysis through automated fixes to validation. Use when the user wants to upgrade IM version, modernize legacy patterns, or apply a full set of best-practice fixes.
+description: Use when the user wants to upgrade a Pricefx Integration Manager project's IM version — says "upgrade project", "upgrade to IM 7.x", "bump IM version", "apply breaking changes", "modernize for new IM line", or hands over a project on an older IM line and asks for a complete upgrade workflow (analysis → auto-fixes → validation).
 model: sonnet
 tools: Read, Grep, Glob, Bash, Edit, Write
 maxTurns: 50

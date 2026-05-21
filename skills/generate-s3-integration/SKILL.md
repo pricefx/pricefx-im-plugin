@@ -1,6 +1,6 @@
 ---
 name: generate-s3-integration
-description: Generate a Pricefx Integration Manager route that reads from or writes to an AWS S3 bucket. Use this skill when files are delivered to or collected from S3 — e.g., polling S3 for inbound CSVs and loading them into Pricefx, exporting Pricefx data and uploading to S3, or bridging S3 files to an SFTP server. Covers consumer (poll/delete), producer (upload), and S3-to-SFTP bridge patterns.
+description: Use when a Pricefx Integration Manager route reads from or writes to an AWS S3 bucket — says "poll S3 for inbound CSVs", "export to S3", "upload to S3", "bridge S3 to SFTP", or "S3 integration", and needs a consumer (poll/delete), producer (upload), or S3-to-SFTP bridge.
 ---
 
 # Generate S3 Integration
