@@ -1,6 +1,6 @@
 # Pricefx Camel Component Reference
 
-All components use the `pfx-` prefix and are producer-only (used in `<to>` or `<toD>`, not `<from>` except `pfx-api:events`).
+All components use the `pfx-` prefix and are producer-only (used in `<to>` or `<toD>`, not `<from>`) — with the exception of `pfx-event:fetch`, the event-polling consumer (see below).
 
 **KB Reference:** https://knowledge.pricefx.com/space/IM/
 
@@ -27,7 +27,6 @@ The primary component for all Pricefx server interactions.
 | `calculate` | Trigger data mart calculation. Requires `typedId`, `targetName`. |
 | `internalCopy` | Copy data source internally. Requires `label`. |
 | `refresh` | Refresh data mart. |
-| `events` | Poll for system events (consumer). Requires `eventTypes`, `delay`. |
 | `execute` | Execute a formula. Requires `formulaName`. |
 | `update` | Update records. |
 | `save` | Save records. |
@@ -67,8 +66,6 @@ The primary component for all Pricefx server interactions.
 | `detectJoinFields` | Auto-detect join fields | `true` |
 | `async` | Async processing | `false` |
 | `asyncTimeout` | Async timeout (ms) | `30000` |
-| `delay` | Poll delay for events (ms) | — |
-| `eventTypes` | Comma-separated event types for polling | — |
 | `countOnly` | Return only count from fetch | `false` |
 | `enableNullFields` | Include null fields in response | `false` |
 | `truncate` | Truncate before load | `false` |
@@ -131,9 +128,6 @@ The primary component for all Pricefx server interactions.
 
 <!-- Flush data feed -->
 <to uri="pfx-api:flush?dataSourceName=DMDS.MySource&amp;dataFeedName=DMF.MyFeed"/>
-
-<!-- Poll events (consumer) -->
-<from uri="pfx-api:events?delay=60000&amp;eventTypes=ITEM_UPDATE_PPV,PADATALOAD_COMPLETED"/>
 ```
 
 ---
@@ -574,12 +568,49 @@ Specialized component for Salesforce-specific operations.
 
 ---
 
+## pfx-event — Pricefx Event Bus
+
+**Syntax:** `pfx-event:method?params`
+
+The only Pricefx consumer component — used in `<from>` to react to system events (PPV updates, PA load completion, custom events, etc.) and in `<to>` to publish custom events.
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `fetch` | Consumer — poll for one event type. Use in `<from>`. |
+| `sendCustom` | Producer — publish a custom event. Use in `<to>`. |
+
+### Key Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `eventType` | Event type to listen for (`fetch`) or publish (`sendCustom`). One type per route. | — |
+| `delay` | Polling interval in ms (`fetch` only) | `60000` |
+| `initialDelay` | Delay before first poll (`fetch` only) | `0` |
+| `greedy` | If true, drain all pending events in one poll cycle (`fetch` only) | `false` |
+
+### Examples
+
+```xml
+<!-- Consumer: react to a PPV item update -->
+<from uri="pfx-event:fetch?eventType=ITEM_UPDATE_PPV&amp;delay=60000"/>
+
+<!-- Producer: publish a custom event at the end of a route -->
+<onCompletion onCompleteOnly="true">
+    <to uri="pfx-event:sendCustom?eventType=CUSTOM_PRODUCTS_IMPORTED"/>
+</onCompletion>
+```
+
+For full event-driven route patterns, see the `generate-event-driven-route` skill.
+
+---
+
 ## Other Components
 
 | Component | Description |
 |-----------|-------------|
 | `pfx-smtp` | Email sending |
-| `pfx-event` | Event handling |
 | `pfx-resources` | Resource management |
 | `pfx-info` | System information |
 | `pfx-hybris` | SAP Hybris integration |
