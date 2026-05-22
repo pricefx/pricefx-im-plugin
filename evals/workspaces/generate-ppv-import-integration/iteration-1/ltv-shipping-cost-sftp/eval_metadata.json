@@ -1,0 +1,15 @@
+{
+  "eval_id": 3,
+  "eval_name": "ltv-shipping-cost-sftp",
+  "category": "positive",
+  "prompt": "Build LTV import for shipping cost lookup — single key country code, value is decimal cost in EUR. Daily from SFTP.",
+  "assertions": [
+    {"id": "uses-objectType-LTV", "text": "Route URI contains objectType=LTV", "type": "grep", "patterns": ["objectType=LTV"], "scope": "outputs"},
+    {"id": "pricingParameterName-present", "text": "Route URI contains pricingParameterName=", "type": "grep", "patterns": ["pricingParameterName="], "scope": "outputs"},
+    {"id": "single-key-mapper", "text": "Mapper maps to LTV fields name and value", "type": "grep", "patterns": ["out=\"name\"", "out=\"value\""], "match": "all", "scope": "outputs"},
+    {"id": "decimal-converter", "text": "Decimal converter applied to the value field (user asked for decimal cost in EUR)", "type": "grep", "patterns": ["stringToDecimal", "stringToNumber", "stringToDouble"], "match": "any", "scope": "outputs"},
+    {"id": "sftp-source", "text": "Route uses pfx-sftp source OR documents SFTP connection (covers either SFTP component or pfx-sftp scheme)", "type": "grep", "patterns": ["pfx-sftp:", "sftp.connection", "SFTPConnection"], "match": "any", "scope": "all"},
+    {"id": "daily-schedule", "text": "Daily schedule wired", "type": "grep", "patterns": ["quartz", "cron=", "scheduler"], "match": "any", "scope": "outputs"},
+    {"id": "no-mltv2", "text": "Does NOT produce MLTV2 pattern", "type": "grep_absent", "patterns": ["objectType=MLTV2", "out=\"key1\""], "scope": "outputs"}
+  ]
+}

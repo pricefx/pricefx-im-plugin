@@ -1,0 +1,15 @@
+{
+  "eval_id": 0,
+  "eval_name": "ltv-exchange-rates-daily",
+  "category": "positive",
+  "prompt": "Set up daily exchange rates load from ECB. CSV has columns currencyCode, rate. Target: LTV table called ExchangeRates.",
+  "assertions": [
+    {"id": "uses-objectType-LTV", "text": "Route URI contains objectType=LTV", "type": "grep", "patterns": ["objectType=LTV"], "scope": "outputs"},
+    {"id": "pricingParameterName-ExchangeRates", "text": "Route URI contains pricingParameterName=ExchangeRates", "type": "grep", "patterns": ["pricingParameterName=ExchangeRates"], "scope": "outputs"},
+    {"id": "single-key-mapper", "text": "Mapper maps to LTV fields name and value (single-key shape)", "type": "grep", "patterns": ["out=\"name\"", "out=\"value\""], "match": "all", "scope": "outputs"},
+    {"id": "daily-schedule", "text": "Daily schedule wired (quartz cron or scheduler param)", "type": "grep", "patterns": ["quartz", "cron=", "scheduler"], "match": "any", "scope": "outputs"},
+    {"id": "no-mltv2", "text": "Does NOT produce MLTV2 pattern", "type": "grep_absent", "patterns": ["objectType=MLTV2", "out=\"key1\"", "out=\"key2\""], "scope": "outputs"},
+    {"id": "no-px-name-constant", "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line (the LTV mapper uses <body out=\"name\"/>, not a constant)", "type": "grep_absent", "patterns": ["<constant[^>]*out=\"name\""], "scope": "outputs"},
+    {"id": "no-businesskeys", "text": "Does NOT specify businessKeys (PPV imports do not use businessKeys)", "type": "grep_absent", "patterns": ["businessKeys="], "scope": "outputs"}
+  ]
+}

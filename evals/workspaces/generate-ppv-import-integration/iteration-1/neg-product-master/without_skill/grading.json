@@ -1,0 +1,30 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-product-master",
+  "category": "negative",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-import-skill",
+      "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration",
+      "passed": true,
+      "evidence": "matched: 'objectType=P'"
+    },
+    {
+      "id": "no-ppv-pattern-in-outputs",
+      "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern",
+      "passed": true,
+      "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

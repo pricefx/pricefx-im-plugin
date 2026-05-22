@@ -1,0 +1,60 @@
+{
+  "eval_id": 0,
+  "eval_name": "ltv-exchange-rates-daily",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-LTV",
+      "text": "Route URI contains objectType=LTV",
+      "passed": true,
+      "evidence": "matched: 'objectType=LTV'"
+    },
+    {
+      "id": "pricingParameterName-ExchangeRates",
+      "text": "Route URI contains pricingParameterName=ExchangeRates",
+      "passed": true,
+      "evidence": "matched: 'pricingParameterName=ExchangeRates'"
+    },
+    {
+      "id": "single-key-mapper",
+      "text": "Mapper maps to LTV fields name and value (single-key shape)",
+      "passed": true,
+      "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+    },
+    {
+      "id": "daily-schedule",
+      "text": "Daily schedule wired (quartz cron or scheduler param)",
+      "passed": true,
+      "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+    },
+    {
+      "id": "no-mltv2",
+      "text": "Does NOT produce MLTV2 pattern",
+      "passed": true,
+      "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' | 'out=\"key2\"' present"
+    },
+    {
+      "id": "no-px-name-constant",
+      "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line (the LTV mapper uses <body out=\"name\"/>, not a constant)",
+      "passed": true,
+      "evidence": "none of: '<constant[^>]*out=\"name\"' present"
+    },
+    {
+      "id": "no-businesskeys",
+      "text": "Does NOT specify businessKeys (PPV imports do not use businessKeys)",
+      "passed": true,
+      "evidence": "none of: 'businessKeys=' present"
+    }
+  ],
+  "score": {
+    "passed": 7,
+    "total": 7
+  },
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

@@ -1,0 +1,8 @@
+<mappers>
+    <loadMapper id="import-ppv-discount-matrix.mapper">
+        <body in="customerCategory" out="key1"/>
+        <body in="productFamily" out="key2"/>
+        <body in="quantityTier" out="key3"/>
+        <body in="discount" out="attribute1" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>

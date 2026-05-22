@@ -1,0 +1,10 @@
+{
+  "eval_id": 6,
+  "eval_name": "neg-dmds-saleshistory",
+  "category": "negative",
+  "prompt": "Daily transactional feed (5M rows) needs to land in DMDS SalesHistoryDS for Price Analyser.",
+  "assertions": [
+    {"id": "redirects-to-pa-skill", "text": "Subagent recognizes DMDS use case — either redirects in narrative (mentions generate-pa-import-integration / PA Data Source) OR produces a correct DMDS route in outputs (proves it understood the prompt and didn't apply PPV)", "type": "grep", "patterns": ["generate-pa-import-integration", "PA Data Source", "DMDS", "Price Analyser", "objectType=DMDS"], "match": "any", "scope": "all"},
+    {"id": "no-ppv-pattern-in-outputs", "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern", "type": "grep_absent", "patterns": ["objectType=LTV", "objectType=MLTV2", "pricingParameterName="], "scope": "outputs"}
+  ]
+}

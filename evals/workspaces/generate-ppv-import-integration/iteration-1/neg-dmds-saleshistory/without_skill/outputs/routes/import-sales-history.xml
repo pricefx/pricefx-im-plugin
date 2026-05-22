@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="import-sales-history">
+        <!-- Daily file poll from local IM-mounted SFTP storage; archive after processing.
+             Scheduler kicks every day at 02:00 UTC. -->
+        <from uri="file://{{integration.sftp.root}}/import/sales-history?{{archive.file}}&amp;{{read.lock}}&amp;{{error.file}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+2+*+*+?&amp;scheduler.triggerId=import-sales-history"/>
+
+        <log message="Starting sales-history import for ${header.CamelFileNameOnly}"/>
+
+        <!-- Streaming unmarshal + streaming file load — required for a 5M-row file.
+             loaddataFile streams bytes directly to the partition; large batchSize
+             minimises HTTP round-trips. Few-field row → 500k batch is appropriate. -->
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=DMDS&amp;targetName=SalesHistoryDS&amp;mapper=import-sales-history.mapper&amp;batchSize=500000&amp;truncate=true"/>
+
+        <log message="Sales-history load finished; total records: ${header.PfxTotalInputRecordsCount}"/>
+
+        <!-- After the load completes, flush the feed and trigger PA recompute. -->
+        <onCompletion onCompleteOnly="true">
+            <log message="Flushing data feed and triggering PA refresh"/>
+            <to uri="pfx-api:flush?dataSourceName=DMDS.SalesHistoryDS&amp;dataFeedName=DMF.SalesHistory"/>
+            <to uri="pfx-api:calculate?targetName=SalesHistoryDS"/>
+        </onCompletion>
+    </route>
+
+</routes>

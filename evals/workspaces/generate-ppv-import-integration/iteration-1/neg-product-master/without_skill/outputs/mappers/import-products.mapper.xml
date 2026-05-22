@@ -1,0 +1,11 @@
+<mappers>
+    <loadMapper id="import-products.mapper">
+        <body in="sku" out="sku"/>
+        <body in="label" out="label"/>
+        <body in="attribute1" out="attribute1"/>
+        <body in="attribute2" out="attribute2"/>
+        <body in="attribute3" out="attribute3"/>
+        <body in="attribute4" out="attribute4"/>
+        <body in="attribute5" out="attribute5"/>
+    </loadMapper>
+</mappers>

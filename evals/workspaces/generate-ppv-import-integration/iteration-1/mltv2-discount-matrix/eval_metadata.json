@@ -1,0 +1,15 @@
+{
+  "eval_id": 1,
+  "eval_name": "mltv2-discount-matrix",
+  "category": "positive",
+  "prompt": "Build MLTV2 import for discount matrix — customer category x product family x quantity tier returns a discount %. 50k rows. Source CSV at /import/discount-matrix.csv",
+  "assertions": [
+    {"id": "uses-objectType-MLTV2", "text": "Route URI contains objectType=MLTV2", "type": "grep", "patterns": ["objectType=MLTV2"], "scope": "outputs"},
+    {"id": "pricingParameterName-present", "text": "Route URI contains pricingParameterName=", "type": "grep", "patterns": ["pricingParameterName="], "scope": "outputs"},
+    {"id": "multi-key-mapper", "text": "Mapper has key1, key2, key3 outputs (3 keys for category x family x tier)", "type": "grep", "patterns": ["out=\"key1\"", "out=\"key2\"", "out=\"key3\""], "match": "all", "scope": "outputs"},
+    {"id": "has-attribute-or-value-output", "text": "Mapper has at least one attribute or value output column for the discount %", "type": "grep", "patterns": ["out=\"attribute1\"", "out=\"value\""], "match": "any", "scope": "outputs"},
+    {"id": "no-ltv", "text": "Does NOT produce LTV pattern", "type": "grep_absent", "patterns": ["objectType=LTV"], "scope": "outputs"},
+    {"id": "no-px-name-constant", "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line", "type": "grep_absent", "patterns": ["<constant[^>]*out=\"name\""], "scope": "outputs"},
+    {"id": "no-businesskeys", "text": "Does NOT specify businessKeys", "type": "grep_absent", "patterns": ["businessKeys="], "scope": "outputs"}
+  ]
+}
