@@ -1,0 +1,44 @@
+<routes xmlns="http://camel.apache.org/schema/spring">
+  <route id="export-approved-contracts-to-erp">
+    <from uri="pfx-event:fetch?eventType=ITEM_APPROVED_PL&amp;delay=60000"/>
+
+    <log loggingLevel="INFO" message="[export-approved-contracts-to-erp] ITEM_APPROVED_PL received for typedId=${header.PfxTypedId}"/>
+
+    <!-- Fetch the approved contract from Pricefx by typedId.
+         PfxTypedId is set by pfx-event:fetch and identifies the approved object. -->
+    <toD uri="pfx-api:fetch?objectType=CT&amp;sql=select * where typedId='${header.PfxTypedId}'"/>
+
+    <!-- Transform Pricefx contract record into the ERP API payload. -->
+    <setBody>
+      <groovy>
+        def record = (body instanceof java.util.List &amp;&amp; !body.isEmpty()) ? body[0] : body
+        return [
+          contractId   : record?.uniqueName,
+          label        : record?.label,
+          customerId   : record?.customerId,
+          validFrom    : record?.validFrom,
+          validTo      : record?.validTo,
+          status       : record?.workflowStatus,
+          approvedDate : new java.util.Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.TimeZone.getTimeZone('UTC')),
+          payload      : record
+        ]
+      </groovy>
+    </setBody>
+    <marshal><json/></marshal>
+
+    <!-- Headers consumed by direct:rest_outbound_call -->
+    <setHeader name="CamelHttpMethod"><constant>POST</constant></setHeader>
+    <setHeader name="Content-Type"><constant>application/json</constant></setHeader>
+    <setHeader name="serviceURL"><simple>{{ext.api.url}}</simple></setHeader>
+    <setHeader name="call_is_DISABLED"><simple>{{ext.api.call_is_DISABLED}}</simple></setHeader>
+    <setHeader name="correlationId">
+      <groovy>java.util.UUID.randomUUID().toString()</groovy>
+    </setHeader>
+
+    <!-- Delegate to the shared REST outbound call route -->
+    <to uri="direct:rest_outbound_call"/>
+
+    <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+    <log loggingLevel="INFO" message="[export-approved-contracts-to-erp] Response: ${body}"/>
+  </route>
+</routes>

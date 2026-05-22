@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+  <!--
+    Business route: triggered by a Pricefx QUOTE_SUBMITTED event.
+    Builds a SAP OData payload from the submitted quote and pushes it to SAP
+    via the shared rest_outbound_call route. Auth uses SAP-style JWT + CSRF +
+    cookies (see beans/simpleCache.xml, beans/instanceCookieHandler.xml,
+    routes/get-jwt-token.xml, routes/get-csrf-token.xml, routes/refresh-api-tokens.xml).
+  -->
+  <route id="post-quote-to-sap">
+
+    <!-- HTTP 401: cached JWT expired mid-call. Refresh JWT + CSRF and retry once. -->
+    <onException>
+      <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+      <onWhen><simple>${exception.statusCode} == 401</simple></onWhen>
+      <redeliveryPolicy maximumRedeliveries="1" redeliveryDelay="0"/>
+      <handled><constant>false</constant></handled>
+      <log loggingLevel="WARN"
+           message="[post-quote-to-sap][AUTH][401] correlationId=${headers.correlationId} Refreshing JWT+CSRF and retrying"/>
+      <to uri="direct:get-jwt-token"/>
+      <to uri="direct:get-csrf-token"/>
+    </onException>
+
+    <!-- HTTP 403: CSRF token invalid/expired. Refresh CSRF and retry once. -->
+    <onException>
+      <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+      <onWhen><simple>${exception.statusCode} == 403</simple></onWhen>
+      <redeliveryPolicy maximumRedeliveries="1" redeliveryDelay="0"/>
+      <handled><constant>false</constant></handled>
+      <log loggingLevel="WARN"
+           message="[post-quote-to-sap][AUTH][403] correlationId=${headers.correlationId} Refreshing CSRF and retrying"/>
+      <to uri="direct:get-csrf-token"/>
+    </onException>
+
+    <from uri="pfx-event:fetch?eventType=QUOTE_SUBMITTED&amp;delay=60000"/>
+
+    <log loggingLevel="INFO"
+         message="[post-quote-to-sap] QUOTE_SUBMITTED received: ${header.PfxEventType} payload=${body}"/>
+
+    <!-- Build the SAP OData request payload from the submitted quote -->
+    <setBody>
+      <groovy><![CDATA[
+        def evt = body
+        // The event body shape varies — adjust mappings to your quote model.
+        // Typical Pricefx quote event carries the quote header object on the body.
+        [
+          QuoteId     : evt?.uniqueName ?: evt?.id?.toString(),
+          QuoteLabel  : evt?.label,
+          CustomerId  : evt?.customerId,
+          TotalAmount : evt?.totalCost ?: evt?.total,
+          Currency    : evt?.currency,
+          SubmittedAt : evt?.lastUpdateDate ?: new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new Date()),
+          SubmittedBy : evt?.lastUpdateBy,
+          LineItems   : (evt?.quoteLineItems ?: []).collect { li ->
+            [
+              LineNo    : li?.lineId,
+              Sku       : li?.sku,
+              Quantity  : li?.quantity,
+              UnitPrice : li?.calculatedPrice ?: li?.listPrice,
+              LineTotal : li?.calculatedTotalPrice
+            ]
+          }
+        ]
+      ]]></groovy>
+    </setBody>
+    <marshal><json/></marshal>
+
+    <!-- Stash the marshalled payload so error-handlers / writeback can access it -->
+    <setProperty name="originalPayload"><simple>${body}</simple></setProperty>
+
+    <!-- Headers required by the shared outbound route -->
+    <setHeader name="CamelHttpMethod"><constant>POST</constant></setHeader>
+    <setHeader name="Content-Type"><constant>application/json</constant></setHeader>
+    <setHeader name="Accept"><constant>application/json</constant></setHeader>
+    <setHeader name="serviceURL"><simple>{{ext.api.sap.serviceUrl}}</simple></setHeader>
+    <setHeader name="call_is_DISABLED"><simple>{{ext.api.call_is_DISABLED}}</simple></setHeader>
+    <setHeader name="correlationId">
+      <groovy>java.util.UUID.randomUUID().toString()</groovy>
+    </setHeader>
+
+    <!-- SAP-style auth headers — read JWT + CSRF from the shared simpleCache. -->
+    <setHeader name="Authorization">
+      <simple>Bearer ${bean:simpleCache.getOrDefault('JWT','')}</simple>
+    </setHeader>
+    <setHeader name="X-CSRF-Token">
+      <simple>${bean:simpleCache.getOrDefault('CSRF','')}</simple>
+    </setHeader>
+    <setHeader name="Ocp-Apim-Subscription-Key">
+      <simple>{{ext.api.subscriptionKey}}</simple>
+    </setHeader>
+    <setHeader name="x-nova-sapsid"><simple>{{ext.api.sap.environment}}</simple></setHeader>
+
+    <!-- Delegate to the shared REST outbound call route -->
+    <to uri="direct:rest_outbound_call"/>
+
+    <!-- Success: log + capture the SAP-assigned record id -->
+    <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+    <log loggingLevel="INFO"
+         message="[post-quote-to-sap][OK] correlationId=${headers.correlationId} httpStatus=${headers.CamelHttpResponseCode} response=${body}"/>
+  </route>
+
+</routes>

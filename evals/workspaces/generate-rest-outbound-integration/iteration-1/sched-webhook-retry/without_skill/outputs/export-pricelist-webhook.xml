@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="export-pricelist-webhook">
+        <!-- Retry on 5xx errors only -->
+        <onException>
+            <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+            <onWhen>
+                <simple>${exception.statusCode} >= 500 &amp;&amp; ${exception.statusCode} &lt; 600</simple>
+            </onWhen>
+            <redeliveryPolicy
+                    maximumRedeliveries="5"
+                    redeliveryDelay="5000"
+                    backOffMultiplier="2"
+                    useExponentialBackOff="true"
+                    maximumRedeliveryDelay="60000"
+                    retryAttemptedLogLevel="WARN"/>
+            <handled>
+                <constant>false</constant>
+            </handled>
+        </onException>
+
+        <!-- Daily schedule at 06:00 -->
+        <from uri="quartz://export/pricelist-webhook?cron=0+0+6+*+*+?&amp;stateful=true"/>
+
+        <log message="Starting daily price list export to webhook"/>
+
+        <!-- Read last export timestamp from Pricefx config store -->
+        <toD uri="pfx-config:get?name={{integration.name}}.${routeId}.export.timestamp&amp;toHeader=lastExportTimestamp&amp;defaultValue=1970-01-01T00:00:00"/>
+
+        <!-- Capture current upper bound -->
+        <setHeader name="currentExportTimestamp">
+            <simple>${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mm:ss}</simple>
+        </setHeader>
+
+        <log message="Exporting price list items changed since ${header.lastExportTimestamp} up to ${header.currentExportTimestamp}"/>
+
+        <!-- Fetch updated price list items in batched mode -->
+        <to uri="pfx-api:fetch?objectType=PLI&amp;filter=export-pricelist-webhook.filter&amp;batchedMode=true&amp;batchSize=5000"/>
+
+        <split>
+            <simple>${body}</simple>
+
+            <!-- Retrieve current batch rows -->
+            <to uri="pfx-api:fetchIterator"/>
+
+            <!-- Transform and marshal to JSON -->
+            <to uri="pfx-model:transform?mapper=export-pricelist-webhook.mapper"/>
+            <to uri="pfx-json:marshal"/>
+
+            <log message="Posting batch of price list updates to webhook"/>
+
+            <!-- Push to downstream webhook -->
+            <to uri="pfx-rest:post?uri=/pricelist&amp;connection=pricelist-webhook.connection&amp;contentType=application/json&amp;connectionTimeoutMs=60000"/>
+
+            <log message="Batch posted successfully"/>
+        </split>
+
+        <!-- Persist new upper bound for next run -->
+        <toD uri="pfx-config:set?name={{integration.name}}.${routeId}.export.timestamp&amp;value=${header.currentExportTimestamp}"/>
+
+        <log message="Daily price list export completed"/>
+    </route>
+
+</routes>

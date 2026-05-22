@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <!--
+    InstanceCookieHandler keeps a single, shared cookie jar across all
+    HTTP calls that reference it via cookieHandler=#instanceCookieHandler.
+
+    Why this matters for SAP:
+      SAP OData binds the CSRF token returned by the GET 'fetch' call to
+      the session cookie set on that response. The subsequent POST/PUT/PATCH
+      must replay the same cookie or SAP responds with HTTP 403 'CSRF token
+      validation failed'.
+
+    Both get-csrf-token AND the business write call (via rest-outbound-shared)
+    MUST reference this same bean. Do NOT declare a second cookie handler
+    bean — multiple instances defeat session continuity.
+  -->
+  <bean id="instanceCookieHandler" class="org.apache.camel.http.base.cookie.InstanceCookieHandler"/>
+
+</beans>

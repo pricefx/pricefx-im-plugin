@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Reusable redelivery policy for outbound REST calls.
+         Exponential backoff: 5s, 10s, 20s (3 retries by default). -->
+    <bean id="restOutboundRedeliveryPolicy" class="org.apache.camel.processor.RedeliveryPolicy">
+        <property name="maximumRedeliveries" value="${ext.api.retry.maxRedeliveries}"/>
+        <property name="redeliveryDelay" value="${ext.api.retry.delayMs}"/>
+        <property name="backOffMultiplier" value="${ext.api.retry.backOffMultiplier}"/>
+        <property name="useExponentialBackOff" value="true"/>
+        <property name="maximumRedeliveryDelay" value="${ext.api.retry.maxDelayMs}"/>
+        <property name="retryAttemptedLogLevel" value="WARN"/>
+        <property name="logRetryAttempted" value="true"/>
+        <property name="logExhausted" value="true"/>
+    </bean>
+
+</beans>

@@ -1,0 +1,107 @@
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+  <!-- Generic REST outbound call.
+       Required headers set by caller:
+         serviceURL          - fully-qualified endpoint URL
+         CamelHttpMethod     - POST | PUT | PATCH
+         Content-Type        - application/json | text/xml | etc.
+         call_is_DISABLED    - 'true' to suppress actual HTTP call (dry-run)
+       Optional headers:
+         correlationId       - passed through for log correlation
+  -->
+  <route id="rest_outbound_call">
+    <from uri="direct:rest_outbound_call"/>
+
+    <onException useOriginalMessage="true">
+      <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+      <onWhen><simple>${exception.statusCode} == 401</simple></onWhen>
+      <redeliveryPolicy maximumRedeliveries="0"/>
+      <handled><constant>true</constant></handled>
+      <log loggingLevel="ERROR"
+           message="[REST_OUTBOUND][401] correlationId=${headers.correlationId} url=${headers.serviceURL} body=${exception.responseBody}"/>
+    </onException>
+
+    <onException useOriginalMessage="true">
+      <exception>javax.net.ssl.SSLHandshakeException</exception>
+      <redeliveryPolicy maximumRedeliveries="0"/>
+      <handled><constant>true</constant></handled>
+      <log loggingLevel="ERROR"
+           message="[REST_OUTBOUND][SSL_HANDSHAKE] correlationId=${headers.correlationId} url=${headers.serviceURL} ${exception.message}"/>
+    </onException>
+
+    <!-- Preserve the request body so we can restore it after auth sub-route -->
+    <setProperty name="REST_requestBody"><simple>${body}</simple></setProperty>
+    <setProperty name="REST_isDryRun">
+      <groovy>org.apache.commons.lang3.StringUtils.equalsIgnoreCase(headers.call_is_DISABLED, 'true')</groovy>
+    </setProperty>
+
+    <doTry>
+
+      <filter>
+        <groovy>!exchange.properties.REST_isDryRun</groovy>
+
+        <!-- Acquire auth token (OAuth 2.0 client-credentials) -->
+        <to uri="direct:rest_auth_get_token"/>
+
+        <!-- Restore body after auth sub-route consumed it -->
+        <setBody><groovy>exchange.properties.REST_requestBody</groovy></setBody>
+
+        <log loggingLevel="INFO"
+             message="[REST_OUTBOUND][SENDING] correlationId=${headers.correlationId} method=${headers.CamelHttpMethod} url=${headers.serviceURL}"/>
+
+        <toD uri="${headers.serviceURL}?bridgeEndpoint=true&amp;throwExceptionOnFailure=true&amp;socketTimeout=60000&amp;connectTimeout=30000&amp;connectionClose=true"/>
+
+        <log loggingLevel="INFO"
+             message="[REST_OUTBOUND][RECEIVED] correlationId=${headers.correlationId} httpStatus=${headers.CamelHttpResponseCode}"/>
+      </filter>
+
+      <filter>
+        <groovy>exchange.properties.REST_isDryRun</groovy>
+        <log loggingLevel="WARN"
+             message="[REST_OUTBOUND][DRY_RUN] Call suppressed. correlationId=${headers.correlationId} url=${headers.serviceURL}"/>
+      </filter>
+
+      <doCatch>
+        <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+        <log loggingLevel="ERROR"
+             message="[REST_OUTBOUND][HTTP_ERROR] correlationId=${headers.correlationId} url=${headers.serviceURL} httpStatus=${exchangeProperty.CamelExceptionCaught.statusCode} responseBody=${exchangeProperty.CamelExceptionCaught.responseBody}"/>
+        <setProperty name="REST_callFailed"><constant>true</constant></setProperty>
+        <setProperty name="REST_errorDetail">
+          <groovy>exchangeProperty.CamelExceptionCaught.statusCode + ' ' + exchangeProperty.CamelExceptionCaught.responseBody</groovy>
+        </setProperty>
+        <rethrow/>
+      </doCatch>
+
+      <doCatch>
+        <exception>javax.net.ssl.SSLException</exception>
+        <log loggingLevel="ERROR"
+             message="[REST_OUTBOUND][SSL_ERROR] correlationId=${headers.correlationId} url=${headers.serviceURL} ${exception.message}"/>
+        <setProperty name="REST_callFailed"><constant>true</constant></setProperty>
+        <rethrow/>
+      </doCatch>
+
+      <doCatch>
+        <exception>java.security.cert.CertificateException</exception>
+        <log loggingLevel="ERROR"
+             message="[REST_OUTBOUND][CERT_ERROR] correlationId=${headers.correlationId} url=${headers.serviceURL} ${exception.message}"/>
+        <setProperty name="REST_callFailed"><constant>true</constant></setProperty>
+        <rethrow/>
+      </doCatch>
+
+      <doCatch>
+        <exception>java.lang.Exception</exception>
+        <log loggingLevel="ERROR"
+             message="[REST_OUTBOUND][ERROR] correlationId=${headers.correlationId} url=${headers.serviceURL} ${exception.message}"/>
+        <setProperty name="REST_callFailed"><constant>true</constant></setProperty>
+        <rethrow/>
+      </doCatch>
+
+      <doFinally>
+        <log loggingLevel="INFO"
+             message="[REST_OUTBOUND][DONE] correlationId=${headers.correlationId} failed=${exchangeProperty.REST_callFailed}"/>
+      </doFinally>
+
+    </doTry>
+  </route>
+
+</routes>

@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "sched-webhook-retry",
+  "category": "positive",
+  "prompt": "Build outbound REST integration that pushes price list updates to downstream webhook https://hooks.example.com/pricelist on a daily schedule. Needs retry on 5xx errors.",
+  "assertions": [
+    {"id": "quartz-daily-trigger", "text": "Daily Quartz cron trigger on the route", "type": "grep", "patterns": ["quartz", "cron="], "match": "any", "scope": "outputs"},
+    {"id": "outbound-http-post", "text": "Route makes an outbound HTTP POST", "type": "grep", "patterns": ["CamelHttpMethod[^>]*POST", "pfx-rest:post", ">POST<"], "match": "any", "scope": "outputs"},
+    {"id": "retry-present", "text": "Retry on transient errors — onException + redeliveryPolicy OR a RedeliveryPolicy bean OR maximumRedeliveries config", "type": "grep", "patterns": ["redeliveryPolicy", "maximumRedeliveries", "RedeliveryPolicy", "redelivery"], "match": "any", "scope": "outputs"},
+    {"id": "url-externalized", "text": "Target URL is externalized — either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field)", "type": "grep", "patterns": ["\\{\\{ext\\.api\\.url\\}\\}", "ext\\.api\\.url=https://hooks\\.example\\.com", "ext.api.url=https://hooks.example.com", "serviceURL", "\"url\":\\s*\"https://hooks\\.example\\.com", "discriminator.*Connection"], "match": "any", "scope": "outputs"},
+    {"id": "no-inbound-pattern", "text": "Does NOT generate inbound REST endpoint patterns", "type": "grep_absent", "patterns": ["<restConfiguration", "<rest path=", "from uri=\"rest:"], "scope": "outputs"}
+  ]
+}

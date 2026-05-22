@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "sap-jwt-csrf",
+  "category": "positive",
+  "prompt": "Pricefx → external SAP OData system: when a quote is submitted (QUOTE_SUBMITTED event), POST it via SAP-style JWT + CSRF + cookies flow to SAP API Management.",
+  "assertions": [
+    {"id": "event-trigger-present", "text": "Route is event-driven (pfx-event:fetch OR direct: trigger for QUOTE_SUBMITTED)", "type": "grep", "patterns": ["pfx-event:fetch", "QUOTE_SUBMITTED", "from uri=\"direct:"], "match": "any", "scope": "outputs"},
+    {"id": "csrf-pattern-present", "text": "CSRF token handling — fetch step OR X-CSRF-Token header OR cookieHandler", "type": "grep", "patterns": ["X-CSRF-Token", "CSRF", "csrf", "cookieHandler", "instanceCookieHandler"], "match": "any", "scope": "all"},
+    {"id": "jwt-pattern-present", "text": "JWT-style auth — bearer token, simpleCache, or get-jwt-token route", "type": "grep", "patterns": ["JWT", "jwt", "simpleCache", "Authorization.*Bearer", "get-jwt-token", "bearer"], "match": "any", "scope": "all"},
+    {"id": "outbound-http-post", "text": "Route makes an outbound HTTP POST", "type": "grep", "patterns": ["CamelHttpMethod[^>]*POST", "pfx-rest:post", ">POST<"], "match": "any", "scope": "outputs"},
+    {"id": "no-inbound-pattern", "text": "Does NOT generate inbound REST endpoint patterns", "type": "grep_absent", "patterns": ["<restConfiguration", "<rest path=", "from uri=\"rest:"], "scope": "outputs"},
+    {"id": "robust-sap-cookie-handler", "text": "Uses the canonical SAP cookie-handler pattern (instanceCookieHandler bean reused between CSRF fetch and business write) — robust to SAP session expiry. Without this, naive Set-Cookie capture is fragile because SAP binds the CSRF token to the session cookie.", "type": "grep", "patterns": ["instanceCookieHandler", "cookieHandler=#"], "match": "any", "scope": "outputs"}
+  ]
+}

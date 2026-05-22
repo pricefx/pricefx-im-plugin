@@ -1,0 +1,10 @@
+{
+  "id": "sftp.connection",
+  "discriminator": "net.pricefx.integration.component.sftp.connection.SFTPConnection",
+  "host": "sftp.example.com",
+  "port": 22,
+  "path": "/",
+  "username": "sftpuser",
+  "password": "REPLACE_ME",
+  "strictHostKeyChecking": false
+}

@@ -17,7 +17,7 @@ Replace `<skill-name>` with one of:
 | `generate-import-integration` | `iteration-1` (squash-merged via !26, develop SHA `cd66927`) | 100% / 92% |
 | `generate-pa-import-integration` | `iteration-1` (squash-merged via !27, develop SHA `4e0df1a`) | 97% / 66% |
 | `generate-ppv-import-integration` | `iteration-1` (PFIMCORE-3026, pending merge) | 100% / 100% (delta 0 — see iter-1 analyst notes) |
-| `generate-rest-outbound-integration` | — (PFIMCORE-3027) | — |
+| `generate-rest-outbound-integration` | `iteration-1` (PFIMCORE-3027, pending merge) | 100% / 96% (delta +0.024 — driven by SAP cookie-handler robustness) |
 | `analyze` | — (PFIMCORE-3028) | — |
 
 If your change touches a skill not in this table, see [Adding a new eval](#adding-a-new-eval) below.

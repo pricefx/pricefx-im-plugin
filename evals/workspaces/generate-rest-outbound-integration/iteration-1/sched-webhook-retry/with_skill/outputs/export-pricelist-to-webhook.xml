@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="export-pricelist-to-webhook">
+        <from uri="quartz://export-pricelist-to-webhook?cron={{ext.api.schedule.cron}}&amp;trigger.timeZone={{ext.api.schedule.timezone}}&amp;stateful=true"/>
+
+        <!-- Retry on 5xx transient errors with exponential backoff -->
+        <onException redeliveryPolicy="restOutboundRedeliveryPolicy">
+            <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+            <onWhen>
+                <simple>${exception.statusCode} >= 500 &amp;&amp; ${exception.statusCode} &lt; 600</simple>
+            </onWhen>
+            <handled>
+                <constant>false</constant>
+            </handled>
+            <log loggingLevel="WARN"
+                 message="[export-pricelist-to-webhook][RETRY_5xx] correlationId=${headers.correlationId} attempt=${header.CamelRedeliveryCounter} status=${exception.statusCode} ${exception.message}"/>
+        </onException>
+
+        <!-- Non-retryable errors (4xx etc.) -->
+        <onException>
+            <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <log loggingLevel="ERROR"
+                 message="[export-pricelist-to-webhook][HTTP_ERROR] correlationId=${headers.correlationId} status=${exception.statusCode} body=${exception.responseBody}"/>
+        </onException>
+
+        <onException>
+            <exception>java.lang.Exception</exception>
+            <handled>
+                <constant>true</constant>
+            </handled>
+            <log loggingLevel="ERROR"
+                 message="[export-pricelist-to-webhook][ERROR] correlationId=${headers.correlationId} ${exception.message}"/>
+        </onException>
+
+        <setHeader name="correlationId">
+            <groovy>java.util.UUID.randomUUID().toString()</groovy>
+        </setHeader>
+
+        <log loggingLevel="INFO"
+             message="[export-pricelist-to-webhook][START] correlationId=${headers.correlationId} cron='{{ext.api.schedule.cron}}'"/>
+
+        <!-- Capture export window for delta sync -->
+        <toD uri="pfx-config:get?name=export-pricelist-to-webhook.lastExportTimestamp&amp;toHeader=lastExportTimestamp&amp;defaultValue=1970-01-01T00:00:00"/>
+        <setHeader name="currentExportTimestamp">
+            <simple>${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mm:ss}</simple>
+        </setHeader>
+
+        <!-- Fetch updated price list items from Pricefx -->
+        <toD uri="pfx-api:fetch?objectType=PLI&amp;filter=export-pricelist-to-webhook.filter&amp;batchedMode=true&amp;batchSize={{ext.api.batchSize}}"/>
+
+        <split>
+            <simple>${body}</simple>
+
+            <toD uri="pfx-api:fetchIterator"/>
+
+            <!-- Build the JSON payload for the webhook -->
+            <setBody>
+                <groovy><![CDATA[
+                    def items = (body ?: []).collect { row ->
+                        [
+                            priceListId   : row.priceListId,
+                            sku           : row.sku,
+                            price         : row.price,
+                            currency      : row.currency,
+                            validFrom     : row.validFrom,
+                            validTo       : row.validTo,
+                            lastUpdateDate: row.lastUpdateDate
+                        ]
+                    }
+                    [
+                        correlationId    : exchange.in.getHeader('correlationId'),
+                        exportTimestamp  : exchange.in.getHeader('currentExportTimestamp'),
+                        previousTimestamp: exchange.in.getHeader('lastExportTimestamp'),
+                        recordCount      : items.size(),
+                        items            : items
+                    ]
+                ]]></groovy>
+            </setBody>
+            <marshal>
+                <json/>
+            </marshal>
+
+            <setHeader name="CamelHttpMethod">
+                <constant>POST</constant>
+            </setHeader>
+            <setHeader name="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+
+            <choice>
+                <when>
+                    <simple>{{ext.api.call_is_DISABLED}} == 'true'</simple>
+                    <log loggingLevel="WARN"
+                         message="[export-pricelist-to-webhook][DRY_RUN] Suppressed POST. correlationId=${headers.correlationId} url={{ext.api.url}}"/>
+                </when>
+                <otherwise>
+                    <log loggingLevel="INFO"
+                         message="[export-pricelist-to-webhook][SENDING] correlationId=${headers.correlationId} url={{ext.api.url}}"/>
+
+                    <toD uri="{{ext.api.url}}?bridgeEndpoint=true&amp;throwExceptionOnFailure=true&amp;socketTimeout={{ext.api.socketTimeoutMs}}&amp;connectTimeout={{ext.api.connectTimeoutMs}}&amp;connectionClose=true"/>
+
+                    <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+                    <log loggingLevel="INFO"
+                         message="[export-pricelist-to-webhook][RECEIVED] correlationId=${headers.correlationId} httpStatus=${headers.CamelHttpResponseCode}"/>
+                </otherwise>
+            </choice>
+        </split>
+
+        <!-- Save export upper bound for next run -->
+        <toD uri="pfx-config:set?name=export-pricelist-to-webhook.lastExportTimestamp&amp;value=${headers.currentExportTimestamp}"/>
+
+        <log loggingLevel="INFO"
+             message="[export-pricelist-to-webhook][DONE] correlationId=${headers.correlationId}"/>
+    </route>
+
+</routes>
