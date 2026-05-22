@@ -1,0 +1,8 @@
+<filter id="export-webhook.filter"
+        sortBy="lastUpdateDate"
+        resultFields="sku,label,attribute1,attribute2,attribute3,lastUpdateDate">
+    <and>
+        <criterion fieldName="lastUpdateDate" operator="greaterThan" value="simple:${headers.lastExportTimestamp}"/>
+        <criterion fieldName="lastUpdateDate" operator="lessOrEqual" value="simple:${headers.currentExportTimestamp}"/>
+    </and>
+</filter>

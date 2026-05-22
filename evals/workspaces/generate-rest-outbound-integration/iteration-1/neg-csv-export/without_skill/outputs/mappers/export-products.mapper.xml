@@ -1,0 +1,10 @@
+<mappers>
+    <mapper id="export-products.mapper" type="transform">
+        <body in="sku" out="sku"/>
+        <body in="label" out="label"/>
+        <body in="attribute1" out="attribute1"/>
+        <body in="attribute2" out="attribute2"/>
+        <body in="attribute3" out="attribute3"/>
+        <body in="lastUpdateDate" out="lastUpdateDate"/>
+    </mapper>
+</mappers>

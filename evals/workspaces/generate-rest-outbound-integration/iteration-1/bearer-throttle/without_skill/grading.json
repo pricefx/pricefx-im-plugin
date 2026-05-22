@@ -1,0 +1,48 @@
+{
+  "eval_id": 3,
+  "eval_name": "bearer-throttle",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "quartz-2am-trigger",
+      "text": "Quartz cron firing at 02:00 \u2014 supports '0 0 2 * * ?' or '0+0+2' Camel-encoded forms",
+      "passed": true,
+      "evidence": "matched: '\\\\+2\\\\+'"
+    },
+    {
+      "id": "outbound-http-post",
+      "text": "Route makes an outbound HTTP POST",
+      "passed": true,
+      "evidence": "matched: 'pfx-rest:post'"
+    },
+    {
+      "id": "bearer-token-auth",
+      "text": "Bearer / API-key / OAuth2 auth wired in \u2014 Authorization header OR ext.api.auth.* property OR OAuth2Connection JSON OR a bearer-token placeholder reference",
+      "passed": true,
+      "evidence": "matched: 'Bearer .*\\\\{\\\\{' | 'bearer.token' | 'bearer.*token'"
+    },
+    {
+      "id": "throttle-present",
+      "text": "Throttling configured \u2014 Camel <throttle> EIP OR throttling property",
+      "passed": true,
+      "evidence": "matched: '<throttle' | 'throttle'"
+    },
+    {
+      "id": "no-inbound-pattern",
+      "text": "Does NOT generate inbound REST endpoint patterns",
+      "passed": true,
+      "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+    }
+  ],
+  "score": {
+    "passed": 5,
+    "total": 5
+  },
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+        Daily outbound export to https://partner.example.com/webhook
+        - Scheduled daily at 02:00 (server time)
+        - Bearer token auth (via NoopConnection + Authorization header)
+        - Throttled to 5 requests/second
+        - Fetches data from Pricefx, splits into per-record POSTs, marshals JSON
+    -->
+    <route id="export-webhook">
+        <from uri="quartz://export/webhook?cron=0+0+2+*+*+?&amp;stateful=true"/>
+
+        <log message="[${routeId}] Starting daily webhook export"/>
+
+        <!-- Capture run window timestamps (delta sync) -->
+        <toD uri="pfx-config:get?name={{integration.name}}.export-webhook.timestamp&amp;toHeader=lastExportTimestamp&amp;defaultValue=1970-01-01T00:00:00"/>
+        <setHeader name="currentExportTimestamp">
+            <simple>${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mm:ss}</simple>
+        </setHeader>
+
+        <!-- Fetch changed products from Pricefx (batched) -->
+        <toD uri="pfx-api:fetch?objectType=P&amp;filter=export-webhook.filter&amp;batchedMode=true&amp;batchSize=5000"/>
+
+        <split streaming="true">
+            <simple>${body}</simple>
+
+            <!-- Retrieve the current batch's rows -->
+            <to uri="pfx-api:fetchIterator"/>
+
+            <!-- Transform records using the mapper -->
+            <to uri="pfx-model:transform?mapper=export-webhook.mapper"/>
+
+            <!-- Split per-record so each row is POSTed individually with throttling -->
+            <split streaming="true">
+                <simple>${body}</simple>
+
+                <!-- Marshal single record to JSON -->
+                <to uri="pfx-json:marshal"/>
+
+                <!-- Throttle to 5 requests per second across the route -->
+                <throttle timePeriodMillis="1000">
+                    <constant>5</constant>
+
+                    <!-- Set Bearer token header and content type -->
+                    <setHeader name="Authorization">
+                        <simple>Bearer {{webhook.bearer.token}}</simple>
+                    </setHeader>
+                    <setHeader name="Content-Type">
+                        <constant>application/json</constant>
+                    </setHeader>
+
+                    <!-- POST to the webhook receiver -->
+                    <to uri="pfx-rest:post?uri=/webhook&amp;connection=webhook.connection&amp;contentType=application/json&amp;connectionTimeoutMs=60000"/>
+
+                    <log message="[${routeId}] POST ok status=${header.CamelHttpResponseCode}"/>
+                </throttle>
+            </split>
+        </split>
+
+        <!-- Persist run timestamp for next delta -->
+        <toD uri="pfx-config:set?name={{integration.name}}.export-webhook.timestamp&amp;value=${header.currentExportTimestamp}"/>
+
+        <log message="[${routeId}] Daily webhook export complete"/>
+
+        <onCompletion onFailureOnly="true">
+            <log loggingLevel="ERROR" message="[${routeId}] Export failed: ${exception.message}"/>
+        </onCompletion>
+    </route>
+
+</routes>

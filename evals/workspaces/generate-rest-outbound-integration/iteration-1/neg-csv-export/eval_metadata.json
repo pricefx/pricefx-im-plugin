@@ -1,0 +1,10 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-csv-export",
+  "category": "negative",
+  "prompt": "Export Pricefx changed products to CSV daily on SFTP.",
+  "assertions": [
+    {"id": "redirects-to-export-skill", "text": "Subagent recognizes file-export use case — narrative mentions generate-export-integration OR the produced outputs use file/SFTP+CSV pattern (no HTTP)", "type": "grep", "patterns": ["generate-export-integration", "CSV", "csv export", "SFTP", "pfx-sftp", "pfx-csv:marshal", "pfx-api:fetch"], "match": "any", "scope": "all"},
+    {"id": "no-outbound-http-pattern", "text": "Does NOT generate outbound HTTP/REST patterns (no toD HTTP, no rest-outbound-shared)", "type": "grep_absent", "patterns": ["bridgeEndpoint=true", "direct:rest_outbound_call", "rest_auth_get_token", "pfx-rest:post"], "scope": "outputs"}
+  ]
+}

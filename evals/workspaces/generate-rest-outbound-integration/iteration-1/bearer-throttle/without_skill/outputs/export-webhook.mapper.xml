@@ -1,0 +1,14 @@
+<mappers>
+    <!--
+        Mapper for outbound webhook payload.
+        Adjust field projection to whatever your receiver expects.
+    -->
+    <loadMapper id="export-webhook.mapper">
+        <body in="sku"         out="productId"/>
+        <body in="label"       out="name"/>
+        <body in="attribute1"  out="price"/>
+        <body in="attribute2"  out="currency"/>
+        <body in="attribute3"  out="status"/>
+        <simple expression="${date:now:yyyy-MM-dd'T'HH:mm:ss'Z'}" out="exportedAt"/>
+    </loadMapper>
+</mappers>

@@ -1,0 +1,10 @@
+{
+  "eval_id": 4,
+  "eval_name": "neg-inbound-rest",
+  "category": "negative",
+  "prompt": "I want to expose a REST endpoint from IM that external systems can call to submit a quote via POST /quotes. Needs JSON request validation and structured 400 errors.",
+  "assertions": [
+    {"id": "redirects-to-inbound-skill", "text": "Subagent recognizes this is an INBOUND endpoint and refers to generate-inbound-rest-endpoint (or IM-as-server / restConfiguration pattern)", "type": "grep", "patterns": ["generate-inbound-rest-endpoint", "inbound", "expose", "IM as server", "IM-as-server", "restConfiguration"], "match": "any", "scope": "narrative"},
+    {"id": "no-outbound-pattern", "text": "Does NOT generate outbound HTTP call pattern (toD with bridgeEndpoint / direct:rest_outbound_call / pfx-rest:post)", "type": "grep_absent", "patterns": ["bridgeEndpoint=true", "direct:rest_outbound_call", "rest_auth_get_token"], "scope": "outputs"}
+  ]
+}

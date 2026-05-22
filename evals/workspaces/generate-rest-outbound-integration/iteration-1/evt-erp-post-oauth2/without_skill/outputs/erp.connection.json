@@ -1,0 +1,9 @@
+{
+  "id": "erp.connection",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.OAuth2Connection",
+  "url": "https://erp.internal",
+  "authUrl": "https://erp.internal/oauth2/token",
+  "clientId": "REPLACE_WITH_ERP_CLIENT_ID",
+  "clientSecret": "REPLACE_WITH_ERP_CLIENT_SECRET",
+  "authRequestTemplate": "grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}"
+}

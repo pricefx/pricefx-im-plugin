@@ -1,0 +1,11 @@
+<mappers>
+    <mapper id="export-pricelist-webhook.mapper" type="loaddata">
+        <body in="sku"            out="sku"/>
+        <body in="priceListName"  out="priceListName"/>
+        <body in="price"          out="price"/>
+        <body in="currency"       out="currency"/>
+        <body in="validFrom"      out="validFrom"/>
+        <body in="validTo"        out="validTo"/>
+        <body in="lastUpdateDate" out="lastUpdateDate"/>
+    </mapper>
+</mappers>

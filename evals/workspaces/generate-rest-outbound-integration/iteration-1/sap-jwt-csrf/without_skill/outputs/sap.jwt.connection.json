@@ -1,0 +1,8 @@
+{
+  "id": "sap.jwt.connection",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.JwtConnection",
+  "url": "https://sap-apim.example.com",
+  "authUrl": "https://sap-apim.example.com/oauth2/token",
+  "clientId": "<replace-with-client-id>",
+  "clientSecret": "<replace-with-client-secret>"
+}

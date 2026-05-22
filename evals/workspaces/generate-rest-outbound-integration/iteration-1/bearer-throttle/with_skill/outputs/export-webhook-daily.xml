@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+      Outbound webhook integration.
+      Pushes Pricefx data to https://partner.example.com/webhook daily at 02:00.
+      Auth: static Bearer token (stored encrypted in application.properties).
+      Throttle: 5 requests/second on the outbound HTTP call.
+      Dry-run: set ext.api.call_is_DISABLED=true to suppress the actual HTTP call.
+    -->
+    <route id="export-webhook-daily">
+
+        <from uri="quartz://export-webhook-daily?cron={{ext.api.schedule.cron}}&amp;trigger.timeZone={{ext.api.schedule.timezone}}&amp;stateful=true"/>
+
+        <log loggingLevel="INFO" message="[export-webhook-daily] Starting daily webhook push"/>
+
+        <setHeader name="correlationId">
+            <groovy>java.util.UUID.randomUUID().toString()</groovy>
+        </setHeader>
+
+        <!-- Fetch the Pricefx data you want to push. Replace the filter/objectType
+             with whatever this integration needs to send. -->
+        <to uri="pfx-api:fetch?objectType=DM&amp;dsUniqueName={{ext.api.source.dsUniqueName}}&amp;filter={{ext.api.source.filter}}&amp;batchedMode=true&amp;batchSize=50000"/>
+
+        <split streaming="true">
+            <simple>${body}</simple>
+
+            <!-- Resolve current batch into rows -->
+            <to uri="pfx-api:fetchIterator"/>
+
+            <!-- Build the JSON payload for the webhook -->
+            <marshal><json/></marshal>
+            <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+
+            <setHeader name="CamelHttpMethod"><constant>POST</constant></setHeader>
+            <setHeader name="Content-Type"><constant>application/json</constant></setHeader>
+            <setHeader name="Authorization">
+                <simple>Bearer {{ext.api.auth.bearerToken}}</simple>
+            </setHeader>
+
+            <!-- Throttle outbound calls to 5 requests/second across this route -->
+            <throttle timePeriodMillis="1000">
+                <constant>{{ext.api.throttle.requestsPerSecond}}</constant>
+
+                <choice>
+                    <when>
+                        <simple>${properties:ext.api.call_is_DISABLED} == 'true'</simple>
+                        <log loggingLevel="WARN"
+                             message="[export-webhook-daily][DRY_RUN] Call suppressed. correlationId=${headers.correlationId} url={{ext.api.url}}"/>
+                    </when>
+                    <otherwise>
+                        <doTry>
+                            <log loggingLevel="INFO"
+                                 message="[export-webhook-daily][SENDING] correlationId=${headers.correlationId} url={{ext.api.url}}"/>
+
+                            <toD uri="{{ext.api.url}}?bridgeEndpoint=true&amp;throwExceptionOnFailure=true&amp;socketTimeout=60000&amp;connectTimeout=30000&amp;connectionClose=true"/>
+
+                            <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+                            <log loggingLevel="INFO"
+                                 message="[export-webhook-daily][RECEIVED] correlationId=${headers.correlationId} httpStatus=${headers.CamelHttpResponseCode}"/>
+
+                            <doCatch>
+                                <exception>org.apache.camel.http.base.HttpOperationFailedException</exception>
+                                <log loggingLevel="ERROR"
+                                     message="[export-webhook-daily][HTTP_ERROR] correlationId=${headers.correlationId} httpStatus=${exchangeProperty.CamelExceptionCaught.statusCode} responseBody=${exchangeProperty.CamelExceptionCaught.responseBody}"/>
+                            </doCatch>
+                            <doCatch>
+                                <exception>java.lang.Exception</exception>
+                                <log loggingLevel="ERROR"
+                                     message="[export-webhook-daily][ERROR] correlationId=${headers.correlationId} ${exception.message}"/>
+                            </doCatch>
+                        </doTry>
+                    </otherwise>
+                </choice>
+            </throttle>
+        </split>
+
+        <log loggingLevel="INFO" message="[export-webhook-daily] Daily webhook push finished"/>
+    </route>
+
+</routes>

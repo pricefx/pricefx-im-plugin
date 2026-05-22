@@ -1,0 +1,7 @@
+<filter id="export-quote-submitted-to-sap.filter"
+        sortBy="lastUpdateDate"
+        resultFields="uniqueName,label,customerId,validFrom,validTo,attribute1,attribute2,attribute3,totalAmount,currency,status">
+    <and>
+        <criterion fieldName="uniqueName" operator="equals" value="simple:${headers.quoteUniqueName}"/>
+    </and>
+</filter>
