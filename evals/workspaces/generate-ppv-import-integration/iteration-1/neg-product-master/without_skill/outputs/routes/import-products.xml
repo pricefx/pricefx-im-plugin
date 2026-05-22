@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-products">
+        <from uri="file://{{integration.sftp.root}}/import/products?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+        <log message="Starting product import from ${header.CamelFileName}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=P&amp;mapper=import-products.mapper&amp;businessKeys=sku&amp;batchSize=500000"/>
+        <log message="Completed product import. Total records: ${header.PfxTotalInputRecordsCount}"/>
+        <onCompletion onCompleteOnly="true">
+            <to uri="pfx-api:internalCopy?label=Product"/>
+        </onCompletion>
+    </route>
+</routes>

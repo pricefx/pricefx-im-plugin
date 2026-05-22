@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-ppv-shipping-cost.mapper" convertEmptyStringToNull="true">
+        <body in="countryCode" out="name"/>
+        <body in="shippingCost" out="value" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>

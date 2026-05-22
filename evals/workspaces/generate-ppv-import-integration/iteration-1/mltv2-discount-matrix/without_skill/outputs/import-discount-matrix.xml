@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-discount-matrix">
+        <from uri="file:{{data.directory}}/import/discount-matrix?{{archive.file}}&amp;{{read.lock}}&amp;delay=10000"/>
+        <log message="Starting MLTV2 discount-matrix import: ${header.CamelFileNameOnly}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=MLTV2&amp;mapper=import-discount-matrix.mapper&amp;pricingParameterName={{pfx:import-discount-matrix.pricingParameterName}}&amp;batchSize=50000"/>
+        <log message="Discount matrix import finished: ${header.CamelFileNameOnly}"/>
+    </route>
+</routes>

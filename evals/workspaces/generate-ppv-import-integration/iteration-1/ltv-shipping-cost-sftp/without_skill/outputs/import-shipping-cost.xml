@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-shipping-cost">
+        <from uri="pfx-sftp://{{pfx:import-shipping-cost.sftp.path}}?connection={{pfx:import-shipping-cost.sftp.connection}}&amp;delay=60000&amp;include=.*\.csv&amp;{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron={{pfx:import-shipping-cost.cron}}&amp;scheduler.timeZone=UTC"/>
+        <log message="Picked up shipping cost file: ${header.CamelFileName}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=LTV&amp;mapper=import-shipping-cost.mapper&amp;pricingParameterName=ShippingCost&amp;batchSize=100000"/>
+        <log message="Shipping cost import completed for ${header.CamelFileName}"/>
+    </route>
+</routes>

@@ -1,0 +1,54 @@
+{
+  "eval_id": 2,
+  "eval_name": "ltv-company-params",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-LTV",
+      "text": "Route URI contains objectType=LTV",
+      "passed": true,
+      "evidence": "matched: 'objectType=LTV'"
+    },
+    {
+      "id": "pricingParameterName-present",
+      "text": "Route URI contains pricingParameterName=",
+      "passed": true,
+      "evidence": "matched: 'pricingParameterName='"
+    },
+    {
+      "id": "single-key-mapper",
+      "text": "Mapper maps to LTV fields name and value",
+      "passed": true,
+      "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+    },
+    {
+      "id": "source-path-used",
+      "text": "Route source URI references an inbound folder derived from the prompt (literal /im/inbound/params OR a kebab-case folder per skill SKILL.md Step 5 OR a property placeholder for inbound path)",
+      "passed": true,
+      "evidence": "matched: 'company-params' | 'inbound' | 'company.params'"
+    },
+    {
+      "id": "no-mltv2",
+      "text": "Does NOT produce MLTV2 pattern",
+      "passed": true,
+      "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' present"
+    },
+    {
+      "id": "no-businesskeys",
+      "text": "Does NOT specify businessKeys",
+      "passed": true,
+      "evidence": "none of: 'businessKeys=' present"
+    }
+  ],
+  "score": {
+    "passed": 6,
+    "total": 6
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

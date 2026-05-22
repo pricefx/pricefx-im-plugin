@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "ltv-company-params",
+  "category": "positive",
+  "prompt": "Need to load company parameter values from /im/inbound/params.csv into Pricefx. Pricing Parameter type LTV.",
+  "assertions": [
+    {"id": "uses-objectType-LTV", "text": "Route URI contains objectType=LTV", "type": "grep", "patterns": ["objectType=LTV"], "scope": "outputs"},
+    {"id": "pricingParameterName-present", "text": "Route URI contains pricingParameterName=", "type": "grep", "patterns": ["pricingParameterName="], "scope": "outputs"},
+    {"id": "single-key-mapper", "text": "Mapper maps to LTV fields name and value", "type": "grep", "patterns": ["out=\"name\"", "out=\"value\""], "match": "all", "scope": "outputs"},
+    {"id": "source-path-used", "text": "Route source URI references an inbound folder derived from the prompt (literal /im/inbound/params OR a kebab-case folder per skill SKILL.md Step 5 OR a property placeholder for inbound path)", "type": "grep", "patterns": ["/im/inbound/params", "/params", "company-params", "inbound", "company.params"], "match": "any", "scope": "outputs"},
+    {"id": "no-mltv2", "text": "Does NOT produce MLTV2 pattern", "type": "grep_absent", "patterns": ["objectType=MLTV2", "out=\"key1\""], "scope": "outputs"},
+    {"id": "no-businesskeys", "text": "Does NOT specify businessKeys", "type": "grep_absent", "patterns": ["businessKeys="], "scope": "outputs"}
+  ]
+}

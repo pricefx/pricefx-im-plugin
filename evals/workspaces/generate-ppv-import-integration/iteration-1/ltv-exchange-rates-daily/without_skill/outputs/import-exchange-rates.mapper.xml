@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-exchange-rates.mapper">
+        <body in="currencyCode" out="name"/>
+        <body in="rate" out="value" converterExpression="stringToDecimal(us,0,6)"/>
+    </loadMapper>
+</mappers>

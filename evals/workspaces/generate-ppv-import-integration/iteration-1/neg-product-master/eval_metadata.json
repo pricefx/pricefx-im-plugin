@@ -1,0 +1,10 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-product-master",
+  "category": "negative",
+  "prompt": "Load product master from /import/products.csv into Pricefx P table, business key sku.",
+  "assertions": [
+    {"id": "redirects-to-import-skill", "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration", "type": "grep", "patterns": ["generate-import-integration", "Product[s]? master", "objectType=P"], "match": "any", "scope": "narrative"},
+    {"id": "no-ppv-pattern-in-outputs", "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern", "type": "grep_absent", "patterns": ["objectType=LTV", "objectType=MLTV2", "pricingParameterName="], "scope": "outputs"}
+  ]
+}

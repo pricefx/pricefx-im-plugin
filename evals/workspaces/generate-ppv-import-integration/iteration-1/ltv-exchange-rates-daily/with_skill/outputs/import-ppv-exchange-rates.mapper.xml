@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-ppv-exchange-rates.mapper">
+        <body in="currencyCode" out="name"/>
+        <body in="rate" out="value" converterExpression="stringToDecimal"/>
+    </loadMapper>
+</mappers>

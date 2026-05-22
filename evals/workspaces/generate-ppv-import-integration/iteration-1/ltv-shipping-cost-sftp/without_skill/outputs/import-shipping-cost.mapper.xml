@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-shipping-cost.mapper">
+        <body in="countryCode" out="name"/>
+        <body in="cost" out="value" converterExpression="stringToDecimal(us,0,4)"/>
+    </loadMapper>
+</mappers>

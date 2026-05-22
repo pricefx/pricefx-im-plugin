@@ -1,0 +1,8 @@
+<mappers>
+    <loadMapper id="import-discount-matrix.mapper">
+        <body in="customerCategory" out="key1"/>
+        <body in="productFamily"    out="key2"/>
+        <body in="quantityTier"     out="key3"/>
+        <body in="discountPct"      out="attribute1" converterExpression="stringToDecimal(us,0,4)"/>
+    </loadMapper>
+</mappers>
