@@ -1,0 +1,698 @@
+{
+  "metadata": {
+    "skill_name": "generate-rest-outbound-integration",
+    "skill_path": "/Users/mnagas/Documents/pricefx/pricefx-im-plugin/skills/generate-rest-outbound-integration",
+    "executor_model": "claude-opus-4-7",
+    "analyzer_model": "claude-opus-4-7",
+    "timestamp": "2026-05-22T13:24:31.952911+00:00",
+    "evals_run": [
+      "bearer-throttle",
+      "edge-rest-direction",
+      "evt-erp-post-oauth2",
+      "neg-csv-export",
+      "neg-inbound-rest",
+      "sap-jwt-csrf",
+      "sched-webhook-retry"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 3,
+      "eval_name": "bearer-throttle",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "quartz-2am-trigger",
+          "text": "Quartz cron firing at 02:00 \u2014 supports '0 0 2 * * ?' or '0+0+2' Camel-encoded forms",
+          "passed": true,
+          "evidence": "matched: '\\\\+2\\\\+'"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST",
+          "passed": true,
+          "evidence": "matched: '>POST<'"
+        },
+        {
+          "id": "bearer-token-auth",
+          "text": "Bearer / API-key / OAuth2 auth wired in \u2014 Authorization header OR ext.api.auth.* property OR OAuth2Connection JSON OR a bearer-token placeholder reference",
+          "passed": true,
+          "evidence": "matched: 'ext\\\\.api\\\\.auth\\\\.' | 'Bearer .*\\\\{\\\\{'"
+        },
+        {
+          "id": "throttle-present",
+          "text": "Throttling configured \u2014 Camel <throttle> EIP OR throttling property",
+          "passed": true,
+          "evidence": "matched: '<throttle' | 'throttle'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "bearer-throttle",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "quartz-2am-trigger",
+          "text": "Quartz cron firing at 02:00 \u2014 supports '0 0 2 * * ?' or '0+0+2' Camel-encoded forms",
+          "passed": true,
+          "evidence": "matched: '\\\\+2\\\\+'"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST",
+          "passed": true,
+          "evidence": "matched: 'pfx-rest:post'"
+        },
+        {
+          "id": "bearer-token-auth",
+          "text": "Bearer / API-key / OAuth2 auth wired in \u2014 Authorization header OR ext.api.auth.* property OR OAuth2Connection JSON OR a bearer-token placeholder reference",
+          "passed": true,
+          "evidence": "matched: 'Bearer .*\\\\{\\\\{' | 'bearer.token' | 'bearer.*token'"
+        },
+        {
+          "id": "throttle-present",
+          "text": "Throttling configured \u2014 Camel <throttle> EIP OR throttling property",
+          "passed": true,
+          "evidence": "matched: '<throttle' | 'throttle'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "edge-rest-direction",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-direction",
+          "text": "Subagent asks a clarifying question about direction (outbound IM\u2192external vs inbound external\u2192IM)",
+          "passed": true,
+          "evidence": "matched: 'outbound' | 'inbound' | 'direction'"
+        },
+        {
+          "id": "no-route-written",
+          "text": "Does NOT silently generate a route XML (outbound or inbound)",
+          "passed": true,
+          "evidence": "no route .xml present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "edge-rest-direction",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-direction",
+          "text": "Subagent asks a clarifying question about direction (outbound IM\u2192external vs inbound external\u2192IM)",
+          "passed": true,
+          "evidence": "matched: 'outbound' | 'inbound' | 'direction'"
+        },
+        {
+          "id": "no-route-written",
+          "text": "Does NOT silently generate a route XML (outbound or inbound)",
+          "passed": true,
+          "evidence": "no route .xml present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "evt-erp-post-oauth2",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "event-trigger-present",
+          "text": "Route is event-driven \u2014 uses pfx-event:fetch OR direct: trigger consistent with the SKILL.md pattern (event name ITEM_APPROVED_PL)",
+          "passed": true,
+          "evidence": "matched: 'pfx-event:fetch' | 'ITEM_APPROVED_PL' | 'from uri=\"direct:'"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST (via raw HTTP component, pfx-rest:post, or CamelHttpMethod=POST header)",
+          "passed": true,
+          "evidence": "matched: 'CamelHttpMethod[^>]*POST' | '>POST<'"
+        },
+        {
+          "id": "url-externalized",
+          "text": "Target URL is externalized \u2014 either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field on OAuth2Connection / etc.)",
+          "passed": true,
+          "evidence": "matched: '\\\\{\\\\{ext\\\\.api\\\\.url\\\\}\\\\}' | 'ext\\\\.api\\\\.url=https://erp\\\\.internal' | 'ext.api.url=https://erp.internal'"
+        },
+        {
+          "id": "oauth2-auth-present",
+          "text": "OAuth2 auth wired in \u2014 either auth sub-route (grant_type=client_credentials) OR OAuth2Connection JSON OR Authorization Bearer header",
+          "passed": true,
+          "evidence": "matched: 'rest_auth_get_token' | 'ext\\\\.api\\\\.auth\\\\.'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns (no rest configuration / <rest path=...>)",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "evt-erp-post-oauth2",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "event-trigger-present",
+          "text": "Route is event-driven \u2014 uses pfx-event:fetch OR direct: trigger consistent with the SKILL.md pattern (event name ITEM_APPROVED_PL)",
+          "passed": true,
+          "evidence": "matched: 'pfx-event:fetch' | 'ITEM_APPROVED_PL'"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST (via raw HTTP component, pfx-rest:post, or CamelHttpMethod=POST header)",
+          "passed": true,
+          "evidence": "matched: 'pfx-rest:post'"
+        },
+        {
+          "id": "url-externalized",
+          "text": "Target URL is externalized \u2014 either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field on OAuth2Connection / etc.)",
+          "passed": true,
+          "evidence": "matched: '\"url\":\\\\s*\"https://erp\\\\.internal' | 'discriminator.*OAuth2Connection'"
+        },
+        {
+          "id": "oauth2-auth-present",
+          "text": "OAuth2 auth wired in \u2014 either auth sub-route (grant_type=client_credentials) OR OAuth2Connection JSON OR Authorization Bearer header",
+          "passed": true,
+          "evidence": "matched: 'grant_type=client_credentials' | 'OAuth2Connection'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns (no rest configuration / <rest path=...>)",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-csv-export",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-export-skill",
+          "text": "Subagent recognizes file-export use case \u2014 narrative mentions generate-export-integration OR the produced outputs use file/SFTP+CSV pattern (no HTTP)",
+          "passed": true,
+          "evidence": "matched: 'generate-export-integration' | 'CSV' | 'SFTP'"
+        },
+        {
+          "id": "no-outbound-http-pattern",
+          "text": "Does NOT generate outbound HTTP/REST patterns (no toD HTTP, no rest-outbound-shared)",
+          "passed": true,
+          "evidence": "none of: 'bridgeEndpoint=true' | 'direct:rest_outbound_call' | 'rest_auth_get_token' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-csv-export",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-export-skill",
+          "text": "Subagent recognizes file-export use case \u2014 narrative mentions generate-export-integration OR the produced outputs use file/SFTP+CSV pattern (no HTTP)",
+          "passed": true,
+          "evidence": "matched: 'CSV' | 'SFTP' | 'pfx-sftp'"
+        },
+        {
+          "id": "no-outbound-http-pattern",
+          "text": "Does NOT generate outbound HTTP/REST patterns (no toD HTTP, no rest-outbound-shared)",
+          "passed": true,
+          "evidence": "none of: 'bridgeEndpoint=true' | 'direct:rest_outbound_call' | 'rest_auth_get_token' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "neg-inbound-rest",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-inbound-skill",
+          "text": "Subagent recognizes this is an INBOUND endpoint and refers to generate-inbound-rest-endpoint (or IM-as-server / restConfiguration pattern)",
+          "passed": true,
+          "evidence": "matched: 'generate-inbound-rest-endpoint' | 'inbound' | 'expose'"
+        },
+        {
+          "id": "no-outbound-pattern",
+          "text": "Does NOT generate outbound HTTP call pattern (toD with bridgeEndpoint / direct:rest_outbound_call / pfx-rest:post)",
+          "passed": true,
+          "evidence": "none of: 'bridgeEndpoint=true' | 'direct:rest_outbound_call' | 'rest_auth_get_token' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "neg-inbound-rest",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-inbound-skill",
+          "text": "Subagent recognizes this is an INBOUND endpoint and refers to generate-inbound-rest-endpoint (or IM-as-server / restConfiguration pattern)",
+          "passed": true,
+          "evidence": "matched: 'generate-inbound-rest-endpoint' | 'inbound' | 'expose'"
+        },
+        {
+          "id": "no-outbound-pattern",
+          "text": "Does NOT generate outbound HTTP call pattern (toD with bridgeEndpoint / direct:rest_outbound_call / pfx-rest:post)",
+          "passed": true,
+          "evidence": "none of: 'bridgeEndpoint=true' | 'direct:rest_outbound_call' | 'rest_auth_get_token' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "sap-jwt-csrf",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "event-trigger-present",
+          "text": "Route is event-driven (pfx-event:fetch OR direct: trigger for QUOTE_SUBMITTED)",
+          "passed": true,
+          "evidence": "matched: 'pfx-event:fetch' | 'QUOTE_SUBMITTED' | 'from uri=\"direct:'"
+        },
+        {
+          "id": "csrf-pattern-present",
+          "text": "CSRF token handling \u2014 fetch step OR X-CSRF-Token header OR cookieHandler",
+          "passed": true,
+          "evidence": "matched: 'X-CSRF-Token' | 'CSRF' | 'csrf'"
+        },
+        {
+          "id": "jwt-pattern-present",
+          "text": "JWT-style auth \u2014 bearer token, simpleCache, or get-jwt-token route",
+          "passed": true,
+          "evidence": "matched: 'JWT' | 'jwt' | 'simpleCache'"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST",
+          "passed": true,
+          "evidence": "matched: 'CamelHttpMethod[^>]*POST' | '>POST<'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        },
+        {
+          "id": "robust-sap-cookie-handler",
+          "text": "Uses the canonical SAP cookie-handler pattern (instanceCookieHandler bean reused between CSRF fetch and business write) \u2014 robust to SAP session expiry. Without this, naive Set-Cookie capture is fragile because SAP binds the CSRF token to the session cookie.",
+          "passed": true,
+          "evidence": "matched: 'instanceCookieHandler' | 'cookieHandler=#'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "sap-jwt-csrf",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "event-trigger-present",
+          "text": "Route is event-driven (pfx-event:fetch OR direct: trigger for QUOTE_SUBMITTED)",
+          "passed": true,
+          "evidence": "matched: 'pfx-event:fetch' | 'QUOTE_SUBMITTED'"
+        },
+        {
+          "id": "csrf-pattern-present",
+          "text": "CSRF token handling \u2014 fetch step OR X-CSRF-Token header OR cookieHandler",
+          "passed": true,
+          "evidence": "matched: 'X-CSRF-Token' | 'CSRF' | 'csrf'"
+        },
+        {
+          "id": "jwt-pattern-present",
+          "text": "JWT-style auth \u2014 bearer token, simpleCache, or get-jwt-token route",
+          "passed": true,
+          "evidence": "matched: 'JWT' | 'jwt' | 'Authorization.*Bearer'"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST",
+          "passed": true,
+          "evidence": "matched: 'pfx-rest:post'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        },
+        {
+          "id": "robust-sap-cookie-handler",
+          "text": "Uses the canonical SAP cookie-handler pattern (instanceCookieHandler bean reused between CSRF fetch and business write) \u2014 robust to SAP session expiry. Without this, naive Set-Cookie capture is fragile because SAP binds the CSRF token to the session cookie.",
+          "passed": false,
+          "evidence": "missing: 'instanceCookieHandler' | 'cookieHandler=#'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "sched-webhook-retry",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "quartz-daily-trigger",
+          "text": "Daily Quartz cron trigger on the route",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron='"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST",
+          "passed": true,
+          "evidence": "matched: '>POST<'"
+        },
+        {
+          "id": "retry-present",
+          "text": "Retry on transient errors \u2014 onException + redeliveryPolicy OR a RedeliveryPolicy bean OR maximumRedeliveries config",
+          "passed": true,
+          "evidence": "matched: 'redeliveryPolicy' | 'maximumRedeliveries' | 'RedeliveryPolicy'"
+        },
+        {
+          "id": "url-externalized",
+          "text": "Target URL is externalized \u2014 either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field)",
+          "passed": true,
+          "evidence": "matched: '\\\\{\\\\{ext\\\\.api\\\\.url\\\\}\\\\}' | 'ext\\\\.api\\\\.url=https://hooks\\\\.example\\\\.com' | 'ext.api.url=https://hooks.example.com'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "sched-webhook-retry",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "quartz-daily-trigger",
+          "text": "Daily Quartz cron trigger on the route",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron='"
+        },
+        {
+          "id": "outbound-http-post",
+          "text": "Route makes an outbound HTTP POST",
+          "passed": true,
+          "evidence": "matched: 'pfx-rest:post'"
+        },
+        {
+          "id": "retry-present",
+          "text": "Retry on transient errors \u2014 onException + redeliveryPolicy OR a RedeliveryPolicy bean OR maximumRedeliveries config",
+          "passed": true,
+          "evidence": "matched: 'redeliveryPolicy' | 'maximumRedeliveries' | 'redelivery'"
+        },
+        {
+          "id": "url-externalized",
+          "text": "Target URL is externalized \u2014 either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field)",
+          "passed": true,
+          "evidence": "matched: '\"url\":\\\\s*\"https://hooks\\\\.example\\\\.com' | 'discriminator.*Connection'"
+        },
+        {
+          "id": "no-inbound-pattern",
+          "text": "Does NOT generate inbound REST endpoint patterns",
+          "passed": true,
+          "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9762,
+        "stddev": 0.0583,
+        "min": 0.8333,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.0238",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "Output-quality benchmark for the outbound REST integration generator (IM \u2192 external HTTP). The skill covers Simple, Complex, and Complex+ modes plus six auth variants (no-auth, API-key, OAuth2 client-credentials, OAuth2 cached, HTTP Basic, mTLS, SAP JWT+CSRF). Test asks whether Claude reliably picks the right shared-route pattern, auth flow, and observability hooks with vs without the skill.",
+    "Positive cases cover the common auth & trigger combinations: event-driven OAuth2 POST, scheduled webhook with retry, SAP JWT+CSRF event POST, daily Bearer + throttling. Together they exercise pfx-event:fetch / quartz / direct triggers and the OAuth2 / SAP-JWT auth variants.",
+    "Negative cases (inbound endpoint, CSV file export) test that the skill recognizes the wrong direction or wrong protocol and defers to generate-inbound-rest-endpoint / generate-export-integration. The skill's closest confusion partner is generate-inbound-rest-endpoint (inverse direction).",
+    "Edge case ('integrate Pricefx with a REST API' \u2014 direction unclear) tests whether the skill asks outbound-or-inbound rather than silently picking one.",
+    "Trigger evals NOT measured here \u2014 see evals/benchmarks/config.md. This benchmark is output-quality only.",
+    "Caveat: pfx CLI was unavailable (no .env). REST outbound has no partition-metadata dependency, so this caveat is informational only.",
+    "Delta +4 pts (with_skill 100%, baseline 96%) is driven entirely by ONE assertion on sap-jwt-csrf \u2014 the canonical instanceCookieHandler+simpleCache pattern from references.md Step 5d that the skill teaches explicitly. The baseline manually captured Set-Cookie and replayed it, which is functionally similar but more fragile when SAP sessions expire mid-flight.",
+    "On the other 6 cases (event-driven OAuth2 POST, scheduled webhook + retry, Bearer + throttle, inbound-rest negative, csv-export negative, ambiguous-direction edge) the baseline matches the skill on output correctness \u2014 Claude with just docs/components.md + docs/routes.md + docs/connections.md produces externalized URLs (via property placeholder OR connection JSON), correct auth wiring, throttling, retry, event triggers, and proper negative-case routing.",
+    "Two assertions were relaxed after the first pass to remove false positives: url-via-placeholder on evt-erp-post-oauth2 and sched-webhook-retry was widened to also accept the connection-JSON `url` field (a valid externalization per docs/connections.md), and bearer-token-auth on bearer-throttle was widened to accept any Bearer-with-placeholder form. Both were genuine convention differences, not correctness gaps.",
+    "Iter-2 recommendation: add more sap-jwt-csrf-style discriminating cases \u2014 auth variants where the skill teaches a specific robust pattern over a naive equivalent (e.g. mTLS sslContextParameters bean vs inline JKS handling, oauth2-cached simpleCache vs per-call token fetch, status writeback with defaultErrorHandler vs inheriting redelivery policy)."
+  ]
+}

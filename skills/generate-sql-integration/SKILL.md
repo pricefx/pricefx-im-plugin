@@ -1,11 +1,13 @@
 ---
 name: generate-sql-integration
-description: Generate a Pricefx Integration Manager route that reads from or writes to a relational/cloud SQL database (Snowflake, SQL Server, Postgres, MySQL, Oracle, etc.). Use this skill when data is fetched from or pushed to a database — e.g., loading product/customer master from Snowflake, calling a SQL Server stored procedure for incremental customer changes, exporting Pricefx Pricing Parameters back into a database table, or doing an initial bulk load via Snowflake stage + gzipped CSV. Covers JDBC datasource beans, paginated SELECT loops, stored procedure calls (`sql-stored:`), incremental sync via `pfx-config`, batch INSERT with named parameters, and Snowflake `COPY INTO` stage exports.
+description: Use when a Pricefx Integration Manager route reads from or writes to a relational/cloud SQL database (Snowflake, SQL Server, Postgres, MySQL, Oracle) — says "load from Snowflake", "call stored procedure", "export to database table", "bulk load via Snowflake stage", "JDBC connection", or names a SQL source/target. Covers JDBC datasource beans, paginated SELECT loops, `sql-stored:` calls, incremental sync via `pfx-config`, batch INSERT, and Snowflake `COPY INTO` stage exports.
 ---
 
 # Generate SQL Integration
 
 You are generating a SQL database integration for a Pricefx Integration Manager project. The route either reads rows from a database and loads them into Pricefx, or fetches data from Pricefx and writes it back to a database table. Follow the steps below. Never hardcode database credentials — always read them via `#{environment['...']}` placeholders that resolve to profile-specific properties.
+
+> **Camel version note:** the `<split>` template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
 
 ## Step 1: Gather Information
 
@@ -278,7 +280,7 @@ For multi-million-row initial loads, paginated SELECT is too slow and creates Sn
     <log message="Loading ${header.target} file ${header.CamelFileNameOnly}"/>
     <to uri="pfx-io:streamCompressedFile"/>
 
-    <split streaming="true" strategyRef="recordsCountAggregation" stopOnException="true">
+    <split streaming="true" aggregationStrategy="recordsCountAggregation" stopOnException="true">
       <tokenize token="\n" group="{{my.{object}.csv.batch-size}}"/>
       <toD uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={{my.pfx.csv.delimiter}}&amp;recordSeparator={{my.pfx.csv.eol}}&amp;trim=true&amp;header=${header.CSVHeader}"/>
       <toD uri="pfx-api:loaddata?objectType=DM&amp;dsUniqueName=${header.target}&amp;mapper=import-${header.target}-Mapper"/>

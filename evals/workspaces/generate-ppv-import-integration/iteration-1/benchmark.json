@@ -1,0 +1,871 @@
+{
+  "metadata": {
+    "skill_name": "generate-ppv-import-integration",
+    "skill_path": "/Users/mnagas/Documents/pricefx/pricefx-im-plugin/skills/generate-ppv-import-integration",
+    "executor_model": "claude-opus-4-7",
+    "analyzer_model": "claude-opus-4-7",
+    "timestamp": "2026-05-22T11:28:56.746129+00:00",
+    "evals_run": [
+      "edge-lookup-vague",
+      "ltv-company-params",
+      "ltv-exchange-rates-daily",
+      "ltv-lookup-cost-centers",
+      "ltv-shipping-cost-sftp",
+      "mltv2-discount-matrix",
+      "neg-dmds-saleshistory",
+      "neg-product-master"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 7,
+      "eval_name": "edge-lookup-vague",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-clarifying-question",
+          "text": "Subagent asks a clarifying question disambiguating Pricing Parameter (LTV/MLTV2) vs extension table (PX/CX) vs Data Source (DMDS)",
+          "passed": true,
+          "evidence": "matched: 'LTV' | 'MLTV2' | 'PX'"
+        },
+        {
+          "id": "no-ppv-route-written",
+          "text": "Does NOT silently generate an LTV or MLTV2 route",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 7,
+      "eval_name": "edge-lookup-vague",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-clarifying-question",
+          "text": "Subagent asks a clarifying question disambiguating Pricing Parameter (LTV/MLTV2) vs extension table (PX/CX) vs Data Source (DMDS)",
+          "passed": true,
+          "evidence": "matched: 'LTV' | 'MLTV2' | 'PX'"
+        },
+        {
+          "id": "no-ppv-route-written",
+          "text": "Does NOT silently generate an LTV or MLTV2 route",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "ltv-company-params",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "source-path-used",
+          "text": "Route source URI references an inbound folder derived from the prompt (literal /im/inbound/params OR a kebab-case folder per skill SKILL.md Step 5 OR a property placeholder for inbound path)",
+          "passed": true,
+          "evidence": "matched: 'company-params' | 'inbound' | 'company.params'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "ltv-company-params",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "source-path-used",
+          "text": "Route source URI references an inbound folder derived from the prompt (literal /im/inbound/params OR a kebab-case folder per skill SKILL.md Step 5 OR a property placeholder for inbound path)",
+          "passed": true,
+          "evidence": "matched: 'company-params' | 'inbound' | 'company.params'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "ltv-exchange-rates-daily",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-ExchangeRates",
+          "text": "Route URI contains pricingParameterName=ExchangeRates",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName=ExchangeRates'"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value (single-key shape)",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "daily-schedule",
+          "text": "Daily schedule wired (quartz cron or scheduler param)",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' | 'out=\"key2\"' present"
+        },
+        {
+          "id": "no-px-name-constant",
+          "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line (the LTV mapper uses <body out=\"name\"/>, not a constant)",
+          "passed": true,
+          "evidence": "none of: '<constant[^>]*out=\"name\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys (PPV imports do not use businessKeys)",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "ltv-exchange-rates-daily",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-ExchangeRates",
+          "text": "Route URI contains pricingParameterName=ExchangeRates",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName=ExchangeRates'"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value (single-key shape)",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "daily-schedule",
+          "text": "Daily schedule wired (quartz cron or scheduler param)",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' | 'out=\"key2\"' present"
+        },
+        {
+          "id": "no-px-name-constant",
+          "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line (the LTV mapper uses <body out=\"name\"/>, not a constant)",
+          "passed": true,
+          "evidence": "none of: '<constant[^>]*out=\"name\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys (PPV imports do not use businessKeys)",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "ltv-lookup-cost-centers",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV (single-key Pricing Parameter)",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern (user said single-key)",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' | 'out=\"key2\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "ltv-lookup-cost-centers",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV (single-key Pricing Parameter)",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern (user said single-key)",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' | 'out=\"key2\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "ltv-shipping-cost-sftp",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "decimal-converter",
+          "text": "Decimal converter applied to the value field (user asked for decimal cost in EUR)",
+          "passed": true,
+          "evidence": "matched: 'stringToDecimal'"
+        },
+        {
+          "id": "sftp-source",
+          "text": "Route uses pfx-sftp source OR documents SFTP connection (covers either SFTP component or pfx-sftp scheme)",
+          "passed": true,
+          "evidence": "matched: 'pfx-sftp:' | 'sftp.connection' | 'SFTPConnection'"
+        },
+        {
+          "id": "daily-schedule",
+          "text": "Daily schedule wired",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "ltv-shipping-cost-sftp",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-LTV",
+          "text": "Route URI contains objectType=LTV",
+          "passed": true,
+          "evidence": "matched: 'objectType=LTV'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "single-key-mapper",
+          "text": "Mapper maps to LTV fields name and value",
+          "passed": true,
+          "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+        },
+        {
+          "id": "decimal-converter",
+          "text": "Decimal converter applied to the value field (user asked for decimal cost in EUR)",
+          "passed": true,
+          "evidence": "matched: 'stringToDecimal'"
+        },
+        {
+          "id": "sftp-source",
+          "text": "Route uses pfx-sftp source OR documents SFTP connection (covers either SFTP component or pfx-sftp scheme)",
+          "passed": true,
+          "evidence": "matched: 'pfx-sftp:' | 'sftp.connection' | 'SFTPConnection'"
+        },
+        {
+          "id": "daily-schedule",
+          "text": "Daily schedule wired",
+          "passed": true,
+          "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+        },
+        {
+          "id": "no-mltv2",
+          "text": "Does NOT produce MLTV2 pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "mltv2-discount-matrix",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-MLTV2",
+          "text": "Route URI contains objectType=MLTV2",
+          "passed": true,
+          "evidence": "matched: 'objectType=MLTV2'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "multi-key-mapper",
+          "text": "Mapper has key1, key2, key3 outputs (3 keys for category x family x tier)",
+          "passed": true,
+          "evidence": "matched: 'out=\"key1\"' | 'out=\"key2\"' | 'out=\"key3\"'"
+        },
+        {
+          "id": "has-attribute-or-value-output",
+          "text": "Mapper has at least one attribute or value output column for the discount %",
+          "passed": true,
+          "evidence": "matched: 'out=\"attribute1\"'"
+        },
+        {
+          "id": "no-ltv",
+          "text": "Does NOT produce LTV pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' present"
+        },
+        {
+          "id": "no-px-name-constant",
+          "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line",
+          "passed": true,
+          "evidence": "none of: '<constant[^>]*out=\"name\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "mltv2-discount-matrix",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "uses-objectType-MLTV2",
+          "text": "Route URI contains objectType=MLTV2",
+          "passed": true,
+          "evidence": "matched: 'objectType=MLTV2'"
+        },
+        {
+          "id": "pricingParameterName-present",
+          "text": "Route URI contains pricingParameterName=",
+          "passed": true,
+          "evidence": "matched: 'pricingParameterName='"
+        },
+        {
+          "id": "multi-key-mapper",
+          "text": "Mapper has key1, key2, key3 outputs (3 keys for category x family x tier)",
+          "passed": true,
+          "evidence": "matched: 'out=\"key1\"' | 'out=\"key2\"' | 'out=\"key3\"'"
+        },
+        {
+          "id": "has-attribute-or-value-output",
+          "text": "Mapper has at least one attribute or value output column for the discount %",
+          "passed": true,
+          "evidence": "matched: 'out=\"attribute1\"'"
+        },
+        {
+          "id": "no-ltv",
+          "text": "Does NOT produce LTV pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' present"
+        },
+        {
+          "id": "no-px-name-constant",
+          "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line",
+          "passed": true,
+          "evidence": "none of: '<constant[^>]*out=\"name\"' present"
+        },
+        {
+          "id": "no-businesskeys",
+          "text": "Does NOT specify businessKeys",
+          "passed": true,
+          "evidence": "none of: 'businessKeys=' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "neg-dmds-saleshistory",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-pa-skill",
+          "text": "Subagent recognizes DMDS use case \u2014 either redirects in narrative (mentions generate-pa-import-integration / PA Data Source) OR produces a correct DMDS route in outputs (proves it understood the prompt and didn't apply PPV)",
+          "passed": true,
+          "evidence": "matched: 'generate-pa-import-integration' | 'DMDS' | 'Price Analyser'"
+        },
+        {
+          "id": "no-ppv-pattern-in-outputs",
+          "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "neg-dmds-saleshistory",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-pa-skill",
+          "text": "Subagent recognizes DMDS use case \u2014 either redirects in narrative (mentions generate-pa-import-integration / PA Data Source) OR produces a correct DMDS route in outputs (proves it understood the prompt and didn't apply PPV)",
+          "passed": true,
+          "evidence": "matched: 'DMDS' | 'objectType=DMDS'"
+        },
+        {
+          "id": "no-ppv-pattern-in-outputs",
+          "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-product-master",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-import-skill",
+          "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration",
+          "passed": true,
+          "evidence": "matched: 'generate-import-integration' | 'Product[s]? master' | 'objectType=P'"
+        },
+        {
+          "id": "no-ppv-pattern-in-outputs",
+          "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-product-master",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-import-skill",
+          "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration",
+          "passed": true,
+          "evidence": "matched: 'objectType=P'"
+        },
+        {
+          "id": "no-ppv-pattern-in-outputs",
+          "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern",
+          "passed": true,
+          "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.0000",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "Output-quality benchmark for the Pricing Parameter (LTV / MLTV2) generator. The PPV pattern is structurally close to a standard PX/CX import but differs on three points the skill must get right: objectType=LTV or MLTV2, pricingParameterName= on the URI, and a key/value or key1..keyN/attribute* mapper shape with NO <constant out=\"name\"/>.",
+    "Positive cases test that the skill produces the canonical LTV/MLTV2 pattern for the right shape (single-key vs multi-key).",
+    "Negative cases (P master, DMDS feed) test that the skill recognizes it's the wrong fit and defers to generate-import-integration / generate-pa-import-integration.",
+    "Edge case (vague 'small lookup table') tests whether the skill asks to disambiguate Pricing Parameter (LTV/MLTV2) vs extension table (PX/CX) vs Data Source (DMDS) rather than silently picking PPV.",
+    "Trigger evals NOT measured here \u2014 see evals/benchmarks/config.md. This benchmark is output-quality only.",
+    "Caveat: pfx CLI was unavailable (no .env), so any partition-metadata-dependent steps use synthetic defaults. The PPV pattern itself is independent of partition metadata.",
+    "Delta is 0 in iter-1 \u2014 both with-skill and without-skill scored 100%. This is a real finding, not noise: the PPV pattern is well-documented in docs/components.md / docs/mappers.md (objectType=LTV/MLTV2, pricingParameterName= URI param, key/value vs key1..keyN/attribute* mapper shapes), so Claude with only the shared docs produced equivalent route+mapper+properties bundles. The skill's value-add is largely in interactive Q&A (Step 2 type detection, Step 5b auto-detection of CSV format, Step 3 pfx CLI lookup, the streamingUnmarshal observability trade-off prompt) \u2014 none of which is exercised by a single-shot grep-based assertion suite.",
+    "Iter-2 recommendation: add more discriminating cases that target the skill's interactive-flow value-add \u2014 e.g. a prompt with attached CSV sample to test auto-detection, a vague-mode prompt that should produce a clarifying question rather than silently inferring MATRIX vs MATRIX2, a prompt asking for upsert (integrate + integrateMapper) vs replace, or a prompt where the user gives a non-trivial table type (RANGE) that only the skill spells out."
+  ]
+}

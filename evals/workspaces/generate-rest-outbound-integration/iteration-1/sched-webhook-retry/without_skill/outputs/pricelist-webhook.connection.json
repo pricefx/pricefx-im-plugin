@@ -1,0 +1,5 @@
+{
+  "id": "pricelist-webhook.connection",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.NoopConnection",
+  "url": "https://hooks.example.com"
+}

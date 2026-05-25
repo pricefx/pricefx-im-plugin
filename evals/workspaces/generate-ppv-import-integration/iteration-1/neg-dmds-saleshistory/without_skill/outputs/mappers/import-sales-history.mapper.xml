@@ -1,0 +1,21 @@
+<mappers>
+    <!-- DMDS load mapper for SalesHistoryDS. Field set is illustrative of a typical
+         transactional sales-history feed: line-level pricing/quantity data keyed by
+         invoice line. Adjust column names + attribute slots to match the real DS
+         layout in the target partition. -->
+    <loadMapper id="import-sales-history.mapper">
+        <body in="invoiceNumber"    out="invoiceNumber"/>
+        <body in="invoiceLine"      out="invoiceLine"/>
+        <body in="invoiceDate"      out="invoiceDate"     converterExpression="stringToDate"/>
+        <body in="sku"              out="sku"/>
+        <body in="customerId"       out="customerId"/>
+        <body in="quantity"         out="quantity"        converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netPrice"         out="netPrice"        converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="listPrice"        out="listPrice"       converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="discountAmount"   out="discountAmount"  converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="netRevenue"       out="netRevenue"      converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="currency"         out="currency"/>
+        <body in="salesChannel"     out="salesChannel"/>
+        <body in="region"           out="region"/>
+    </loadMapper>
+</mappers>

@@ -1,0 +1,10 @@
+{
+  "id": "customerMasterSftp",
+  "discriminator": "net.pricefx.integration.component.sftp.connection.SFTPConnection",
+  "host": "${integration.customerMasterSftp.host}",
+  "port": 22,
+  "path": "/",
+  "username": "${integration.customerMasterSftp.username}",
+  "password": "${integration.customerMasterSftp.password}",
+  "strictHostKeyChecking": false
+}

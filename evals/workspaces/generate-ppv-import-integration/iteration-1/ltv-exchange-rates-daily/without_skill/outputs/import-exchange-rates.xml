@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-exchange-rates">
+        <from uri="file://{{integration.sftp.root}}/import/exchange-rates?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+6+*+*+?&amp;scheduler.timeZone=Europe/Frankfurt"/>
+        <log message="Starting ECB exchange rates import from file ${header[CamelFileNameOnly]}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=LTV&amp;mapper=import-exchange-rates.mapper&amp;pricingParameterName=ExchangeRates&amp;batchSize=500000"/>
+        <log message="ECB exchange rates import completed. Total records: ${header.PfxTotalInputRecordsCount}"/>
+    </route>
+</routes>

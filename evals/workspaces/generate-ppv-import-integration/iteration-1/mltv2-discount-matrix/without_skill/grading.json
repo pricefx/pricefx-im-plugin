@@ -1,0 +1,60 @@
+{
+  "eval_id": 1,
+  "eval_name": "mltv2-discount-matrix",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-MLTV2",
+      "text": "Route URI contains objectType=MLTV2",
+      "passed": true,
+      "evidence": "matched: 'objectType=MLTV2'"
+    },
+    {
+      "id": "pricingParameterName-present",
+      "text": "Route URI contains pricingParameterName=",
+      "passed": true,
+      "evidence": "matched: 'pricingParameterName='"
+    },
+    {
+      "id": "multi-key-mapper",
+      "text": "Mapper has key1, key2, key3 outputs (3 keys for category x family x tier)",
+      "passed": true,
+      "evidence": "matched: 'out=\"key1\"' | 'out=\"key2\"' | 'out=\"key3\"'"
+    },
+    {
+      "id": "has-attribute-or-value-output",
+      "text": "Mapper has at least one attribute or value output column for the discount %",
+      "passed": true,
+      "evidence": "matched: 'out=\"attribute1\"'"
+    },
+    {
+      "id": "no-ltv",
+      "text": "Does NOT produce LTV pattern",
+      "passed": true,
+      "evidence": "none of: 'objectType=LTV' present"
+    },
+    {
+      "id": "no-px-name-constant",
+      "text": "Does NOT add a PX/CX-style <constant out=\"name\"/> line",
+      "passed": true,
+      "evidence": "none of: '<constant[^>]*out=\"name\"' present"
+    },
+    {
+      "id": "no-businesskeys",
+      "text": "Does NOT specify businessKeys",
+      "passed": true,
+      "evidence": "none of: 'businessKeys=' present"
+    }
+  ],
+  "score": {
+    "passed": 7,
+    "total": 7
+  },
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

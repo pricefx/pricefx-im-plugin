@@ -1,0 +1,30 @@
+{
+  "eval_id": 6,
+  "eval_name": "neg-dmds-saleshistory",
+  "category": "negative",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-pa-skill",
+      "text": "Subagent recognizes DMDS use case \u2014 either redirects in narrative (mentions generate-pa-import-integration / PA Data Source) OR produces a correct DMDS route in outputs (proves it understood the prompt and didn't apply PPV)",
+      "passed": true,
+      "evidence": "matched: 'DMDS' | 'objectType=DMDS'"
+    },
+    {
+      "id": "no-ppv-pattern-in-outputs",
+      "text": "Does NOT generate LTV / MLTV2 / pricingParameterName pattern",
+      "passed": true,
+      "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

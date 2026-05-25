@@ -1,0 +1,48 @@
+{
+  "eval_id": 4,
+  "eval_name": "ltv-lookup-cost-centers",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-LTV",
+      "text": "Route URI contains objectType=LTV (single-key Pricing Parameter)",
+      "passed": true,
+      "evidence": "matched: 'objectType=LTV'"
+    },
+    {
+      "id": "pricingParameterName-present",
+      "text": "Route URI contains pricingParameterName=",
+      "passed": true,
+      "evidence": "matched: 'pricingParameterName='"
+    },
+    {
+      "id": "single-key-mapper",
+      "text": "Mapper maps to LTV fields name and value",
+      "passed": true,
+      "evidence": "matched: 'out=\"name\"' | 'out=\"value\"'"
+    },
+    {
+      "id": "no-mltv2",
+      "text": "Does NOT produce MLTV2 pattern (user said single-key)",
+      "passed": true,
+      "evidence": "none of: 'objectType=MLTV2' | 'out=\"key1\"' | 'out=\"key2\"' present"
+    },
+    {
+      "id": "no-businesskeys",
+      "text": "Does NOT specify businessKeys",
+      "passed": true,
+      "evidence": "none of: 'businessKeys=' present"
+    }
+  ],
+  "score": {
+    "passed": 5,
+    "total": 5
+  },
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

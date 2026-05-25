@@ -1,0 +1,11 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-ltv",
+  "category": "negative",
+  "prompt": "Load LTV currency rates from CSV into Pricefx pricing parameter table.",
+  "assertions": [
+    {"id": "redirects-to-ppv-skill", "text": "Subagent recognizes this is the wrong skill and refers to generate-ppv-import-integration", "type": "grep", "patterns": ["generate-ppv-import-integration", "ppv-import", "Pricing Parameter", "LTV", "use.*ppv"], "match": "any", "scope": "narrative"},
+    {"id": "no-dmds-pattern", "text": "Does NOT generate objectType=DMDS / flush", "type": "grep_absent", "patterns": ["objectType=DMDS", "pfx-api:flush"], "scope": "outputs"},
+    {"id": "no-split-tokenize-for-ltv", "text": "Does NOT generate split+tokenize (DMDS-only pattern)", "type": "grep_absent", "patterns": ["<tokenize"], "scope": "outputs"}
+  ]
+}

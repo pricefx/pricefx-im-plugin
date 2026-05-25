@@ -2,6 +2,19 @@
 
 Connections define how IM connects to external systems (Pricefx, SFTP servers, REST APIs, databases). They are stored as JSON files in `config/connections/`.
 
+## Endpoint-field naming (READ THIS FIRST)
+
+The JSON field name for the connection's endpoint is **not** uniform across discriminator classes — it depends on the Java class the discriminator points at:
+
+| Discriminator | Endpoint field(s) |
+|---|---|
+| `PriceFxConnection` | `uri` |
+| `SFTPConnection` (note: uppercase) | `host` + `port` (+ `path`, `username`, `password`, `strictHostKeyChecking`) |
+| `OAuth2Connection`, `BasicConnection`, `JwtConnection`, `NoopConnection` (REST family) | `url` (+ `authUrl` for token-based variants) |
+| `S3Connection` | `region` + `bucket` (no URL field — endpoint is derived) |
+
+These are the actual Spring/Jackson deserialization keys from the IM Java sources (`net.pricefx.integration.component.rest.domain.connection.*`). Using `uri` on an `OAuth2Connection` JSON, or `url` on a `PriceFxConnection` JSON, will silently drop the value at deserialization time — the connection will fail to authenticate with a confusing null-pointer or "host not configured" error.
+
 ## Pricefx Connection (JSON)
 
 ```json
@@ -42,15 +55,16 @@ For connecting to REST APIs with OAuth2 authentication (e.g., Salesforce):
 {
   "id": "salesforce.connection",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.OAuth2Connection",
-  "uri": "https://customer.my.salesforce.com",
-  "authUri": "https://customer.my.salesforce.com/services/oauth2/token",
+  "url": "https://customer.my.salesforce.com",
+  "authUrl": "https://customer.my.salesforce.com/services/oauth2/token",
   "clientId": "your-client-id",
   "clientSecret": "your-client-secret",
   "username": "integrationuser@company.com",
-  "password": "password+securityToken",
-  "grantType": "password"
+  "password": "password+securityToken"
 }
 ```
+
+The grant type defaults to `password`. To use a different grant (e.g. `client_credentials`), override `authRequestTemplate` — there is **no** standalone `grantType` field on `OAuth2Connection`.
 
 ### Basic Auth Connection (JSON)
 
@@ -58,7 +72,7 @@ For connecting to REST APIs with OAuth2 authentication (e.g., Salesforce):
 {
   "id": "basic.connection",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.BasicConnection",
-  "uri": "https://api.example.com",
+  "url": "https://api.example.com",
   "username": "user",
   "password": "password"
 }
@@ -70,8 +84,8 @@ For connecting to REST APIs with OAuth2 authentication (e.g., Salesforce):
 {
   "id": "jwt.connection",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.JwtConnection",
-  "uri": "https://api.example.com",
-  "authUri": "https://api.example.com/auth/token",
+  "url": "https://api.example.com",
+  "authUrl": "https://api.example.com/auth/token",
   "clientId": "your-client-id",
   "clientSecret": "your-client-secret"
 }
@@ -85,7 +99,7 @@ For APIs that don't require authentication:
 {
   "id": "public-api",
   "discriminator": "net.pricefx.integration.component.rest.domain.connection.NoopConnection",
-  "uri": "https://public-api.example.com"
+  "url": "https://public-api.example.com"
 }
 ```
 
@@ -108,15 +122,17 @@ SFTP connections configure server access for file transfer.
 ```json
 {
   "id": "sftp.connection",
-  "discriminator": "net.pricefx.integration.connection.SftpConnection",
+  "discriminator": "net.pricefx.integration.component.sftp.connection.SFTPConnection",
   "host": "sftp.example.com",
   "port": 22,
+  "path": "/",
   "username": "sftpuser",
   "password": "password",
-  "knownHostsFile": "/path/to/known_hosts",
-  "privateKeyFile": "/path/to/private_key"
+  "strictHostKeyChecking": false
 }
 ```
+
+Fields available on `SFTPConnection`: `host`, `port` (default `22`), `path` (default `"/"`), `username`, `password`, `strictHostKeyChecking` (default `false`). The class lives in `net.pricefx.integration.component.sftp.connection.SFTPConnection` (uppercase `SFTP`). There is **no** `knownHostsFile` or `privateKeyFile` field — known-hosts handling is controlled by `strictHostKeyChecking`, and IM does not currently support SSH-key authentication via this connection type.
 
 ### Using SFTP Connections in Routes
 
@@ -130,7 +146,7 @@ SFTP connections configure server access for file transfer.
 ```json
 {
   "id": "s3.connection",
-  "discriminator": "net.pricefx.integration.component.s3.S3Connection",
+  "discriminator": "net.pricefx.integration.component.s3.connection.S3Connection",
   "accessKey": "your-access-key",
   "secretKey": "your-secret-key",
   "region": "us-east-1"
@@ -174,12 +190,12 @@ For `pfx-rest`, `pfx-sftp`, and `pfx-sql`, a connection is typically required un
 
 | Discriminator Class | Use Case |
 |---------------------|----------|
-| `...connection.PriceFxConnection` | Pricefx server |
-| `...connection.OAuth2Connection` | REST with OAuth2 (Salesforce, etc.) |
-| `...connection.BasicConnection` | REST with Basic Auth |
-| `...connection.JwtConnection` | REST with JWT |
-| `...connection.NoopConnection` | REST without auth |
-| `...connection.SftpConnection` | SFTP servers |
-| `...s3.S3Connection` | AWS S3 |
+| `net.pricefx.integration.component.rest.domain.connection.PriceFxConnection` | Pricefx server |
+| `net.pricefx.integration.component.rest.domain.connection.OAuth2Connection` | REST with OAuth2 (Salesforce, etc.) |
+| `net.pricefx.integration.component.rest.domain.connection.BasicConnection` | REST with Basic Auth |
+| `net.pricefx.integration.component.rest.domain.connection.JwtConnection` | REST with JWT |
+| `net.pricefx.integration.component.rest.domain.connection.NoopConnection` | REST without auth |
+| `net.pricefx.integration.component.sftp.connection.SFTPConnection` | SFTP servers (uppercase SFTP) |
+| `net.pricefx.integration.component.s3.connection.S3Connection` | AWS S3 |
 
-All connection classes are under `net.pricefx.integration.component.rest.domain.connection` (REST types) or their respective component packages.
+The discriminator string is consumed by `Class.forName()` at deserialization — a typo in the class path (or wrong casing on `SFTP`) throws `ClassNotFoundException` at deploy time, **not** a runtime null-pointer.

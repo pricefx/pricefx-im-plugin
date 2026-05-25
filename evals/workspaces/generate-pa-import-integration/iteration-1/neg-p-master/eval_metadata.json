@@ -1,0 +1,11 @@
+{
+  "eval_id": 4,
+  "eval_name": "neg-p-master",
+  "category": "negative",
+  "prompt": "Import product master from /import/products.csv into Pricefx P table with sku as business key.",
+  "assertions": [
+    {"id": "redirects-to-import-skill", "text": "Subagent recognizes this is the wrong skill and refers to generate-import-integration", "type": "grep", "patterns": ["generate-import-integration", "import-integration", "P master.*standard", "use.*standard.*import", "loaddataFile", "Product master"], "match": "any", "scope": "narrative"},
+    {"id": "no-dmds-pattern", "text": "Does NOT generate objectType=DMDS / flush / dsUniqueName for a P import", "type": "grep_absent", "patterns": ["objectType=DMDS", "pfx-api:flush"], "scope": "outputs"},
+    {"id": "no-split-tokenize-for-p", "text": "Does NOT generate split+tokenize wrapper (DMDS-only pattern)", "type": "grep_absent", "patterns": ["<tokenize"], "scope": "outputs"}
+  ]
+}

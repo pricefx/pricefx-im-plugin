@@ -1,0 +1,30 @@
+{
+  "eval_id": 6,
+  "eval_name": "edge-vague-source",
+  "category": "edge",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "asks-for-object-type",
+      "text": "Subagent asks a clarifying question naming object types (P/PX/DMDS/LTV)",
+      "passed": true,
+      "evidence": "matched: 'DMDS' | 'object type' | 'clarify'"
+    },
+    {
+      "id": "no-dmds-route-written",
+      "text": "Does NOT silently generate a DMDS route",
+      "passed": true,
+      "evidence": "none of: 'objectType=DMDS' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

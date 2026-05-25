@@ -1,6 +1,6 @@
 ---
 name: generate-connection
-description: Interactively generate a Pricefx Integration Manager connection JSON file. Supports pricefx, sftp, rest-oauth2, rest-basic, rest-jwt, rest-public connection types. Use when the user says "create connection", "add connection", "configure sftp/rest/pricefx".
+description: Use when the user wants to create a Pricefx Integration Manager connection JSON file — says "create connection", "add connection", "configure sftp/rest/pricefx", or needs a new entry under `src/main/resources/repo/connections/`. Supports pricefx, sftp, rest-oauth2, rest-basic, rest-jwt, and rest-public connection types.
 ---
 
 # Generate Connection
@@ -32,7 +32,7 @@ Required: partition URL, partition name, username, password.
 {
   "name": "pricefx",
   "type": "pricefx",
-  "url": "{partition-url}",
+  "uri": "{partition-url}",
   "partition": "{partition-name}",
   "username": "{{pfx.username}}",
   "password": "{{pfx.password}}"
@@ -44,19 +44,19 @@ pfx.password={ENC}changeme
 ```
 
 ### sftp
-Required: host, port (default 22), username, auth method (password or key), remote directory.
+Required: host, port (default 22), username, password, remote path. The `SFTPConnection` class supports password auth only (no SSH key); known-hosts handling is controlled by `strictHostKeyChecking` (default `false`).
 ```json
 {
   "name": "{connection-name}",
   "type": "sftp",
-  "url": "{host}",
+  "host": "{host}",
   "port": 22,
+  "path": "/{remote/dir}",
   "username": "{{sftp.username}}",
   "password": "{{sftp.password}}",
-  "remoteDirectory": "{/remote/dir}"
+  "strictHostKeyChecking": false
 }
 ```
-For key auth, replace `"password"` with `"privateKey": "{{sftp.privateKey}}"`.
 ```properties
 sftp.username={username}
 sftp.password={ENC}changeme

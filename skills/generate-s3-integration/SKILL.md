@@ -1,11 +1,13 @@
 ---
 name: generate-s3-integration
-description: Generate a Pricefx Integration Manager route that reads from or writes to an AWS S3 bucket. Use this skill when files are delivered to or collected from S3 — e.g., polling S3 for inbound CSVs and loading them into Pricefx, exporting Pricefx data and uploading to S3, or bridging S3 files to an SFTP server. Covers consumer (poll/delete), producer (upload), and S3-to-SFTP bridge patterns.
+description: Use when a Pricefx Integration Manager route reads from or writes to an AWS S3 bucket — says "poll S3 for inbound CSVs", "export to S3", "upload to S3", "bridge S3 to SFTP", or "S3 integration", and needs a consumer (poll/delete), producer (upload), or S3-to-SFTP bridge.
 ---
 
 # Generate S3 Integration
 
 You are generating an AWS S3 integration for a Pricefx Integration Manager project. Follow the steps below. Never hardcode AWS credentials — always use encrypted property placeholders.
+
+> **Camel version note:** route templates reference the Camel 4 `aws2-s3:` URI scheme and (when the import-style per-batch logging variant is selected) the Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap `aws2-s3:` → `aws-s3:` and `aggregationStrategy=` → `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
 
 ## Step 1: Gather Information
 
@@ -61,6 +63,16 @@ File: `src/main/resources/repo/routes/{route-name}.xml`
   </route>
 </routes>
 ```
+
+> ⚠️ **Heads-up — observability trade-off for the inbound load:**
+>
+> `streamingUnmarshal` + `loaddataFile` streams the S3 object to Pricefx as a single opaque upload. IM logs show only the start and end of the load — **no per-batch progress, no row counts mid-stream, no per-batch timings**. If the load takes hours or partially fails, you cannot tell from IM logs how far it got.
+>
+> Before generating, **ask the user**:
+>
+> > **The default S3 inbound template uses `loaddataFile` (fast, but no per-batch progress in IM logs). For large or long-running S3 imports, would you prefer the split/tokenize+`loaddata` pattern with batch-level logging instead?**
+>
+> If they want per-batch logging, replace the unmarshal+loaddataFile pair with a `<split aggregationStrategy="recordsCountAggregation" streaming="true">` containing `<tokenize group="N" token="\n"/>` + `pfx-csv:unmarshal` + a batch log + `pfx-api:loaddata` (see `generate-import-integration` for the full template).
 
 ## Step 3b: Generate Outbound Route (S3 Producer)
 
@@ -216,6 +228,5 @@ Fix any issues silently and report corrections.
 
 ## References
 
-- [S3 Integration Pattern](../../../integration-manager/docs/patterns/s3-integration.md)
 - [Import Integration Skill](../generate-import-integration/SKILL.md) — for the Pricefx load steps after reading the S3 file
 - [Multi-Tenant Route Skill](../generate-multi-tenant-route/SKILL.md) — for partition-specific S3 key paths in multi-tenant setups

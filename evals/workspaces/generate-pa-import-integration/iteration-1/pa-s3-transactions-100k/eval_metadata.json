@@ -1,0 +1,14 @@
+{
+  "eval_id": 1,
+  "eval_name": "pa-s3-transactions-100k",
+  "category": "positive",
+  "prompt": "Set up DMDS load for our daily transactions feed coming from S3 bucket s3://pricefx-data/transactions/. Target DMDS.TransactionFeed, batch size 100k.",
+  "assertions": [
+    {"id": "uses-objectType-DMDS", "text": "Generated route uses objectType=DMDS", "type": "grep", "patterns": ["objectType=DMDS"], "scope": "outputs"},
+    {"id": "uses-targetname-transactionfeed", "text": "Uses targetName / dsUniqueName referring to TransactionFeed", "type": "grep", "patterns": ["TransactionFeed"], "scope": "outputs"},
+    {"id": "s3-consumer", "text": "Route reads from S3 (pfx-s3 or aws2-s3)", "type": "grep", "patterns": ["pfx-s3:", "aws2-s3:", "aws-s3:"], "match": "any", "scope": "outputs"},
+    {"id": "tokenize-100k", "text": "Tokenize group is 100000 as requested", "type": "grep", "patterns": ["group=\"100000\"", "group=100000"], "match": "any", "scope": "outputs"},
+    {"id": "flush-present", "text": "pfx-api:flush is present", "type": "grep", "patterns": ["pfx-api:flush"], "scope": "outputs"},
+    {"id": "no-loaddatafile", "text": "Does NOT use loaddataFile", "type": "grep_absent", "patterns": ["pfx-api:loaddataFile"], "scope": "outputs"}
+  ]
+}

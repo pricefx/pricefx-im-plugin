@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="export-products">
+        <!-- Daily at 02:00 -->
+        <from uri="quartz://export/export-products?cron=0+0+2+*+*+?"/>
+
+        <!-- Read last export timestamp from Pricefx config store -->
+        <toD uri="pfx-config:get?name={{integration.name}}.export-products.export.timestamp&amp;toHeader=lastExportTimestamp"/>
+        <choice>
+            <when>
+                <simple>${headers.lastExportTimestamp} == null || ${headers.lastExportTimestamp} == ''</simple>
+                <setHeader name="lastExportTimestamp">
+                    <constant>1970-01-01T00:00:00</constant>
+                </setHeader>
+            </when>
+        </choice>
+
+        <!-- Capture upper bound for delta window -->
+        <setHeader name="currentExportTimestamp">
+            <simple>${date-with-timezone:now:UTC:yyyy-MM-dd'T'HH:mm:ss}</simple>
+        </setHeader>
+
+        <!-- Build dated file name -->
+        <setHeader name="CamelFileName">
+            <simple>products_${date:now:yyyyMMdd_HHmmss}.csv</simple>
+        </setHeader>
+
+        <!-- Fetch in batched mode -->
+        <toD uri="pfx-api:fetch?objectType=P&amp;filter=export-products.filter&amp;batchedMode=true&amp;batchSize=50000"/>
+
+        <split streaming="true">
+            <simple>${body}</simple>
+            <toD uri="pfx-api:fetchIterator"/>
+            <toD uri="pfx-model:transform?mapper=export-products.mapper"/>
+            <toD uri="pfx-csv:marshal?delimiter=,"/>
+            <to uri="pfx-sftp://{{export.sftp.path}}?connection=sftp.connection&amp;fileName=${header.CamelFileName}&amp;fileExist=Append"/>
+        </split>
+
+        <!-- Persist upper bound on success -->
+        <onCompletion onCompleteOnly="true">
+            <toD uri="pfx-config:set?name={{integration.name}}.export-products.export.timestamp&amp;value=${headers.currentExportTimestamp}"/>
+            <log message="Exported products delta &gt; ${headers.lastExportTimestamp} and &lt;= ${headers.currentExportTimestamp}"/>
+        </onCompletion>
+    </route>
+
+</routes>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="export-customers-daily">
+        <from uri="quartz://export-customers-daily?cron=0+0+6+*+*+?&amp;trigger.timeZone=UTC&amp;stateful=true"/>
+        <log message="Starting customer export" loggingLevel="INFO"/>
+        <toD uri="pfx-api:fetch?objectType=C&amp;filter=export-customers-daily.filter&amp;batchedMode=true&amp;batchSize=50000"/>
+        <split>
+            <simple>${body}</simple>
+            <toD uri="pfx-api:fetchIterator"/>
+            <toD uri="pfx-model:transform?mapper=export-customers-daily.mapper"/>
+            <toD uri="pfx-csv:marshal"/>
+            <to uri="file://{{integration.sftp.root}}/outbound/customers?fileName=customers-${date:now:yyyyMMdd}.csv&amp;fileExist=Append"/>
+        </split>
+        <log message="Export complete" loggingLevel="INFO"/>
+    </route>
+</routes>

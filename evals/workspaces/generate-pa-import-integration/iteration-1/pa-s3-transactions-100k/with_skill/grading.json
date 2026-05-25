@@ -1,0 +1,54 @@
+{
+  "eval_id": 1,
+  "eval_name": "pa-s3-transactions-100k",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-DMDS",
+      "text": "Generated route uses objectType=DMDS",
+      "passed": true,
+      "evidence": "matched: 'objectType=DMDS'"
+    },
+    {
+      "id": "uses-targetname-transactionfeed",
+      "text": "Uses targetName / dsUniqueName referring to TransactionFeed",
+      "passed": true,
+      "evidence": "matched: 'TransactionFeed'"
+    },
+    {
+      "id": "s3-consumer",
+      "text": "Route reads from S3 (pfx-s3 or aws2-s3)",
+      "passed": true,
+      "evidence": "matched: 'pfx-s3:'"
+    },
+    {
+      "id": "tokenize-100k",
+      "text": "Tokenize group is 100000 as requested",
+      "passed": true,
+      "evidence": "matched: 'group=\"100000\"'"
+    },
+    {
+      "id": "flush-present",
+      "text": "pfx-api:flush is present",
+      "passed": true,
+      "evidence": "matched: 'pfx-api:flush'"
+    },
+    {
+      "id": "no-loaddatafile",
+      "text": "Does NOT use loaddataFile",
+      "passed": true,
+      "evidence": "none of: 'pfx-api:loaddataFile' present"
+    }
+  ],
+  "score": {
+    "passed": 6,
+    "total": 6
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

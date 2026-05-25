@@ -1,6 +1,6 @@
 # Pricefx Camel Component Reference
 
-All components use the `pfx-` prefix and are producer-only (used in `<to>` or `<toD>`, not `<from>` except `pfx-api:events`).
+All components use the `pfx-` prefix and are producer-only (used in `<to>` or `<toD>`, not `<from>`) — with the exception of `pfx-event:fetch`, the event-polling consumer (see below).
 
 **KB Reference:** https://knowledge.pricefx.com/space/IM/
 
@@ -19,14 +19,14 @@ The primary component for all Pricefx server interactions.
 | `loaddata` | Bulk load data (replace). IM parses and maps data, sends via JSON API. Requires `objectType`, `mapper`. |
 | `loaddataFile` | Stream file directly to Pricefx server. More efficient for large files. Supports `mapper` for field mapping. Requires `objectType`. |
 | `integrate` | Upsert data (insert or update). Requires `objectType`, `mapper`. |
-| `fetch` | Query data. Requires `objectType` and either `sql` or `filter`. |
+| `fetch` | Query data. Requires `objectType` and either `sql` or `filter`. When called with `batchedMode=true`, returns a list of batch references; iterate with a `<split>` and call `fetchIterator` (no params) inside the split to retrieve each batch's rows. |
+| `fetchIterator` | Inside a `<split>` over a previous `pfx-api:fetch?batchedMode=true` result — retrieves the current batch's rows. Takes no parameters; the batch reference comes from the exchange body set by the outer `fetch`. |
 | `delete` | Delete records. Requires `objectType` and `filter`. |
 | `flush` | Flush data feed to data source. Requires `dataSourceName`, `dataFeedName`. |
 | `truncate` | Truncate data mart/feed/source. Requires `targetName`. |
 | `calculate` | Trigger data mart calculation. Requires `typedId`, `targetName`. |
 | `internalCopy` | Copy data source internally. Requires `label`. |
 | `refresh` | Refresh data mart. |
-| `events` | Poll for system events (consumer). Requires `eventTypes`, `delay`. |
 | `execute` | Execute a formula. Requires `formulaName`. |
 | `update` | Update records. |
 | `save` | Save records. |
@@ -66,8 +66,6 @@ The primary component for all Pricefx server interactions.
 | `detectJoinFields` | Auto-detect join fields | `true` |
 | `async` | Async processing | `false` |
 | `asyncTimeout` | Async timeout (ms) | `30000` |
-| `delay` | Poll delay for events (ms) | — |
-| `eventTypes` | Comma-separated event types for polling | — |
 | `countOnly` | Return only count from fetch | `false` |
 | `enableNullFields` | Include null fields in response | `false` |
 | `truncate` | Truncate before load | `false` |
@@ -130,9 +128,6 @@ The primary component for all Pricefx server interactions.
 
 <!-- Flush data feed -->
 <to uri="pfx-api:flush?dataSourceName=DMDS.MySource&amp;dataFeedName=DMF.MyFeed"/>
-
-<!-- Poll events (consumer) -->
-<from uri="pfx-api:events?delay=60000&amp;eventTypes=ITEM_UPDATE_PPV,PADATALOAD_COMPLETED"/>
 ```
 
 ---
@@ -277,6 +272,8 @@ Use `pfx-config:get/set` to persist a timestamp between runs for incremental exp
 |--------|-------------|
 | `unmarshal` | Parse JSON string into Java objects |
 | `marshal` | Convert Java objects to JSON string |
+| `transform` | Apply a JOLT-style transformation spec to the JSON body |
+| `remap` | Rename / restructure JSON fields per a mapping |
 
 ### Examples
 
@@ -334,6 +331,8 @@ Use `pfx-config:get/set` to persist a timestamp between runs for incremental exp
 **Syntax:** `pfx-rest:method?params`
 
 **KB:** https://knowledge.pricefx.com/space/IM/10551435/pfx-rest+Component
+When using pfx-rest to call Pricefx always look at Pricefx REST API for details.
+**API Docs** https://api.pricefx.com/rest-api
 
 ### Methods
 
@@ -415,6 +414,8 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | `selectIterator` | Streaming query |
 | `insert` | Insert records |
 | `upsert` | Insert or update records |
+| `truncate` | Truncate a table |
+| `delete` | Delete rows matching a filter |
 
 ### Key Parameters
 
@@ -442,6 +443,12 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | Method | Description |
 |--------|-------------|
 | `detectCharset` | Detect file character encoding |
+| `setupCharset` | Set the Camel charset on the exchange (so downstream readers use it) |
+| `streamCompressedFile` | Stream a zipped / gzipped file without loading it into memory |
+| `compress` | Compress the body to ZIP or GZIP |
+| `parseVirtualHeaders` | Parse a header definition string into a virtual-header structure |
+| `parseValidationSchema` | Parse a CSV/XLSX validation schema |
+| `fileSplitHelper` | Split a file into N chunks for parallel processing |
 
 ### Key Parameters
 
@@ -500,6 +507,7 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | Method | Description |
 |--------|-------------|
 | `transform` | Transform data using a mapper |
+| `query` | Query an in-memory data structure with a mapper-style projection |
 
 ### Key Parameters
 
@@ -525,6 +533,7 @@ Inherits all standard Camel SFTP parameters (delete, noop, fileName, etc.).
 | Method | Description |
 |--------|-------------|
 | `csv` | Validate CSV format |
+| `xlsx` | Validate XLSX format |
 
 ### Key Parameters
 
@@ -571,16 +580,53 @@ Specialized component for Salesforce-specific operations.
 
 ---
 
+## pfx-event — Pricefx Event Bus
+
+**Syntax:** `pfx-event:method?params`
+
+The only Pricefx consumer component — used in `<from>` to react to system events (PPV updates, PA load completion, custom events, etc.) and in `<to>` to publish custom events.
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `fetch` | Consumer — poll for one event type. Use in `<from>`. |
+| `sendCustom` | Producer — publish a custom event. Use in `<to>`. |
+
+### Key Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `eventType` | Event type to listen for (`fetch`) or publish (`sendCustom`). One type per route. | — |
+| `delay` | Polling interval in ms (`fetch` only) | `60000` |
+| `initialDelay` | Delay before first poll (`fetch` only) | `0` |
+| `greedy` | If true, drain all pending events in one poll cycle (`fetch` only) | `false` |
+
+### Examples
+
+```xml
+<!-- Consumer: react to a PPV item update -->
+<from uri="pfx-event:fetch?eventType=ITEM_UPDATE_PPV&amp;delay=60000"/>
+
+<!-- Producer: publish a custom event at the end of a route -->
+<onCompletion onCompleteOnly="true">
+    <to uri="pfx-event:sendCustom?eventType=CUSTOM_PRODUCTS_IMPORTED"/>
+</onCompletion>
+```
+
+For full event-driven route patterns, see the `generate-event-driven-route` skill.
+
+---
+
 ## Other Components
 
 | Component | Description |
 |-----------|-------------|
 | `pfx-smtp` | Email sending |
-| `pfx-event` | Event handling |
 | `pfx-resources` | Resource management |
 | `pfx-info` | System information |
 | `pfx-hybris` | SAP Hybris integration |
-| `pfx-greenplum` | Greenplum database |
+| `pfx-gp` | Greenplum database |
 | `pfx-odata2` | OData v2 protocol |
 | `pfx-c4c` | SAP Cloud for Customers |
 | `pfx-google-shopping` | Google Shopping |

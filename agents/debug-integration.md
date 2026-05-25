@@ -1,6 +1,6 @@
 ---
 name: debug-integration
-description: Diagnoses Pricefx Integration Manager errors and failures. Use when a route fails, data doesn't import correctly, or the user encounters an error message.
+description: Use when a Pricefx Integration Manager route fails, data does not import correctly, the user pastes an error message or stack trace, or asks to debug / diagnose / troubleshoot an integration failure.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 maxTurns: 25

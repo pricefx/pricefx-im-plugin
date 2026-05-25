@@ -1,0 +1,10 @@
+{
+  "eval_id": 7,
+  "eval_name": "edge-lookup-vague",
+  "category": "edge",
+  "prompt": "I have a small lookup table I want to use in Pricefx.",
+  "assertions": [
+    {"id": "asks-clarifying-question", "text": "Subagent asks a clarifying question disambiguating Pricing Parameter (LTV/MLTV2) vs extension table (PX/CX) vs Data Source (DMDS)", "type": "grep", "patterns": ["LTV", "MLTV2", "PX", "CX", "DMDS", "Pricing Parameter", "extension table", "Data Source", "clarif", "which", "what type"], "match": "any", "scope": "narrative"},
+    {"id": "no-ppv-route-written", "text": "Does NOT silently generate an LTV or MLTV2 route", "type": "grep_absent", "patterns": ["objectType=LTV", "objectType=MLTV2"], "scope": "outputs"}
+  ]
+}

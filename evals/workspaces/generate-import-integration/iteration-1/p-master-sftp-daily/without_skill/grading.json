@@ -1,0 +1,54 @@
+{
+  "eval_id": 0,
+  "eval_name": "p-master-sftp-daily",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-P",
+      "text": "Generated route URI contains objectType=P",
+      "passed": true,
+      "evidence": "matched: 'objectType=P'"
+    },
+    {
+      "id": "uses-loaddatafile-or-loaddata",
+      "text": "Generated route uses pfx-api:loaddataFile or pfx-api:loaddata",
+      "passed": true,
+      "evidence": "matched: 'pfx-api:loaddataFile' | 'pfx-api:loaddata'"
+    },
+    {
+      "id": "mapper-file-present",
+      "text": "A mapper XML file is produced (loadMapper or integrateMapper)",
+      "passed": true,
+      "evidence": "matched: 'loadMapper'"
+    },
+    {
+      "id": "daily-schedule",
+      "text": "Daily schedule wired (quartz cron, scheduler param, or property placeholder)",
+      "passed": true,
+      "evidence": "matched: 'quartz' | 'cron=' | 'scheduler'"
+    },
+    {
+      "id": "no-dmds-pattern",
+      "text": "No DMDS / flush / dataSourceName pattern leaks into the generated route/mapper",
+      "passed": true,
+      "evidence": "none of: 'DMDS' | 'pfx-api:flush' | 'dataSourceName=' present"
+    },
+    {
+      "id": "no-ltv-mltv2-pattern",
+      "text": "No LTV / MLTV2 / pricingParameterName pattern leaks into the generated route/mapper",
+      "passed": true,
+      "evidence": "none of: 'objectType=LTV' | 'objectType=MLTV2' | 'pricingParameterName=' present"
+    }
+  ],
+  "score": {
+    "passed": 6,
+    "total": 6
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

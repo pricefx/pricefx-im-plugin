@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <!--
+    In-memory cache shared by get-jwt-token, get-csrf-token, and the business
+    route post-quote-to-sap. Keys used:
+
+      'JWT'  — OAuth bearer token, fetched by get-jwt-token
+      'CSRF' — SAP CSRF token, fetched by get-csrf-token
+
+    Read from routes with:
+      ${bean:simpleCache.getOrDefault('JWT','')}
+      ${bean:simpleCache.getOrDefault('CSRF','')}
+
+    Mutated only by the refresh-api-tokens timer and the 401/403 onException
+    hooks. ConcurrentHashMap is thread-safe — multiple business routes can
+    read concurrently without contention.
+  -->
+  <bean id="simpleCache" class="java.util.concurrent.ConcurrentHashMap"/>
+
+</beans>

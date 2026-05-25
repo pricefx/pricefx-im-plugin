@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-department-cost-centers">
+        <from uri="file://{{integration.sftp.root}}/import/ppv/department-cost-centers?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+        <log message="Starting import of department-to-cost-center lookup from ${header.CamelFileNameOnly}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=LTV&amp;mapper=import-department-cost-centers.mapper&amp;pricingParameterName=DepartmentCostCenters&amp;batchSize=500000"/>
+        <log message="Completed import of department-to-cost-center lookup. Total records: ${header.PfxTotalInputRecordsCount}"/>
+    </route>
+</routes>

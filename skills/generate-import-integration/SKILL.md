@@ -1,6 +1,6 @@
 ---
 name: generate-import-integration
-description: Generate a Pricefx import integration (route, mapper, properties) for Product (P), Product Extension (PX), Customer (C), Customer Extension (CX), Seller (SL), or Seller Extension (SX). Use this skill whenever the user wants to load, import, or push data INTO Pricefx from CSV files, SFTP, database, or REST API. Covers loaddataFile (streaming) and loaddata patterns, smart auto-mapping from CSV headers, and new table creation. For PA/Data Source (DMDS) imports, use generate-pa-import-integration instead. Fetches real metadata from the partition via pfx CLI.
+description: Use when the user wants to load or import data INTO Pricefx for Product (P), Product Extension (PX), Customer (C), Customer Extension (CX), Seller (SL), or Seller Extension (SX) — says "import data", "load into Pricefx", "push to Pricefx", "ingest CSV", or has a CSV / SFTP / database / REST source. For PA / Data Source (DMDS) imports use `generate-pa-import-integration` instead. For Pricing Parameters (LTV/MLTV2) use `generate-ppv-import-integration`.
 ---
 
 # Generate Import Integration
@@ -8,6 +8,8 @@ description: Generate a Pricefx import integration (route, mapper, properties) f
 You are generating an import integration for a Pricefx Integration Manager project. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
 
 **Supported object types:** P (Product), PX (Product Extension), C (Customer), CX (Customer Extension), SL (Seller), SX (Seller Extension).
+
+> **Camel version note:** the loaddata-with-split template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
 For PA Data Source (DMDS) imports, use the `/generate-pa-import-integration` skill instead.
 
 ## Step 1: Check Credentials
@@ -116,103 +118,14 @@ Present the fields to the user in a clear table.
 
 ## Step 3b: Smart Auto-Mapping (when CSV sample data AND PX/CX metadata are available)
 
-When you have BOTH a CSV sample/header AND target PX/CX metadata (with labels from `product-extension-metadata` or `customer-extension-metadata`), automatically propose field mappings using the algorithm below. **Do NOT ask the user to manually map fields** — propose the mapping and let them confirm or adjust.
+When you have BOTH a CSV sample/header AND target PX/CX metadata (with labels from `product-extension-metadata` or `customer-extension-metadata`), apply the **Smart Auto-Mapping algorithm in `docs/smart-auto-mapping.md`** to propose field mappings. **Do NOT ask the user to manually map fields** when the algorithm is applicable — propose, then let the user confirm or adjust.
 
-### Auto-Mapping Algorithm
+Key field for this skill:
+- P / PX → `sku`
+- C / CX → `customerId`
+- SL / SX → `sellerId`
 
-For each CSV column, find the best matching Pricefx field using these rules in priority order:
-
-**Priority 1 — Exact key field match (confidence: HIGH)**
-- CSV column name contains `id`, `sku`, `key`, `code`, `product_id`, `item_number` → map to key field:
-  - For P/PX: map to `sku`
-  - For C/CX: map to `customerId`
-- CSV column name contains `name`, `description`, `label`, `title` (and is not a category/hierarchy) → map to `label`
-
-**Priority 2 — Fuzzy match against attribute labels (confidence: HIGH or MEDIUM)**
-Compare each CSV column name against PX/CX attribute labels using these matching techniques:
-1. **Exact match** (case-insensitive): `"Product Name"` = `"Product Name"` → HIGH confidence
-2. **Normalized match** (remove spaces, underscores, hyphens, lowercase): `"product_name"` = `"ProductName"` → HIGH confidence
-3. **Contains match**: CSV `"Hierarchy Level 1"` contains label `"Hierarchy 1"` → MEDIUM confidence
-4. **Word overlap**: CSV `"Product Cost USD"` shares words with label `"Product Costs"` → MEDIUM confidence (≥50% word overlap)
-5. **Abbreviation match**: CSV `"Prod Name"` ↔ label `"Product Name"` → MEDIUM confidence
-
-**Priority 3 — Type-based matching (confidence: LOW)**
-If no label match found, match by data type compatibility:
-- CSV column with decimal values → attribute with type `REAL`/`NUMERIC`
-- CSV column with dates → attribute with type `DATE`/`DATETIME`
-- Only use if there's a single compatible unmatched attribute of that type
-
-**Priority 4 — Sequential fallback (confidence: LOW)**
-Remaining unmatched CSV columns → assign to next available `attributeN` in order.
-
-### Confidence Display
-
-Present the proposed mapping as a table with confidence indicators:
-
-```
-Smart Auto-Mapping Result:
-| # | CSV Column          | → | Pricefx Field | Label          | Confidence | Match Reason              |
-|---|---------------------|---|---------------|----------------|------------|---------------------------|
-| 1 | Product ID          | → | sku           | —              | ✅ HIGH    | Key field (contains "ID") |
-| 2 | Product Name        | → | attribute1    | Product Name   | ✅ HIGH    | Exact label match         |
-| 3 | Hierarchy Level 1   | → | attribute2    | Product Hier 1 | 🟡 MEDIUM | Word overlap (73%)        |
-| 4 | Cost                | → | attribute9    | Product Costs  | 🟡 MEDIUM | Word overlap + type match |
-| 5 | Internal Code       | → | attribute11   | —              | 🔴 LOW    | Sequential fallback       |
-```
-
-Ask: **Does this mapping look correct? You can adjust any row.**
-
-### Converter Expression Auto-Detection
-
-When proposing the mapping, also detect and suggest converter expressions based on:
-1. **Target field type** from metadata (e.g., `NUMERIC` → `stringToDecimal`)
-2. **CSV sample data** patterns (e.g., date formats → `stringToDate`)
-
-| Target Type | Suggested Converter |
-|---|---|
-| `NUMERIC`, `MONEY`, `PERCENT` | `converterExpression="stringToDecimal"` |
-| `INTEGER` | `converterExpression="stringToInteger"` |
-| `DATE` | `converterExpression="stringToDate"` (detect format from sample) |
-| `DATETIME` | `converterExpression="stringToDateTime"` |
-| `TEXT`, `STRING` | none needed |
-
-### When Auto-Mapping is NOT possible
-
-- **No CSV sample data available** → fall back to manual mapping (Step 8)
-- **No attribute labels set** (all labels empty in metadata) → fall back to sequential mapping + ask user
-- **P, C objects** (no `*-metadata` command available) → fall back to manual mapping
-
-### LLM-Enhanced Mapping Reasoning
-
-When the 4-tier automatic matching produces LOW confidence results, apply semantic reasoning:
-
-1. **Analyze field semantics** — don't just match names, understand meaning:
-   - `Cust_Num`, `Customer_Number`, `KUNNR`, `customer_id`, `cust_no` → all map to `customerId`
-   - `Mat_No`, `Material`, `SKU`, `ItemCode`, `product_code` → all map to `sku`
-   - `Desc`, `Description`, `Label`, `Name`, `Title` → likely maps to `label`
-   - `Cat`, `Category`, `Group`, `Class`, `Segment` → likely maps to an attribute
-
-2. **Analyze data values** — if header matching is ambiguous, sample the data:
-   - Column with values like "PRD-001", "SKU-123" → product identifier → `sku`
-   - Column with values like "C-1001", "CUST-42" → customer identifier → `customerId`
-   - Column with numeric values and 2 decimal places → likely a price/cost → needs `stringToDecimal` converter
-   - Column with dates → needs `stringToDate` converter with detected format
-
-3. **Cross-reference with Pricefx metadata** — if connected to a partition:
-   - Fetch existing field labels and descriptions
-   - Match CSV headers against field descriptions, not just field names
-   - Example: Pricefx field `attribute3` has label "Product Category" → CSV column "Category" maps here
-
-4. **Confidence display with reasoning:**
-   ```
-   CSV Column          → Pricefx Field    Confidence  Reasoning
-   Customer_Number     → customerId       HIGH        Semantic match: customer identifier
-   Mat_Desc            → label            MEDIUM      "Desc" commonly maps to description/label
-   Unit_Price          → attribute1       MEDIUM      Numeric with decimals, likely price field
-   XYZABC              → ???              LOW         No semantic match — ask user
-   ```
-
-5. **Always ask for confirmation** — display the proposed mapping and let user adjust before generating.
+For P / C / SL master objects (no `*-metadata` command available), fall back to manual mapping (Step 8). Same fallback when the CSV has no header sample or all attribute labels are empty.
 
 ## Step 4: Determine Data Source
 
@@ -276,16 +189,24 @@ If auto-detected, skip Steps 6 (Batch Size), 7 (CSV Header) — they are already
 
 **IMPORTANT:** This step applies ONLY to P, PX, CX, C, SL, SX imports. For DS/DMDS (PA Data Sources), ALWAYS use the `generate-pa-import-integration` skill which uses the split+tokenize+loaddata+flush pattern. NEVER offer `loaddataFile` for DS/DMDS.
 
-Recommend `loaddataFile` as the default:
-
-> **Recommended: `loaddataFile`** (streaming, server-side batching)
+> ⚠️ **Critical trade-off — read this before choosing:**
 >
-> This is the simplest and most efficient approach. The file is streamed directly to Pricefx, which handles batching internally. No split/tokenize, no Groovy parser, minimal code.
+> `loaddataFile` + `streamingUnmarshal` is faster and simpler, BUT it gives **NO row-level or batch-level feedback** during processing. The file streams to Pricefx as a single opaque upload; IM logs only show "started" and "complete" with the final record count. If a load takes hours, you have no visibility into how far it has progressed, no per-batch timing, and no way to spot a slow batch or partial failure mid-stream.
+>
+> `loaddata` + split/tokenize parses the file in IM and loads in named batches — every batch logs its number, file name, and starting row (see the batch log line in the loaddata template below). You can watch progress in the IM logs.
 
-| Method | Best for | Description |
-|--------|----------|-------------|
-| `pfx-api:loaddataFile` | **Default for all P/PX/CX/C/SL/SX** | Streams file to Pricefx server. Server handles batching. Minimal route code (~5 lines). |
-| `pfx-api:loaddata` | Complex row-level transformations | IM parses CSV, applies Groovy per-row logic, sends JSON batches. Use ONLY when you need Groovy expressions in the mapper that access other rows or headers. |
+**You MUST ask the user explicitly before generating the route:**
+
+> **Which import method do you want?**
+> 1. **`loaddataFile`** (streaming, fast, **no progress visibility**) — recommended for small/medium files where you don't need to watch progress, or when downstream monitoring (Pricefx UI, events) is sufficient.
+> 2. **`loaddata` + split/tokenize** (slower, **per-batch logging**) — recommended for large files (>500k rows), long-running loads, or any production load where you want to see batch progress in IM logs.
+
+Do NOT silently default to `loaddataFile`. The observability difference is significant and the user should make this choice deliberately.
+
+| Method | Best for | Observability | Description |
+|--------|----------|---------------|-------------|
+| `pfx-api:loaddataFile` | Small/medium files, simple maps | ❌ None — single-shot stream | Streams file to Pricefx server. Server handles batching. Minimal route code (~5 lines). |
+| `pfx-api:loaddata` | Large files, long-running loads, row-level Groovy logic | ✅ Per-batch logging | IM parses CSV, batches via tokenize, logs each batch. Use when you need progress visibility or Groovy row-level transforms. |
 
 ### loaddataFile Sync Modes
 
@@ -332,6 +253,7 @@ Use this ONLY if the user explicitly needs row-level Groovy transformations:
   <split aggregationStrategy="recordsCountAggregation" streaming="true">
     <tokenize group="{{pfx:batch.size:20000}}" token="\n"/>
     <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+    <log message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelFileName} (batch size: {{pfx:batch.size:20000}}, starting at row ${exchangeProperty.CamelSplitIndex * {{pfx:batch.size:20000}} + 1})" loggingLevel="INFO"/>
     <toD uri="pfx-api:loaddata?objectType=P&amp;mapper={{pfx:mapper}}&amp;connection={{pfx:connection}}"/>
     <setBody><constant/></setBody>
   </split>
@@ -440,11 +362,8 @@ Use `<routes>` format (standalone). Hardcode `batchSize` directly in the route X
         <!-- Unmarshal CSV -->
         <to uri="pfx-csv:unmarshal?skipHeaderRecord={true|false}&amp;delimiter={DELIMITER}"/>
 
-        <!-- Map fields -->
-        <to uri="pfx-mapper:{route-name}Mapper"/>
-
-        <!-- Import to Pricefx -->
-        <to uri="pfx-api:loaddata?objectType={TYPE}&amp;batchSize={BATCH_SIZE}"/>
+        <!-- Import to Pricefx (mapper is passed as a parameter — there is no separate pfx-mapper component) -->
+        <to uri="pfx-api:loaddata?objectType={TYPE}&amp;mapper={route-name}.mapper&amp;batchSize={BATCH_SIZE}&amp;businessKeys={KEY_FIELD}"/>
 
         <log message="Import completed for file: ${header.CamelFileName}" loggingLevel="INFO"/>
     </route>
@@ -675,4 +594,3 @@ After generating all files, run this checklist automatically. Fix any issues BEF
    - [ ] Archive/error folder pattern is configured on file source
    - [ ] No inline Groovy exceeding 15 lines
    - [ ] All values that could change per environment use `{{pfx:...}}` properties
-   - [ ] Route references pattern catalog: [CSV/SFTP Import](../../../integration-manager/docs/patterns/import-csv-sftp.md)

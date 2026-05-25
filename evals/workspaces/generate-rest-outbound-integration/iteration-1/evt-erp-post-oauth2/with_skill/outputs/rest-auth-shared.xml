@@ -1,0 +1,41 @@
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+  <!-- Obtain a Bearer token via OAuth 2.0 client-credentials grant.
+       On success: sets Authorization header on the exchange.
+       On failure: clears Authorization header and logs an error. -->
+  <route id="rest_auth_get_token">
+    <from uri="direct:rest_auth_get_token"/>
+
+    <setHeader name="Content-Type">
+      <constant>application/x-www-form-urlencoded</constant>
+    </setHeader>
+    <setBody>
+      <simple>grant_type={{ext.api.auth.grantType}}&amp;client_id={{ext.api.auth.clientId}}&amp;client_secret={{ext.api.auth.clientSecret}}&amp;scope={{ext.api.auth.scope}}</simple>
+    </setBody>
+
+    <toD uri="{{ext.api.auth.url}}?httpMethod=POST&amp;bridgeEndpoint=true&amp;throwExceptionOnFailure=false&amp;connectionClose=true&amp;connectTimeout=30000&amp;socketTimeout=30000"/>
+
+    <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+    <setProperty name="AUTH_rawResponse"><simple>${body}</simple></setProperty>
+
+    <choice>
+      <when>
+        <simple><![CDATA[${header.CamelHttpResponseCode} >= 200 && ${header.CamelHttpResponseCode} < 300]]></simple>
+        <setBody>
+          <groovy>new groovy.json.JsonSlurper().parseText(exchange.properties.AUTH_rawResponse)</groovy>
+        </setBody>
+        <setHeader name="Authorization">
+          <groovy>'Bearer ' + (body?.access_token ?: '')</groovy>
+        </setHeader>
+        <log loggingLevel="INFO"
+             message="[AUTH][OK] route=${routeId} tokenType=${body?.token_type} expiresIn=${body?.expires_in}"/>
+      </when>
+      <otherwise>
+        <log loggingLevel="ERROR"
+             message="[AUTH][FAILED][${header.CamelHttpResponseCode}] route=${routeId} url={{ext.api.auth.url}} body=${exchangeProperty.AUTH_rawResponse}"/>
+        <removeHeader name="Authorization"/>
+      </otherwise>
+    </choice>
+  </route>
+
+</routes>

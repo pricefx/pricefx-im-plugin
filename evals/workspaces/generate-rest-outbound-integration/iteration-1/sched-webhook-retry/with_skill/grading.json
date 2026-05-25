@@ -1,0 +1,48 @@
+{
+  "eval_id": 1,
+  "eval_name": "sched-webhook-retry",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "quartz-daily-trigger",
+      "text": "Daily Quartz cron trigger on the route",
+      "passed": true,
+      "evidence": "matched: 'quartz' | 'cron='"
+    },
+    {
+      "id": "outbound-http-post",
+      "text": "Route makes an outbound HTTP POST",
+      "passed": true,
+      "evidence": "matched: '>POST<'"
+    },
+    {
+      "id": "retry-present",
+      "text": "Retry on transient errors \u2014 onException + redeliveryPolicy OR a RedeliveryPolicy bean OR maximumRedeliveries config",
+      "passed": true,
+      "evidence": "matched: 'redeliveryPolicy' | 'maximumRedeliveries' | 'RedeliveryPolicy'"
+    },
+    {
+      "id": "url-externalized",
+      "text": "Target URL is externalized \u2014 either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field)",
+      "passed": true,
+      "evidence": "matched: '\\\\{\\\\{ext\\\\.api\\\\.url\\\\}\\\\}' | 'ext\\\\.api\\\\.url=https://hooks\\\\.example\\\\.com' | 'ext.api.url=https://hooks.example.com'"
+    },
+    {
+      "id": "no-inbound-pattern",
+      "text": "Does NOT generate inbound REST endpoint patterns",
+      "passed": true,
+      "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+    }
+  ],
+  "score": {
+    "passed": 5,
+    "total": 5
+  },
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

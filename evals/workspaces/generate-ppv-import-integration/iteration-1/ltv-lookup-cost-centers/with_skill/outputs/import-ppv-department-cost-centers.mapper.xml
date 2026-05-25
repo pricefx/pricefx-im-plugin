@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-ppv-department-cost-centers.mapper">
+        <body in="departmentCode" out="name"/>
+        <body in="costCenter" out="value"/>
+    </loadMapper>
+</mappers>

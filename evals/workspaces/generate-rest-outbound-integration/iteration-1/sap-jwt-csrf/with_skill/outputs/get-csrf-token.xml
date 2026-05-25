@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+  <!--
+    Fetches a CSRF token from the SAP OData service via a GET with
+    `x-csrf-token: fetch`. Stores the returned token in simpleCache['CSRF'].
+
+    Critical: this route uses cookieHandler=#instanceCookieHandler. The same
+    bean reference MUST be used on the business write call (post-quote-to-sap →
+    rest-outbound-shared) — SAP binds the CSRF token to the session cookie
+    returned by this fetch. A fresh cookie jar on the write call returns HTTP 403.
+
+    Must run AFTER get-jwt-token: needs a valid bearer in simpleCache['JWT'].
+
+    Reads:
+      ext.api.sap.serviceUrl   — SAP OData service URL (used as fetch base, typically with $top=1)
+      ext.api.sap.environment  — SAP environment (PRD/UAT/DEV) for x-nova-sapsid
+      ext.api.subscriptionKey  — SAP API Mgmt subscription key
+
+    Writes:
+      simpleCache['CSRF'] = value of x-csrf-token response header
+      instanceCookieHandler.cookieStore — session cookie (used by write call)
+  -->
+  <route id="get-csrf-token">
+    <description>Fetches CSRF token from SAP and stores it in simpleCache['CSRF']. Uses instanceCookieHandler so SAP's session cookie is reused on the subsequent write.</description>
+    <from uri="direct:get-csrf-token"/>
+
+    <log message="[AUTH] Refreshing CSRF token from {{ext.api.sap.serviceUrl}}"/>
+
+    <setHeader name="x-nova-sapsid"><simple>{{ext.api.sap.environment}}</simple></setHeader>
+    <setHeader name="Ocp-Apim-Subscription-Key"><simple>{{ext.api.subscriptionKey}}</simple></setHeader>
+    <setHeader name="Content-Type"><constant>application/json</constant></setHeader>
+    <setHeader name="Accept"><constant>application/json</constant></setHeader>
+    <setHeader name="x-csrf-token"><constant>fetch</constant></setHeader>
+    <setHeader name="CamelHttpMethod"><constant>GET</constant></setHeader>
+    <setHeader name="CamelHttpQuery"><constant>$top=1</constant></setHeader>
+    <setHeader name="Authorization">
+      <simple>Bearer ${bean:simpleCache.getOrDefault('JWT','')}</simple>
+    </setHeader>
+    <setHeader name="HttpUri"><simple>{{ext.api.sap.serviceUrl}}</simple></setHeader>
+
+    <!-- throwExceptionOnFailure=false on the fetch so we can log the body on failure;
+         cookieHandler=#instanceCookieHandler is REQUIRED so SAP's session cookie is captured. -->
+    <toD uri="${header.HttpUri}?bridgeEndpoint=true&amp;cookieHandler=#instanceCookieHandler&amp;throwExceptionOnFailure=false&amp;connectionClose=false&amp;connectTimeout=30000&amp;socketTimeout=30000"/>
+
+    <log message="[AUTH] CSRF response status ${header.CamelHttpResponseCode}"/>
+
+    <choice>
+      <when>
+        <simple><![CDATA[${header.CamelHttpResponseCode} >= 200 && ${header.CamelHttpResponseCode} < 300]]></simple>
+        <toD uri="bean:simpleCache?method=put('CSRF',${header.x-csrf-token})"/>
+        <log loggingLevel="INFO" message="[AUTH][OK] CSRF refreshed and cached"/>
+      </when>
+      <otherwise>
+        <log loggingLevel="ERROR"
+             message="[AUTH][CSRF_FAILED][${header.CamelHttpResponseCode}] url={{ext.api.sap.serviceUrl}} body=${body}"/>
+      </otherwise>
+    </choice>
+  </route>
+
+</routes>

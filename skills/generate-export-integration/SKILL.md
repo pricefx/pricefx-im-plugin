@@ -1,6 +1,6 @@
 ---
 name: generate-export-integration
-description: Generate a Pricefx export integration (route, mapper, filter, properties) for any object type (P, PX, CX, C, SL, SX, DS/DMDS). Use this skill whenever the user wants to export or extract data FROM Pricefx — to CSV, SFTP, database, or REST API. Covers full exports, delta/incremental sync, scheduled exports, and batched fetch patterns. Fetches real metadata from the partition via pfx CLI.
+description: Use when the user wants to export or extract data FROM Pricefx for any object type (P, PX, CX, C, SL, SX, DS/DMDS) — says "export data", "extract from Pricefx", "delta sync", "incremental export", "scheduled export", or needs to push Pricefx data to CSV / SFTP / database / REST.
 ---
 
 # Generate Export Integration
@@ -169,8 +169,6 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
 ```
 
 The `${headers.lastExportTimestamp}` is populated by `pfx-config:get` with the stored timestamp. On first run (no stored value), all records are exported.
-
-**Reference:** [Incremental Timestamp Export Pattern](../../../integration-manager/docs/patterns/export-incremental-timestamp.md)
 
 **Note:** Always use UTC timestamps and set timezone explicitly on Quartz (e.g., `trigger.timeZone=UTC`).
 
@@ -371,8 +369,6 @@ When exporting to both SFTP and S3, or writing multiple file formats:
   <to uri="direct:export-to-s3"/>
 </multicast>
 ```
-
-See [Chained Routes Pattern](../../../integration-manager/docs/patterns/chained-routes-direct.md).
 
 ## Batch Size
 

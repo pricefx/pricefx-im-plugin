@@ -1,0 +1,30 @@
+{
+  "eval_id": 6,
+  "eval_name": "edge-vague-check",
+  "category": "edge",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "asks-which-route",
+      "text": "Subagent asks which route file to analyze (or lists routes/ as the dir to look in)",
+      "passed": true,
+      "evidence": "matched: 'file path' | 'routes/' | 'src/main/resources/repo/routes'"
+    },
+    {
+      "id": "no-arbitrary-lint-report",
+      "text": "Does NOT produce a lint report for an arbitrary/made-up route file",
+      "passed": true,
+      "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

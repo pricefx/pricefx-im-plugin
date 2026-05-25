@@ -1,6 +1,6 @@
 ---
 name: generate-test-data
-description: Generates realistic CSV test data for IM import routes based on partition metadata. Use when the user needs sample data for testing integrations.
+description: Use when the user needs realistic CSV sample data to test a Pricefx Integration Manager import route — says "generate test data", "create sample CSV", "mock data", "test fixtures", or wants to dry-run an integration with synthetic input matching the partition's actual field metadata.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Write
 maxTurns: 20

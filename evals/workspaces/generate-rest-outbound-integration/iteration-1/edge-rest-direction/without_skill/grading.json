@@ -1,0 +1,30 @@
+{
+  "eval_id": 6,
+  "eval_name": "edge-rest-direction",
+  "category": "edge",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "asks-direction",
+      "text": "Subagent asks a clarifying question about direction (outbound IM\u2192external vs inbound external\u2192IM)",
+      "passed": true,
+      "evidence": "matched: 'outbound' | 'inbound' | 'direction'"
+    },
+    {
+      "id": "no-route-written",
+      "text": "Does NOT silently generate a route XML (outbound or inbound)",
+      "passed": true,
+      "evidence": "no route .xml present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

@@ -1,0 +1,6 @@
+<mappers>
+    <loadMapper id="import-ppv-company-params.mapper">
+        <body in="name" out="name"/>
+        <body in="value" out="value"/>
+    </loadMapper>
+</mappers>

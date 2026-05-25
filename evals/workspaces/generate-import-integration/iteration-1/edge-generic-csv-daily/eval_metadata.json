@@ -1,0 +1,10 @@
+{
+  "eval_id": 9,
+  "eval_name": "edge-generic-csv-daily",
+  "category": "edge",
+  "prompt": "I have a CSV in /tmp/data.csv that needs to go into Pricefx. Daily.",
+  "assertions": [
+    {"id": "asks-or-makes-reasonable-default", "text": "Subagent either asks for object type OR picks one with a clear note that the assumption can be overridden", "type": "grep", "patterns": ["which object", "what object", "Product", "Customer", "object type", "assume", "default", "P, PX, C, CX"], "match": "any", "scope": "narrative"},
+    {"id": "no-pa-ltv-leak-if-generated", "text": "If a route was generated, it doesn't accidentally use DMDS / LTV / MLTV2 (those need separate skills)", "type": "grep_absent", "patterns": ["DMDS", "objectType=LTV", "objectType=MLTV2", "pricingParameterName=", "pfx-api:flush"], "scope": "outputs"}
+  ]
+}

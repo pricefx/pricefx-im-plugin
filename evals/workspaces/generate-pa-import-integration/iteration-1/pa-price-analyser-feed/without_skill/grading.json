@@ -1,0 +1,54 @@
+{
+  "eval_id": 3,
+  "eval_name": "pa-price-analyser-feed",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-DMDS",
+      "text": "Generated route uses objectType=DMDS",
+      "passed": true,
+      "evidence": "matched: 'objectType=DMDS'"
+    },
+    {
+      "id": "uses-targetname-transactionfeed",
+      "text": "Targets TransactionFeed",
+      "passed": true,
+      "evidence": "matched: 'TransactionFeed'"
+    },
+    {
+      "id": "split-tokenize-loaddata",
+      "text": "split + tokenize + loaddata pattern",
+      "passed": false,
+      "evidence": "missing: '<split' | '<tokenize'"
+    },
+    {
+      "id": "flush-present",
+      "text": "pfx-api:flush is present",
+      "passed": true,
+      "evidence": "matched: 'pfx-api:flush'"
+    },
+    {
+      "id": "dated-filename-handling",
+      "text": "Route handles dated filename (YYYYMMDD.csv) via simple/groovy/include/fileName",
+      "passed": true,
+      "evidence": "matched: 'yyyyMMdd' | 'date:now' | 'include='"
+    },
+    {
+      "id": "no-loaddatafile",
+      "text": "Does NOT use loaddataFile",
+      "passed": false,
+      "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+    }
+  ],
+  "score": {
+    "passed": 4,
+    "total": 6
+  },
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "total": 6,
+    "pass_rate": 0.6667
+  }
+}

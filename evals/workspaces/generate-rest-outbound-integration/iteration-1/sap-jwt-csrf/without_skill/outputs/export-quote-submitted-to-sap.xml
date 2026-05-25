@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <!--
+      Outbound integration: Pricefx -> SAP API Management (OData)
+      Trigger : QUOTE_SUBMITTED event from Pricefx event bus
+      Flow    : JWT auth -> GET /<entity> with X-CSRF-Token: Fetch (captures token + cookies)
+                -> POST quote payload with X-CSRF-Token and Cookie header
+    -->
+
+    <!-- ===========================================================
+         Main route: listen for QUOTE_SUBMITTED events
+         =========================================================== -->
+    <route id="export-quote-submitted-to-sap">
+        <from uri="pfx-event:fetch?eventType=QUOTE_SUBMITTED&amp;delay=60000"/>
+
+        <log message="QUOTE_SUBMITTED received. Event headers: ${headers}"/>
+
+        <!-- The event payload typically carries the Quote typedId/uniqueName in headers.
+             We pull the full quote (with line items) from Pricefx to build the SAP payload. -->
+        <setHeader name="quoteUniqueName">
+            <simple>${header.PfxEventPayload[uniqueName]}</simple>
+        </setHeader>
+        <setHeader name="quoteTypedId">
+            <simple>${header.PfxEventPayload[typedId]}</simple>
+        </setHeader>
+
+        <log message="Fetching Quote ${header.quoteUniqueName} (typedId=${header.quoteTypedId})"/>
+
+        <!-- Fetch the quote header -->
+        <toD uri="pfx-api:fetch?objectType=Q&amp;filter=export-quote-submitted-to-sap.filter"/>
+
+        <!-- Iterate (usually one record) and POST each to SAP -->
+        <split>
+            <simple>${body}</simple>
+            <setProperty name="quote">
+                <simple>${body}</simple>
+            </setProperty>
+
+            <!-- ============== STEP 1: CSRF token fetch ==============
+                 SAP requires:
+                   - Authorization: Bearer <JWT>  (added automatically by JwtConnection)
+                   - X-CSRF-Token: Fetch          on a GET request
+                 SAP responds with:
+                   - X-CSRF-Token: <token>
+                   - Set-Cookie:   <session cookies>
+                 We capture both into exchange headers so the POST can replay them. -->
+            <setHeader name="X-CSRF-Token">
+                <constant>Fetch</constant>
+            </setHeader>
+            <setHeader name="Accept">
+                <constant>application/json</constant>
+            </setHeader>
+
+            <toD uri="pfx-rest:get?uri=/sap/opu/odata/sap/{{sap.odata.service}}/&amp;connection=sap.jwt.connection&amp;connectionTimeoutMs=60000&amp;outputTarget=header&amp;outputTargetName=csrfFetchResponse"/>
+
+            <!-- Capture token + Set-Cookie returned by SAP.
+                 Both are populated in the exchange headers by pfx-rest. -->
+            <setHeader name="sapCsrfToken">
+                <simple>${header.X-CSRF-Token}</simple>
+            </setHeader>
+            <setHeader name="sapCookie">
+                <simple>${header.Set-Cookie}</simple>
+            </setHeader>
+
+            <log message="CSRF token acquired (len=${header.sapCsrfToken.length()}); cookies=${header.sapCookie}"/>
+
+            <!-- ============== STEP 2: Build the JSON body ==============
+                 Use a FreeMarker template stored under repo/resources/.
+                 The template receives the quote map via CamelFreemarkerDataModel. -->
+            <setHeader name="CamelFreemarkerDataModel">
+                <groovy>[ quote: exchange.getProperty("quote") ]</groovy>
+            </setHeader>
+            <to uri="freemarker:file://{{integration.data}}/repository/resources/sap-quote-payload.ftl?allowContextMapAll=true"/>
+
+            <!-- ============== STEP 3: POST quote payload to SAP ============== -->
+            <setHeader name="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+            <setHeader name="X-CSRF-Token">
+                <simple>${header.sapCsrfToken}</simple>
+            </setHeader>
+            <setHeader name="Cookie">
+                <simple>${header.sapCookie}</simple>
+            </setHeader>
+
+            <doTry>
+                <toD uri="pfx-rest:post?uri=/sap/opu/odata/sap/{{sap.odata.service}}/{{sap.odata.entitySet}}&amp;connection=sap.jwt.connection&amp;connectionTimeoutMs=120000"/>
+
+                <log message="SAP POST OK for quote ${header.quoteUniqueName}. Response: ${body}"/>
+
+                <doCatch>
+                    <exception>java.lang.Exception</exception>
+                    <log loggingLevel="ERROR" message="SAP POST failed for quote ${header.quoteUniqueName}: ${exception.message}"/>
+                    <!-- A 403 with X-CSRF-Token: Required means the token expired.
+                         Caller can retry; route surfaces the error to IM run history. -->
+                    <throwException ref="${exception}"/>
+                </doCatch>
+            </doTry>
+        </split>
+    </route>
+
+</routes>

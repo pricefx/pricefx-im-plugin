@@ -1,0 +1,30 @@
+{
+  "eval_id": 9,
+  "eval_name": "edge-generic-csv-daily",
+  "category": "edge",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "asks-or-makes-reasonable-default",
+      "text": "Subagent either asks for object type OR picks one with a clear note that the assumption can be overridden",
+      "passed": true,
+      "evidence": "matched: 'object type' | 'default'"
+    },
+    {
+      "id": "no-pa-ltv-leak-if-generated",
+      "text": "If a route was generated, it doesn't accidentally use DMDS / LTV / MLTV2 (those need separate skills)",
+      "passed": true,
+      "evidence": "none of: 'DMDS' | 'objectType=LTV' | 'objectType=MLTV2' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

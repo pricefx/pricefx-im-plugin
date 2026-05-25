@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<filter id="export-pricelist-to-webhook.filter"
+        sortBy="lastUpdateDate"
+        resultFields="priceListId,sku,price,currency,validFrom,validTo,lastUpdateDate">
+    <and>
+        <criterion fieldName="lastUpdateDate" operator="greaterThan" value="simple:${headers.lastExportTimestamp}"/>
+        <criterion fieldName="lastUpdateDate" operator="lessOrEqual" value="simple:${headers.currentExportTimestamp}"/>
+    </and>
+</filter>

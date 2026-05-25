@@ -1,0 +1,48 @@
+{
+  "eval_id": 1,
+  "eval_name": "px-prices-hourly",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-PX",
+      "text": "Generated route uses objectType=PX",
+      "passed": true,
+      "evidence": "matched: 'objectType=PX'"
+    },
+    {
+      "id": "px-name-constant",
+      "text": "Mapper contains <constant ... out=\"name\"/> with table name Prices (required for PX)",
+      "passed": true,
+      "evidence": "matched: '<constant[^>]*expression=\"Prices\"[^>]*out=\"name\"'"
+    },
+    {
+      "id": "hourly-cron",
+      "text": "Schedule is hourly (cron pattern roughly every hour or every 60 minutes)",
+      "passed": true,
+      "evidence": "matched: '0\\\\+0\\\\+0/1'"
+    },
+    {
+      "id": "file-component",
+      "text": "Route reads from file:// or pfx-sftp:// source",
+      "passed": true,
+      "evidence": "matched: 'file:'"
+    },
+    {
+      "id": "no-dmds-pattern",
+      "text": "No DMDS / flush pattern in route/mapper",
+      "passed": true,
+      "evidence": "none of: 'DMDS' | 'pfx-api:flush' present"
+    }
+  ],
+  "score": {
+    "passed": 5,
+    "total": 5
+  },
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

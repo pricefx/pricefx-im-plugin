@@ -1,0 +1,60 @@
+{
+  "eval_id": 0,
+  "eval_name": "pa-saleshistory-tab",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "uses-objectType-DMDS",
+      "text": "Generated route URI uses objectType=DMDS",
+      "passed": true,
+      "evidence": "matched: 'objectType=DMDS'"
+    },
+    {
+      "id": "has-split-streaming",
+      "text": "Route has <split streaming=\"true\"> for handling the 10M-row file",
+      "passed": false,
+      "evidence": "missing: '<split[^>]*streaming=\"true\"' | 'streaming=\"true\"'"
+    },
+    {
+      "id": "has-tokenize",
+      "text": "Route uses <tokenize ... group=N> chunking",
+      "passed": false,
+      "evidence": "missing: '<tokenize'"
+    },
+    {
+      "id": "uses-loaddata-not-loaddatafile",
+      "text": "Uses pfx-api:loaddata (NOT loaddataFile) for DMDS",
+      "passed": false,
+      "evidence": "missing: 'pfx-api:loaddata\\\\?' | 'pfx-api:loaddata&'"
+    },
+    {
+      "id": "no-loaddatafile",
+      "text": "Does NOT use pfx-api:loaddataFile (forbidden for DMDS)",
+      "passed": false,
+      "evidence": "found (should be absent): 'pfx-api:loaddataFile' -> 'pfx-api:loaddataFile'"
+    },
+    {
+      "id": "flush-present",
+      "text": "pfx-api:flush is present after the load",
+      "passed": true,
+      "evidence": "matched: 'pfx-api:flush'"
+    },
+    {
+      "id": "tab-delimiter",
+      "text": "CSV unmarshal is configured for tab delimiter",
+      "passed": true,
+      "evidence": "matched: 'delimiter=\\\\\\\\t' | 'delimiter=%09' | '\\\\\\\\t'"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 7
+  },
+  "summary": {
+    "passed": 3,
+    "failed": 4,
+    "total": 7,
+    "pass_rate": 0.4286
+  }
+}

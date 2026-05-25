@@ -1,0 +1,10 @@
+{
+  "eval_id": 7,
+  "eval_name": "neg-mltv2-discount-matrix",
+  "category": "negative",
+  "prompt": "Need to import a discount matrix into MLTV2 — multi-key lookup with customer x product x quantity tier dimensions. Target table DiscountMatrix.",
+  "assertions": [
+    {"id": "redirects-to-ppv-skill", "text": "Subagent recognizes MLTV2 use case and refers to generate-ppv-import-integration", "type": "grep", "patterns": ["generate-ppv-import-integration", "ppv-import", "Pricing Parameter", "MLTV2 is.*different", "use.*ppv"], "match": "any", "scope": "narrative"},
+    {"id": "no-wrong-objecttype-pcx", "text": "Does NOT generate objectType=P/PX/C/CX for an MLTV2 table", "type": "grep_absent", "patterns": ["objectType=P[^X]", "objectType=PX", "objectType=C[^X]", "objectType=CX"], "scope": "outputs"}
+  ]
+}

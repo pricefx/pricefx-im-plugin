@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+  <!--
+    Periodic refresh timer for the SAP JWT + CSRF tokens.
+
+    Order matters: JWT must be refreshed BEFORE CSRF (the CSRF fetch is an
+    authenticated SAP OData GET that uses the bearer token in simpleCache['JWT']).
+
+    Runs at startup (delay=0) and then on the interval configured by
+    ext.api.tokens.refreshPeriodMs (default 30 minutes — adjust to be safely
+    less than the SAP token lifetime).
+
+    Set ext.api.tokens.autoStartup=false to disable in environments where the
+    SAP endpoint is unreachable (e.g., local dev).
+  -->
+  <route id="refresh-api-tokens" autoStartup="{{ext.api.tokens.autoStartup:true}}">
+    <description>Refresh SAP JWT then CSRF token on a fixed interval. Keeps simpleCache warm so business routes never block on auth.</description>
+    <from uri="timer://refresh-api-tokens?delay=0&amp;period={{ext.api.tokens.refreshPeriodMs}}"/>
+
+    <log loggingLevel="INFO" message="[refresh-api-tokens] Refreshing JWT + CSRF tokens"/>
+
+    <doTry>
+      <to uri="direct:get-jwt-token"/>
+      <to uri="direct:get-csrf-token"/>
+      <doCatch>
+        <exception>java.lang.Exception</exception>
+        <log loggingLevel="ERROR"
+             message="[refresh-api-tokens][ERROR] ${exception.message} — business routes will retry via 401/403 onException"/>
+      </doCatch>
+    </doTry>
+  </route>
+
+</routes>

@@ -1,6 +1,6 @@
 ---
 name: generate-ppv-import-integration
-description: Generate a Pricefx Pricing Parameter (Company Parameter) import integration for LTV (single-key lookup table) or MLTV2 (multi-key matrix table). Use this skill whenever the user wants to import pricing parameters, company parameters, lookup tables, exchange rates, discount matrices, or any key/value configuration data into Pricefx. Fetches real metadata from the partition via pfx CLI.
+description: Use when the user wants to import Pricefx Pricing Parameters / Company Parameters into LTV (single-key lookup) or MLTV2 (multi-key matrix) tables — mentions "pricing parameters", "company parameters", "lookup tables", "exchange rates", "discount matrices", or any key/value configuration data. For P/PX/C/CX use `generate-import-integration`; for PA/DMDS use `generate-pa-import-integration`.
 ---
 
 # Generate Pricing Parameter Import Integration
@@ -214,6 +214,16 @@ Generate the route and mapper files using the conventions below.
 ### Route XML — LTV/MLTV2 import
 
 PPV imports use `pfx-csv:streamingUnmarshal` + `pfx-api:loaddataFile` with the `pricingParameterName` parameter to identify the target table.
+
+> ⚠️ **Heads-up — observability trade-off:**
+>
+> `streamingUnmarshal` + `loaddataFile` streams the entire file to Pricefx as a single opaque upload. IM logs will show only "start" and "end" — **no per-batch progress, no row counts mid-stream, no batch timings**. If the load is slow or partially fails, you cannot tell from IM logs how far it got.
+>
+> For PPV files this is usually acceptable (they tend to be small/medium). But before generating the route, **ask the user**:
+>
+> > **The recommended `loaddataFile` pattern gives no per-batch progress in IM logs — only a final "complete" message. Is that OK, or do you want the slower split/tokenize+`loaddata` pattern with batch-level logging?**
+>
+> If they want per-batch logging, switch to the split+tokenize+`loaddata` pattern (see `generate-import-integration` for the template).
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">

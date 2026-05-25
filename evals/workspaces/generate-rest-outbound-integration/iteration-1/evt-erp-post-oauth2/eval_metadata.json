@@ -1,0 +1,13 @@
+{
+  "eval_id": 0,
+  "eval_name": "evt-erp-post-oauth2",
+  "category": "positive",
+  "prompt": "After Pricefx event ITEM_APPROVED_PL, we need to POST the approved contract to our ERP at https://erp.internal/api/v2/contracts. OAuth2 client-credentials auth.",
+  "assertions": [
+    {"id": "event-trigger-present", "text": "Route is event-driven — uses pfx-event:fetch OR direct: trigger consistent with the SKILL.md pattern (event name ITEM_APPROVED_PL)", "type": "grep", "patterns": ["pfx-event:fetch", "ITEM_APPROVED_PL", "from uri=\"direct:"], "match": "any", "scope": "outputs"},
+    {"id": "outbound-http-post", "text": "Route makes an outbound HTTP POST (via raw HTTP component, pfx-rest:post, or CamelHttpMethod=POST header)", "type": "grep", "patterns": ["CamelHttpMethod[^>]*POST", "pfx-rest:post", ">POST<"], "match": "any", "scope": "outputs"},
+    {"id": "url-externalized", "text": "Target URL is externalized — either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field on OAuth2Connection / etc.)", "type": "grep", "patterns": ["\\{\\{ext\\.api\\.url\\}\\}", "ext\\.api\\.url=https://erp\\.internal", "ext.api.url=https://erp.internal", "serviceURL", "\"url\":\\s*\"https://erp\\.internal", "discriminator.*OAuth2Connection"], "match": "any", "scope": "outputs"},
+    {"id": "oauth2-auth-present", "text": "OAuth2 auth wired in — either auth sub-route (grant_type=client_credentials) OR OAuth2Connection JSON OR Authorization Bearer header", "type": "grep", "patterns": ["grant_type=client_credentials", "OAuth2Connection", "Authorization.*Bearer", "rest_auth_get_token", "ext\\.api\\.auth\\."], "match": "any", "scope": "outputs"},
+    {"id": "no-inbound-pattern", "text": "Does NOT generate inbound REST endpoint patterns (no rest configuration / <rest path=...>)", "type": "grep_absent", "patterns": ["<restConfiguration", "<rest path=", "from uri=\"rest:"], "scope": "outputs"}
+  ]
+}

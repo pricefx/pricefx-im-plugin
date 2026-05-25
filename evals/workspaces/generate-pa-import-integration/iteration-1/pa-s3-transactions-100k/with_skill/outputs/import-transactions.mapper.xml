@@ -1,0 +1,16 @@
+<mappers>
+    <loadMapper id="import-transactions.mapper">
+        <body in="productId" out="sku"/>
+        <body in="customerId" out="attribute1"/>
+        <body in="transactionDate" out="attribute2" converterExpression="stringToDate"/>
+        <body in="invoiceNumber" out="attribute3"/>
+        <body in="quantity" out="attribute4" converterExpression="stringToDecimal"/>
+        <body in="unitPrice" out="attribute5" converterExpression="stringToDecimal"/>
+        <body in="netAmount" out="attribute6" converterExpression="stringToDecimal"/>
+        <body in="currency" out="attribute7"/>
+        <body in="discount" out="attribute8" converterExpression="stringToDecimal"/>
+        <body in="cost" out="attribute9" converterExpression="stringToDecimal"/>
+        <body in="region" out="attribute10"/>
+        <body in="salesChannel" out="attribute11"/>
+    </loadMapper>
+</mappers>

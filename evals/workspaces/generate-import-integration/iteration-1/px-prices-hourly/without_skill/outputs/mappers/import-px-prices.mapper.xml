@@ -1,0 +1,28 @@
+<mappers>
+    <!-- PX Prices mapper.
+         PX imports REQUIRE a <constant out="name"/> entry that sets the
+         extension table name. Without it the import fails or writes to the
+         wrong table.
+
+         Business key for PX is sku.
+
+         Field mappings are synthesized from common Pricefx Prices PX layouts:
+         attribute1 = price (numeric)
+         attribute2 = currency
+         attribute3 = unit of measure
+         attribute4 = price list / type
+         attribute5 = validFrom (date)
+         attribute6 = validTo (date)
+         Adjust as needed to match the real PX.Prices schema in the partition. -->
+    <loadMapper id="import-px-prices.mapper">
+        <constant expression="Prices" out="name"/>
+
+        <body in="sku"        out="sku"/>
+        <body in="price"      out="attribute1" converterExpression="stringToDecimal(us,0,4)"/>
+        <body in="currency"   out="attribute2"/>
+        <body in="uom"        out="attribute3"/>
+        <body in="priceList"  out="attribute4"/>
+        <body in="validFrom"  out="attribute5" converterExpression="stringToDate"/>
+        <body in="validTo"    out="attribute6" converterExpression="stringToDate"/>
+    </loadMapper>
+</mappers>

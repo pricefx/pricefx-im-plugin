@@ -1,0 +1,36 @@
+{
+  "eval_id": 3,
+  "eval_name": "pos-px-missing-constant",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "report-flags-missing-px-name-constant",
+      "text": "Report flags A-2: PX mapper missing <constant out=\"name\"/>",
+      "passed": true,
+      "evidence": "matched: 'constant.*name' | '<constant.*out=\"name\"' | 'missing.*name'"
+    },
+    {
+      "id": "detects-px-route-type",
+      "text": "Report identifies the route as a PX (extension) import",
+      "passed": true,
+      "evidence": "matched: 'PX' | 'extension' | 'Product Extension'"
+    },
+    {
+      "id": "report-uses-check-labels",
+      "text": "Report uses the structured check-label format",
+      "passed": false,
+      "evidence": "missing: 'A-2' | 'N-1' | 'F-1'"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 3
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 1,
+    "total": 3,
+    "pass_rate": 0.6667
+  }
+}

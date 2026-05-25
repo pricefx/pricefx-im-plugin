@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "pa-invoices-daily-3am",
+  "category": "positive",
+  "prompt": "Build me a PA Data Source import for line-item invoice data from /im/inbound/invoices/. Needs flush after load completes. Schedule daily at 3am.",
+  "assertions": [
+    {"id": "uses-objectType-DMDS", "text": "Generated route uses objectType=DMDS", "type": "grep", "patterns": ["objectType=DMDS"], "scope": "outputs"},
+    {"id": "has-split-tokenize-loaddata", "text": "Route has split + tokenize + loaddata pattern", "type": "grep", "patterns": ["<split", "<tokenize", "pfx-api:loaddata\\?", "pfx-api:loaddata&"], "match": "all", "scope": "outputs"},
+    {"id": "flush-present", "text": "pfx-api:flush is present (user asked for it)", "type": "grep", "patterns": ["pfx-api:flush"], "scope": "outputs"},
+    {"id": "3am-cron", "text": "Quartz cron fires at 3 AM", "type": "grep", "patterns": ["\\+3\\+", "\\+03\\+", " 3 ", " 03 ", "0 0 3"], "match": "any", "scope": "outputs"},
+    {"id": "no-loaddatafile", "text": "Does NOT use loaddataFile", "type": "grep_absent", "patterns": ["pfx-api:loaddataFile"], "scope": "outputs"}
+  ]
+}

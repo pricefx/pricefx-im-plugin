@@ -1,11 +1,13 @@
 ---
 name: generate-kafka-integration
-description: Generate a Pricefx Integration Manager Kafka consumer route that reads CDC (change-data-capture) events from a Kafka topic and loads them into a Pricefx Data Source (DMDS) table. Use this skill when the user needs near-real-time data ingestion from Kafka, multi-tenant OPCO grouping, sequence-based deduplication, or a dual-pipeline setup alongside an existing file-based import route.
+description: Use when the user wants to consume Kafka CDC (change-data-capture) events into a Pricefx Data Source (DMDS) — says "Kafka consumer", "near-real-time ingestion", "CDC events", "stream into PA", or needs multi-tenant OPCO grouping, sequence-based deduplication, or a dual-pipeline setup alongside an existing file-based import route.
 ---
 
 # Generate Kafka Integration
 
 You are generating a Kafka consumer integration for a Pricefx Integration Manager project. Follow the steps below. This skill creates a Kafka consumer route that reads CDC events, deduplicates them, groups by OPCO, and loads batches into a Pricefx DMDS table.
+
+> **Camel version note:** the `<aggregate>` block uses Camel 4 `aggregationStrategy=` and `aggregationRepository=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` and `aggregationRepositoryRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
 
 ## Step 1: Gather Information
 
@@ -263,6 +265,5 @@ When a file-based import route already exists for the same entity:
 
 ## References
 
-- [Kafka Dual Pipeline Pattern](../../../integration-manager/docs/patterns/kafka-dual-pipeline.md)
 - [PA Import Integration Skill](../generate-pa-import-integration/SKILL.md) — for the DMDS loaddata pattern used in the shared load route
-- [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md) — if initial catch-up load needs a time window
+- [Scheduling Route Skill](../generate-scheduling-route/SKILL.md) — if initial catch-up load needs a time window

@@ -1,0 +1,21 @@
+<mappers>
+    <loadMapper id="import-px-prices.mapper">
+        <!-- PX extension table name — REQUIRED for any PX import -->
+        <constant expression="Prices" out="name"/>
+
+        <!-- Business key for Product Extension -->
+        <body in="sku" out="sku"/>
+
+        <!-- Attribute columns 1..10 — assumed schema; rename `in` to match real CSV headers if different -->
+        <body in="attribute1"  out="attribute1"/>
+        <body in="attribute2"  out="attribute2"/>
+        <body in="attribute3"  out="attribute3"/>
+        <body in="attribute4"  out="attribute4"/>
+        <body in="attribute5"  out="attribute5"/>
+        <body in="attribute6"  out="attribute6"/>
+        <body in="attribute7"  out="attribute7"/>
+        <body in="attribute8"  out="attribute8"/>
+        <body in="attribute9"  out="attribute9"/>
+        <body in="attribute10" out="attribute10"/>
+    </loadMapper>
+</mappers>

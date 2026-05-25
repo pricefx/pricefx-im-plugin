@@ -1,0 +1,28 @@
+<mappers>
+    <!--
+        Mapper for Seller Master (SL) load from ERP REST API.
+
+        Pricefx SL master key field is `sellerId` (used as businessKey in the route).
+        Other core SL fields: name, status. Custom values go to attribute1..N.
+
+        Field names below assume a typical JSON shape from the ERP:
+            { "sellerId": "...", "name": "...", "email": "...", "phone": "...",
+              "region": "...", "status": "...", "lastUpdated": "..." }
+
+        Adjust the `in=` source paths if the actual JSON differs.
+    -->
+    <loadMapper id="import-sellers.mapper">
+        <!-- Core SL fields -->
+        <groovy expression="body.sellerId"      out="sellerId"/>
+        <groovy expression="body.name"          out="name"/>
+        <groovy expression="body.status"        out="status"/>
+
+        <!-- Common ERP fields mapped to SL attributes -->
+        <groovy expression="body.email"         out="attribute1"/>
+        <groovy expression="body.phone"         out="attribute2"/>
+        <groovy expression="body.region"        out="attribute3"/>
+        <groovy expression="body.department"    out="attribute4"/>
+        <groovy expression="body.managerId"     out="attribute5"/>
+        <groovy expression="body.lastUpdated"   out="attribute6"/>
+    </loadMapper>
+</mappers>

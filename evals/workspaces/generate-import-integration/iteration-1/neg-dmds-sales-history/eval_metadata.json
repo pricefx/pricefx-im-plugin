@@ -1,0 +1,11 @@
+{
+  "eval_id": 6,
+  "eval_name": "neg-dmds-sales-history",
+  "category": "negative",
+  "prompt": "We get a transactional file (about 5M rows) every night at 2am that needs to go into DMDS SalesHistory data source. Path /sftp/transactions/YYYYMMDD.csv",
+  "assertions": [
+    {"id": "redirects-to-pa-skill", "text": "Subagent recognizes DMDS use case and refers to generate-pa-import-integration", "type": "grep", "patterns": ["generate-pa-import-integration", "pa-import-integration", "PA Data Source", "DMDS.*different", "split.*tokenize.*flush"], "match": "any", "scope": "narrative"},
+    {"id": "no-wrong-objecttype-pcx", "text": "Does NOT generate objectType=P/PX/C/CX/SL/SX for a DMDS file", "type": "grep_absent", "patterns": ["objectType=P[^X]", "objectType=PX", "objectType=C[^X]", "objectType=CX", "objectType=SL", "objectType=SX"], "scope": "outputs"},
+    {"id": "no-loaddatafile-for-dmds", "text": "Does NOT use pfx-api:loaddataFile for DMDS (DMDS needs split+tokenize+loaddata+flush)", "type": "grep_absent", "patterns": ["pfx-api:loaddataFile"], "scope": "outputs"}
+  ]
+}

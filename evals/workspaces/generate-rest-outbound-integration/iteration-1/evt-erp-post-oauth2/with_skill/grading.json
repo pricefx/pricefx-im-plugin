@@ -1,0 +1,48 @@
+{
+  "eval_id": 0,
+  "eval_name": "evt-erp-post-oauth2",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "event-trigger-present",
+      "text": "Route is event-driven \u2014 uses pfx-event:fetch OR direct: trigger consistent with the SKILL.md pattern (event name ITEM_APPROVED_PL)",
+      "passed": true,
+      "evidence": "matched: 'pfx-event:fetch' | 'ITEM_APPROVED_PL' | 'from uri=\"direct:'"
+    },
+    {
+      "id": "outbound-http-post",
+      "text": "Route makes an outbound HTTP POST (via raw HTTP component, pfx-rest:post, or CamelHttpMethod=POST header)",
+      "passed": true,
+      "evidence": "matched: 'CamelHttpMethod[^>]*POST' | '>POST<'"
+    },
+    {
+      "id": "url-externalized",
+      "text": "Target URL is externalized \u2014 either via property placeholder ({{ext.api.url}}/serviceURL) OR via a connection JSON file (url field on OAuth2Connection / etc.)",
+      "passed": true,
+      "evidence": "matched: '\\\\{\\\\{ext\\\\.api\\\\.url\\\\}\\\\}' | 'ext\\\\.api\\\\.url=https://erp\\\\.internal' | 'ext.api.url=https://erp.internal'"
+    },
+    {
+      "id": "oauth2-auth-present",
+      "text": "OAuth2 auth wired in \u2014 either auth sub-route (grant_type=client_credentials) OR OAuth2Connection JSON OR Authorization Bearer header",
+      "passed": true,
+      "evidence": "matched: 'rest_auth_get_token' | 'ext\\\\.api\\\\.auth\\\\.'"
+    },
+    {
+      "id": "no-inbound-pattern",
+      "text": "Does NOT generate inbound REST endpoint patterns (no rest configuration / <rest path=...>)",
+      "passed": true,
+      "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+    }
+  ],
+  "score": {
+    "passed": 5,
+    "total": 5
+  },
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

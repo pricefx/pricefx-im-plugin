@@ -1,0 +1,9 @@
+<mappers>
+    <loadMapper id="import-products.mapper">
+        <!-- Product master fields -->
+        <body in="sku"   out="sku"/>
+        <body in="name"  out="label"/>
+        <body in="price" out="attribute1" converterExpression="stringToDecimal(us,0,2)"/>
+        <body in="uom"   out="attribute2"/>
+    </loadMapper>
+</mappers>

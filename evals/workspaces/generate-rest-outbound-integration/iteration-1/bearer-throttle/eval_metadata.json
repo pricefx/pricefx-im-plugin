@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "bearer-throttle",
+  "category": "positive",
+  "prompt": "I have a webhook receiver at https://partner.example.com/webhook that wants Pricefx data POSTed daily at 2am. Needs Bearer token auth and throttling to 5 req/s.",
+  "assertions": [
+    {"id": "quartz-2am-trigger", "text": "Quartz cron firing at 02:00 — supports '0 0 2 * * ?' or '0+0+2' Camel-encoded forms", "type": "grep", "patterns": ["\\+2\\+", "\\+02\\+", " 2 ", " 02 ", "0 0 2"], "match": "any", "scope": "outputs"},
+    {"id": "outbound-http-post", "text": "Route makes an outbound HTTP POST", "type": "grep", "patterns": ["CamelHttpMethod[^>]*POST", "pfx-rest:post", ">POST<"], "match": "any", "scope": "outputs"},
+    {"id": "bearer-token-auth", "text": "Bearer / API-key / OAuth2 auth wired in — Authorization header OR ext.api.auth.* property OR OAuth2Connection JSON OR a bearer-token placeholder reference", "type": "grep", "patterns": ["Authorization.*Bearer", "ext\\.api\\.auth\\.", "ext\\.api\\.apiKey", "OAuth2Connection", "grant_type", "Bearer .*\\{\\{", "bearer.token", "bearer.*token"], "match": "any", "scope": "outputs"},
+    {"id": "throttle-present", "text": "Throttling configured — Camel <throttle> EIP OR throttling property", "type": "grep", "patterns": ["<throttle", "throttle", "maxConcurrentConnections", "rate"], "match": "any", "scope": "outputs"},
+    {"id": "no-inbound-pattern", "text": "Does NOT generate inbound REST endpoint patterns", "type": "grep_absent", "patterns": ["<restConfiguration", "<rest path=", "from uri=\"rest:"], "scope": "outputs"}
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 name: generate-multi-tenant-route
-description: Generate a Pricefx Integration Manager multi-tenant routing structure where a single IM instance manages data flows for multiple independent Pricefx partitions (tenants, business units, or regions). Use this skill when the user needs per-partition event entry routes, a shared handler with partition-aware connection headers, partition-specific S3/SFTP destinations, or a supervisor scheduler that iterates over active partitions.
+description: Use when a single Pricefx Integration Manager instance must serve multiple independent Pricefx partitions (tenants, business units, regions) — needs per-partition event entry routes, a shared handler with partition-aware connection headers, partition-specific S3/SFTP destinations, or a supervisor scheduler that iterates over active partitions.
 ---
 
 # Generate Multi-Tenant Route
@@ -280,7 +280,6 @@ Fix any issues silently and report corrections.
 
 ## References
 
-- [Multi-Tenant Partitions Pattern](../../../integration-manager/docs/patterns/multi-tenant-partitions.md)
 - [S3 Integration Skill](../generate-s3-integration/SKILL.md) — for partition-specific S3 key path generation
 - [Event-Driven Route Skill](../generate-event-driven-route/SKILL.md) — for single-partition event handling
 - [Export Integration Skill](../generate-export-integration/SKILL.md) — for the Pricefx fetch/export steps used in the shared export handler

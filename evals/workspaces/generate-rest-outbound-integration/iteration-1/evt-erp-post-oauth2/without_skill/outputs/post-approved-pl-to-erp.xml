@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+    <route id="post-approved-pl-to-erp">
+        <from uri="pfx-event:fetch?eventType=ITEM_APPROVED_PL&amp;delay=60000"/>
+
+        <log message="Received ITEM_APPROVED_PL event: ${header.PfxEventType} payload=${body}"/>
+
+        <!-- The event body typically contains a typedId / item reference.
+             Fetch the full PL (price list / contract) record so we have the full payload to send. -->
+        <setHeader name="approvedItemId">
+            <simple>${body[typedId]}</simple>
+        </setHeader>
+
+        <doTry>
+            <!-- Marshal the (already-resolved) record to JSON for the ERP -->
+            <to uri="pfx-json:marshal"/>
+
+            <setHeader name="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+
+            <!-- POST to ERP -->
+            <to uri="pfx-rest:post?uri=/api/v2/contracts&amp;connection=erp.connection&amp;contentType=application/json&amp;connectionTimeoutMs=60000"/>
+
+            <log message="Successfully posted approved PL item ${header.approvedItemId} to ERP. Response: ${body}"/>
+
+            <doCatch>
+                <exception>java.lang.Exception</exception>
+                <log loggingLevel="ERROR" message="Failed to post approved PL item ${header.approvedItemId} to ERP: ${exception.message}"/>
+            </doCatch>
+        </doTry>
+    </route>
+
+</routes>

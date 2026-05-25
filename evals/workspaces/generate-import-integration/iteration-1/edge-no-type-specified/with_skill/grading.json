@@ -1,0 +1,30 @@
+{
+  "eval_id": 8,
+  "eval_name": "edge-no-type-specified",
+  "category": "edge",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "asks-for-object-type",
+      "text": "Subagent asks a clarifying question naming object types (P/PX/C/CX/DMDS/LTV/MLTV2 etc.) before committing",
+      "passed": true,
+      "evidence": "matched: 'P / PX' | 'Product Master' | 'object type'"
+    },
+    {
+      "id": "did-not-write-route-file",
+      "text": "Subagent did NOT silently generate a route XML file",
+      "passed": true,
+      "evidence": "no route .xml present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

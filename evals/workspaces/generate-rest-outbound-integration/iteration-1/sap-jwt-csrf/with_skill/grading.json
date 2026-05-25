@@ -1,0 +1,54 @@
+{
+  "eval_id": 2,
+  "eval_name": "sap-jwt-csrf",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "event-trigger-present",
+      "text": "Route is event-driven (pfx-event:fetch OR direct: trigger for QUOTE_SUBMITTED)",
+      "passed": true,
+      "evidence": "matched: 'pfx-event:fetch' | 'QUOTE_SUBMITTED' | 'from uri=\"direct:'"
+    },
+    {
+      "id": "csrf-pattern-present",
+      "text": "CSRF token handling \u2014 fetch step OR X-CSRF-Token header OR cookieHandler",
+      "passed": true,
+      "evidence": "matched: 'X-CSRF-Token' | 'CSRF' | 'csrf'"
+    },
+    {
+      "id": "jwt-pattern-present",
+      "text": "JWT-style auth \u2014 bearer token, simpleCache, or get-jwt-token route",
+      "passed": true,
+      "evidence": "matched: 'JWT' | 'jwt' | 'simpleCache'"
+    },
+    {
+      "id": "outbound-http-post",
+      "text": "Route makes an outbound HTTP POST",
+      "passed": true,
+      "evidence": "matched: 'CamelHttpMethod[^>]*POST' | '>POST<'"
+    },
+    {
+      "id": "no-inbound-pattern",
+      "text": "Does NOT generate inbound REST endpoint patterns",
+      "passed": true,
+      "evidence": "none of: '<restConfiguration' | '<rest path=' | 'from uri=\"rest:' present"
+    },
+    {
+      "id": "robust-sap-cookie-handler",
+      "text": "Uses the canonical SAP cookie-handler pattern (instanceCookieHandler bean reused between CSRF fetch and business write) \u2014 robust to SAP session expiry. Without this, naive Set-Cookie capture is fragile because SAP binds the CSRF token to the session cookie.",
+      "passed": true,
+      "evidence": "matched: 'instanceCookieHandler' | 'cookieHandler=#'"
+    }
+  ],
+  "score": {
+    "passed": 6,
+    "total": 6
+  },
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

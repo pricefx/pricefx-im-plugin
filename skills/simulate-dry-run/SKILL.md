@@ -1,6 +1,6 @@
 ---
 name: simulate-dry-run
-description: Simulate what would happen if a CSV file or event were processed by an IM route, without making actual API calls. Shows the transformation pipeline step by step. Use when the user says "dry run", "simulate", "what would happen", "test without running", "trace".
+description: Use when the user wants to trace what would happen if a CSV file or event were processed by a Pricefx Integration Manager route, WITHOUT making real API calls — says "dry run", "simulate", "what would happen", "test without running", "trace through the route".
 ---
 
 # Simulate Dry Run

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-company-params">
+        <from uri="file://{{pfx:import-company-params.inbound}}?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+        <log message="Picked up company parameter file ${header.CamelFileName}"/>
+        <to uri="pfx-csv:streamingUnmarshal?skipHeaderRecord=true&amp;useReusableParser=true"/>
+        <to uri="pfx-api:loaddataFile?objectType=LTV&amp;mapper=import-company-params.mapper&amp;pricingParameterName={{pfx:import-company-params.pricingParameterName}}&amp;batchSize=100000"/>
+        <log message="Finished loading LTV company parameters from ${header.CamelFileName}"/>
+    </route>
+</routes>

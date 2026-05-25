@@ -1,6 +1,6 @@
 ---
 name: generate-pa-import-integration
-description: Generate a Pricefx PA (Price Analyser) Data Source import integration using the DMDS split+tokenize+loaddata+flush pattern. Use this skill whenever the user wants to import data into a PA Data Source, Data Source (DS), DMDS, or mentions Price Analyser data loading. This pattern is different from standard imports — it requires split+tokenize batching and a mandatory flush step. Fetches real metadata from the partition via pfx CLI.
+description: Use when the user wants to import data into a Pricefx PA (Price Analyser) Data Source — mentions "PA Data Source", "DMDS", "DS", "Price Analyser data loading", "sales history", or "transaction load". DMDS imports legitimately need the split+tokenize+loaddata+flush pattern, which is different from standard imports. For P/PX/C/CX use `generate-import-integration`; for LTV/MLTV2 use `generate-ppv-import-integration`.
 ---
 
 # Generate PA Data Source Import Integration
@@ -8,6 +8,8 @@ description: Generate a Pricefx PA (Price Analyser) Data Source import integrati
 You are generating an import integration for a **PA Data Source (DMDS)** in a Pricefx Integration Manager project. PA (Price Analyser) imports use a specific pattern: `split+tokenize+loaddata+flush`. Follow the steps below precisely. NEVER use placeholder/generic fields — always use real field names from the partition.
 
 **This skill is for DMDS (PA Data Source) imports only.** For P, PX, CX, or C imports, use `/generate-import-integration` instead.
+
+> **Camel version note:** the `<split>` template uses Camel 4 `aggregationStrategy=` form (IM 7.x default). Before writing files, detect the target project's Camel version from `pom.xml` `<camel.version>` (or infer from IM version per `migrate-manual-to-provisioned-pom` Step 1). For Camel 3 (IM ≤ 6.x), swap to `strategyRef=` per `docs/routes.md` → "Camel 3 ↔ Camel 4". When the version is unclear, default to Camel 4 and flag the assumption.
 
 ## DMDS Import Pattern Overview
 
@@ -39,68 +41,9 @@ Present the fields to the user in a clear table.
 
 ## Step 3b: Smart Auto-Mapping (when CSV sample data AND DS metadata are available)
 
-When you have BOTH a CSV sample/header AND target DS metadata (with labels from `data-source-metadata`), automatically propose field mappings using the algorithm below. **Do NOT ask the user to manually map fields** — propose the mapping and let them confirm or adjust.
+When you have BOTH a CSV sample/header AND target DS metadata (with labels from `data-source-metadata`), apply the **Smart Auto-Mapping algorithm in `docs/smart-auto-mapping.md`** to propose field mappings. **Do NOT ask the user to manually map fields** when the algorithm is applicable — propose, then let the user confirm or adjust.
 
-### Auto-Mapping Algorithm
-
-For each CSV column, find the best matching Pricefx field using these rules in priority order:
-
-**Priority 1 — Exact key field match (confidence: HIGH)**
-- CSV column name contains `id`, `sku`, `key`, `code`, `product_id`, `item_number` → map to `sku`
-- CSV column name contains `name`, `description`, `label`, `title` (and is not a category/hierarchy) → map to `label`
-
-**Priority 2 — Fuzzy match against attribute labels (confidence: HIGH or MEDIUM)**
-Compare each CSV column name against DS attribute labels using these matching techniques:
-1. **Exact match** (case-insensitive): `"Product Name"` = `"Product Name"` → HIGH confidence
-2. **Normalized match** (remove spaces, underscores, hyphens, lowercase): `"product_name"` = `"ProductName"` → HIGH confidence
-3. **Contains match**: CSV `"Hierarchy Level 1"` contains label `"Hierarchy 1"` → MEDIUM confidence
-4. **Word overlap**: CSV `"Product Cost USD"` shares words with label `"Product Costs"` → MEDIUM confidence (≥50% word overlap)
-5. **Abbreviation match**: CSV `"Prod Name"` ↔ label `"Product Name"` → MEDIUM confidence
-
-**Priority 3 — Type-based matching (confidence: LOW)**
-If no label match found, match by data type compatibility:
-- CSV column with decimal values → attribute with type `REAL`/`NUMERIC`
-- CSV column with dates → attribute with type `DATE`/`DATETIME`
-- Only use if there's a single compatible unmatched attribute of that type
-
-**Priority 4 — Sequential fallback (confidence: LOW)**
-Remaining unmatched CSV columns → assign to next available `attributeN` in order.
-
-### Confidence Display
-
-Present the proposed mapping as a table with confidence indicators:
-
-```
-Smart Auto-Mapping Result:
-| # | CSV Column          | → | Pricefx Field | Label          | Confidence | Match Reason              |
-|---|---------------------|---|---------------|----------------|------------|---------------------------|
-| 1 | Product ID          | → | sku           | —              | ✅ HIGH    | Key field (contains "ID") |
-| 2 | Product Name        | → | attribute1    | Product Name   | ✅ HIGH    | Exact label match         |
-| 3 | Hierarchy Level 1   | → | attribute2    | Product Hier 1 | 🟡 MEDIUM | Word overlap (73%)        |
-| 4 | Cost                | → | attribute9    | Product Costs  | 🟡 MEDIUM | Word overlap + type match |
-| 5 | Internal Code       | → | attribute11   | —              | 🔴 LOW    | Sequential fallback       |
-```
-
-Ask: **Does this mapping look correct? You can adjust any row.**
-
-### Converter Expression Auto-Detection
-
-When proposing the mapping, also detect and suggest converter expressions based on:
-1. **Target field type** from metadata (e.g., `NUMERIC` → `stringToDecimal`)
-2. **CSV sample data** patterns (e.g., date formats → `stringToDate`)
-
-| Target Type | Suggested Converter |
-|---|---|
-| `NUMERIC`, `MONEY`, `PERCENT` | `converterExpression="stringToDecimal"` |
-| `INTEGER` | `converterExpression="stringToInteger"` |
-| `DATE` | `converterExpression="stringToDate"` (detect format from sample) |
-| `DATETIME` | `converterExpression="stringToDateTime"` |
-| `TEXT`, `STRING` | none needed |
-
-### When Auto-Mapping is NOT possible
-
-- **No CSV sample data available** → fall back to manual mapping (Step 7)
-- **No attribute labels set** (all labels empty in metadata) → fall back to sequential mapping + ask user
+Key field for DMDS is `sku`. If the CSV has no header sample or all attribute labels are empty in metadata, fall back to manual mapping (Step 7).
 
 ## Step 4: Determine Data Source
 
@@ -246,7 +189,7 @@ Generate the route and mapper files using the conventions below.
 
             <to uri="pfx-csv:unmarshal?skipHeaderRecord=true&amp;delimiter={DELIMITER}"/>
 
-            <log loggingLevel="INFO" message="Running batch number# ${exchangeProperty.CamelSplitIndex}"/>
+            <log loggingLevel="INFO" message="Loading batch #${exchangeProperty.CamelSplitIndex + 1} of ${header.CamelFileName} (batch size: {BATCH_SIZE}, starting at row ${exchangeProperty.CamelSplitIndex * {BATCH_SIZE} + 1})"/>
 
             <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.{DataSourceName}&amp;mapper={route-name}.mapper"/>
         </split>
@@ -348,23 +291,20 @@ Other properties are only needed for SFTP connections, etc. Delimiter, skipHeade
 
 ## Scheduling for Long-Running DS Loads
 
-For large data sources that take hours to load, add start/stop scheduling:
+For large data sources that should only poll during off-peak hours, use the `file://` URI's built-in quartz scheduler instead of a separate controlbus start/stop pair. This restricts polling to the scheduled window without ever starting/stopping the route itself, so the route can't get stuck in a half-started state.
+
+Add `scheduler=quartz`, `scheduler.cron`, and `scheduler.timeZone` to the file URI:
 
 ```xml
-<!-- Start route at 23:00 UTC -->
-<route id="start-{{ROUTE_ID}}">
-  <from uri="quartz://scheduler-start?cron=0+0+23+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
-  <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=start"/>
-</route>
-
-<!-- Stop route at 06:00 UTC -->
-<route id="stop-{{ROUTE_ID}}">
-  <from uri="quartz://scheduler-stop?cron=0+0+6+?+*+*&amp;trigger.timeZone=UTC&amp;stateful=true"/>
-  <toD uri="controlbus:route?routeId={{ROUTE_ID}}&amp;action=stop"/>
-</route>
+<from uri="file://{{integration.sftp.root}}/{path}?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}&amp;scheduler=quartz&amp;scheduler.cron=0+0+23-5+?+*+*&amp;scheduler.timeZone=UTC"/>
 ```
 
-See [Scheduling Start/Stop Pattern](../../../integration-manager/docs/patterns/scheduling-start-stop.md).
+The cron expression `0+0+23-5+?+*+*` polls hourly between 23:00 and 05:00 UTC. Adjust to your maintenance window.
+
+**Why this is safer  than controlbus start/stop:**
+- One route, one URI — no risk of the stop route firing while a load is mid-batch
+- No orphaned state if one of the start/stop quartz triggers misfires
+- Polling pauses cleanly outside the window; any in-flight exchange completes before the next poll is skipped
 
 ## Important Rules
 

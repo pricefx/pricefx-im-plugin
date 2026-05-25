@@ -1,0 +1,14 @@
+{
+  "eval_id": 3,
+  "eval_name": "pa-price-analyser-feed",
+  "category": "positive",
+  "prompt": "Daily Price Analyser data feed — CSV at /sftp/transactions/YYYYMMDD.csv. Target is DMDS.TransactionFeed. ~5M rows.",
+  "assertions": [
+    {"id": "uses-objectType-DMDS", "text": "Generated route uses objectType=DMDS", "type": "grep", "patterns": ["objectType=DMDS"], "scope": "outputs"},
+    {"id": "uses-targetname-transactionfeed", "text": "Targets TransactionFeed", "type": "grep", "patterns": ["TransactionFeed"], "scope": "outputs"},
+    {"id": "split-tokenize-loaddata", "text": "split + tokenize + loaddata pattern", "type": "grep", "patterns": ["<split", "<tokenize", "pfx-api:loaddata"], "match": "all", "scope": "outputs"},
+    {"id": "flush-present", "text": "pfx-api:flush is present", "type": "grep", "patterns": ["pfx-api:flush"], "scope": "outputs"},
+    {"id": "dated-filename-handling", "text": "Route handles dated filename (YYYYMMDD.csv) via simple/groovy/include/fileName", "type": "grep", "patterns": ["yyyyMMdd", "date:now", "fileName=", "include="], "match": "any", "scope": "outputs"},
+    {"id": "no-loaddatafile", "text": "Does NOT use loaddataFile", "type": "grep_absent", "patterns": ["pfx-api:loaddataFile"], "scope": "outputs"}
+  ]
+}

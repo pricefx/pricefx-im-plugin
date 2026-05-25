@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="import-sellers-from-rest">
+        <!-- Quartz scheduler: every 4 hours, on the hour. stateful=true prevents overlapping runs. -->
+        <from uri="quartz://import-sellers-from-rest?cron=0+0+0/4+*+*+?&amp;stateful=true"/>
+
+        <log message="[${routeId}] Starting seller master import from REST API" loggingLevel="INFO"/>
+
+        <!-- Fetch seller list from external ERP REST API.
+             Uses the 'erp' connection (NoopConnection — no auth assumed; replace with OAuth2/Basic if needed).
+             The connection.json sets the base URL https://erp.internal — uri here is the path. -->
+        <toD uri="pfx-rest:get?uri=/api/sellers&amp;connection=erp&amp;connectionTimeoutMs=120000"/>
+
+        <!-- Parse JSON body into a list of seller maps -->
+        <to uri="pfx-json:unmarshal"/>
+
+        <log message="[${routeId}] Fetched seller payload, loading into Pricefx SL master" loggingLevel="INFO"/>
+
+        <!-- Load into Pricefx Seller Master.
+             objectType=SL, businessKeys=sellerId (per skill rules for SL/SX).
+             batchSize 50000 — conservative default for ~10 fields. -->
+        <to uri="pfx-api:loaddata?objectType=SL&amp;mapper=import-sellers-from-rest.mapper&amp;businessKeys=sellerId&amp;batchSize=50000"/>
+
+        <log message="[${routeId}] Seller import complete. Records: ${header.PfxTotalInputRecordsCount}" loggingLevel="INFO"/>
+    </route>
+</routes>

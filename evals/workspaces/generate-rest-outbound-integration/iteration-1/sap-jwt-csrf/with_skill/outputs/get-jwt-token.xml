@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+
+  <!--
+    Fetches an OAuth 2.0 bearer token from the SAP API Management token endpoint
+    and stores it in simpleCache under key 'JWT'.
+
+    Called from:
+      - refresh-api-tokens timer (periodic warm-up)
+      - 401 onException hook in the business route (on token expiry)
+
+    Reads:
+      ext.api.auth.url        — token URL
+      ext.api.auth.grantType  — typically 'client_credentials'
+      ext.api.auth.clientId   — OAuth client id
+      ext.api.auth.clientSecret — OAuth client secret (encrypted)
+      ext.api.auth.scope      — optional scope
+      ext.api.subscriptionKey — SAP API Mgmt subscription key (if APIM in front)
+
+    Writes:
+      simpleCache['JWT'] = access_token
+  -->
+  <route id="get-jwt-token">
+    <description>Fetches OAuth 2.0 bearer token and stores it in simpleCache['JWT'].</description>
+    <from uri="direct:get-jwt-token"/>
+
+    <log message="[AUTH] Refreshing JWT from {{ext.api.auth.url}}"/>
+
+    <setHeader name="Content-Type"><constant>application/x-www-form-urlencoded</constant></setHeader>
+    <setHeader name="Accept"><constant>application/json</constant></setHeader>
+    <setHeader name="CamelHttpMethod"><constant>POST</constant></setHeader>
+    <setHeader name="Ocp-Apim-Subscription-Key">
+      <simple>{{ext.api.subscriptionKey}}</simple>
+    </setHeader>
+    <setBody>
+      <simple>grant_type={{ext.api.auth.grantType}}&amp;client_id={{ext.api.auth.clientId}}&amp;client_secret={{ext.api.auth.clientSecret}}&amp;scope={{ext.api.auth.scope}}</simple>
+    </setBody>
+    <setHeader name="HttpUri"><simple>{{ext.api.auth.url}}</simple></setHeader>
+
+    <!-- throwExceptionOnFailure=false: we want to inspect the response body on auth failure -->
+    <toD uri="${header.HttpUri}?bridgeEndpoint=true&amp;throwExceptionOnFailure=false&amp;connectionClose=true&amp;connectTimeout=30000&amp;socketTimeout=30000"/>
+
+    <log message="[AUTH] Token response status ${header.CamelHttpResponseCode}"/>
+
+    <choice>
+      <when>
+        <simple><![CDATA[${header.CamelHttpResponseCode} >= 200 && ${header.CamelHttpResponseCode} < 300]]></simple>
+        <setHeader name="jwt"><jsonpath>$.access_token</jsonpath></setHeader>
+        <toD uri="bean:simpleCache?method=put('JWT',${header.jwt})"/>
+        <log loggingLevel="INFO" message="[AUTH][OK] JWT refreshed and cached"/>
+      </when>
+      <otherwise>
+        <log loggingLevel="ERROR"
+             message="[AUTH][FAILED][${header.CamelHttpResponseCode}] url={{ext.api.auth.url}} body=${body}"/>
+      </otherwise>
+    </choice>
+  </route>
+
+</routes>

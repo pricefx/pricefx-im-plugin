@@ -1,0 +1,13 @@
+{
+  "eval_id": 4,
+  "eval_name": "ltv-lookup-cost-centers",
+  "category": "positive",
+  "prompt": "Import a 200-row lookup table from CSV that maps department codes to cost centers. Needs to be a Pricefx Pricing Parameter (single-key).",
+  "assertions": [
+    {"id": "uses-objectType-LTV", "text": "Route URI contains objectType=LTV (single-key Pricing Parameter)", "type": "grep", "patterns": ["objectType=LTV"], "scope": "outputs"},
+    {"id": "pricingParameterName-present", "text": "Route URI contains pricingParameterName=", "type": "grep", "patterns": ["pricingParameterName="], "scope": "outputs"},
+    {"id": "single-key-mapper", "text": "Mapper maps to LTV fields name and value", "type": "grep", "patterns": ["out=\"name\"", "out=\"value\""], "match": "all", "scope": "outputs"},
+    {"id": "no-mltv2", "text": "Does NOT produce MLTV2 pattern (user said single-key)", "type": "grep_absent", "patterns": ["objectType=MLTV2", "out=\"key1\"", "out=\"key2\""], "scope": "outputs"},
+    {"id": "no-businesskeys", "text": "Does NOT specify businessKeys", "type": "grep_absent", "patterns": ["businessKeys="], "scope": "outputs"}
+  ]
+}

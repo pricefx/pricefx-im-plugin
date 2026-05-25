@@ -1,0 +1,30 @@
+{
+  "eval_id": 4,
+  "eval_name": "neg-inbound-rest",
+  "category": "negative",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-inbound-skill",
+      "text": "Subagent recognizes this is an INBOUND endpoint and refers to generate-inbound-rest-endpoint (or IM-as-server / restConfiguration pattern)",
+      "passed": true,
+      "evidence": "matched: 'generate-inbound-rest-endpoint' | 'inbound' | 'expose'"
+    },
+    {
+      "id": "no-outbound-pattern",
+      "text": "Does NOT generate outbound HTTP call pattern (toD with bridgeEndpoint / direct:rest_outbound_call / pfx-rest:post)",
+      "passed": true,
+      "evidence": "none of: 'bridgeEndpoint=true' | 'direct:rest_outbound_call' | 'rest_auth_get_token' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

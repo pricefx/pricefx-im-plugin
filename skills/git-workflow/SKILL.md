@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Automate git workflows for IM integration projects — create feature branches, commit with meaningful messages, prepare merge requests with route descriptions. Use when the user says "create branch", "commit my work", "prepare MR", "git workflow".
+description: Use when the user wants to run git operations on a Pricefx Integration Manager project — says "create branch", "commit my work", "prepare MR", "git workflow", or needs feature-branch naming, commit messages, or MR descriptions generated from the route changes.
 ---
 
 # Git Workflow

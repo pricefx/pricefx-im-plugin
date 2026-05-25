@@ -10,14 +10,13 @@ Build, review, debug, and maintain Pricefx Integration Manager projects with AI-
 2. [Setup](#setup)
 3. [Quick Start](#quick-start)
 4. [Skills Reference](#skills-reference)
-5. [Pattern Catalog](#pattern-catalog)
-6. [Agents Reference](#agents-reference)
-7. [pfx CLI Tool](#pfx-cli-tool)
-8. [Usage Examples](#usage-examples)
-9. [Tips & Best Practices](#tips--best-practices)
-10. [Shared Documentation](#shared-documentation)
-11. [Plugin Structure](#plugin-structure)
-12. [Development](#development)
+5. [Agents Reference](#agents-reference)
+6. [pfx CLI Tool](#pfx-cli-tool)
+7. [Usage Examples](#usage-examples)
+8. [Tips & Best Practices](#tips--best-practices)
+9. [Shared Documentation](#shared-documentation)
+10. [Plugin Structure](#plugin-structure)
+11. [Development](#development)
 
 ---
 
@@ -65,6 +64,37 @@ Once loaded, you should see the plugin's skills available when you type `/` in C
 
 ### Connect to your Pricefx partition
 
+The pfx CLI resolves credentials in this order, picking the first one that produces a complete set:
+
+1. **Project connection JSON + `local-secret.properties`** (preferred — keeps the CLI aligned with what the IM project actually deploys)
+2. **`.env` file in the project root** (fallback — useful for ad-hoc partitions or when no IM project is present)
+
+#### Option 1 — project connection JSON + local-secret.properties (preferred)
+
+The CLI scans `src/main/resources/repo/connections/` for any JSON file whose `discriminator` is `net.pricefx.integration.component.rest.domain.connection.PriceFxConnection` and reads `uri`, `partition`, and `username` from it. The password is loaded from `src/main/resources/local-secret.properties` using the key `connections.{connection-id}.password`.
+
+Example — `src/main/resources/repo/connections/pricefx.json`:
+
+```json
+{
+  "id": "pricefx",
+  "discriminator": "net.pricefx.integration.component.rest.domain.connection.PriceFxConnection",
+  "uri": "https://your-cluster.pricefx.eu/pricefx",
+  "partition": "your-partition",
+  "username": "admin"
+}
+```
+
+Example — `src/main/resources/local-secret.properties` (never committed):
+
+```properties
+connections.pricefx.password=your-password
+```
+
+Add `local-secret.properties` to `.gitignore`. The `.json` file is safe to commit because it does not contain the password.
+
+#### Option 2 — `.env` file (fallback)
+
 Create a `.env` file in **your IM project root** (not the plugin directory):
 
 ```env
@@ -74,7 +104,9 @@ PFX_USERNAME=admin
 PFX_PASSWORD=your-password
 ```
 
-Test the connection:
+Process environment variables (`PFX_URL`, `PFX_PARTITION`, `PFX_USERNAME`, `PFX_PASSWORD`) override values from the `.env` file. This is the fallback path — used only when no project connection JSON is found or its password is missing from `local-secret.properties`.
+
+#### Test the connection
 
 ```
 > pfx test-connection
@@ -138,11 +170,11 @@ The skill will ask you targeted questions and fetch real metadata from your part
 
 ## Skills Reference
 
-Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **25 skills** covering the full integration development lifecycle.
+Skills are interactive — they ask questions and generate files. Invoke them with `/pricefx-im-plugin:<skill-name>`. The plugin ships with **35 skills** covering the full integration development lifecycle.
 
 ---
 
-### Generation (14 skills)
+### Generation (15 skills)
 
 #### generate-import-integration
 
@@ -417,39 +449,40 @@ Quick metadata lookup — no files generated, just displays information.
 
 ---
 
-## Pattern Catalog
+### Migration & Refactoring (11 skills)
 
-The plugin ships an anonymized **pattern catalog** in `docs/patterns/` — 18 reference integration patterns extracted from real-world IM deployments (all customer names and partition details removed).
+#### refactor-template-import-route
 
-Skills reference the catalog automatically to apply proven implementation approaches. You can also browse it directly to understand how a particular scenario is typically built.
+Refactors a templated FTP-to-Pricefx import route into a straight-line route — hardwires `{{pfx:...}}` property placeholders, drops dead branches, and switches `pfx-sftp` to the `file` component with `{{integration.sftp.root}}`.
 
-### What the catalog covers
+```
+/pricefx-im-plugin:refactor-template-import-route
+```
 
-| Category | Patterns |
+#### migrate-manual-to-provisioned-* (10 sub-skills)
+
+These ten skills are the building blocks of the `migrate-manual-to-provisioned` agent and are not normally invoked directly — the agent orchestrates them in the right order. Each handles one slice of a legacy "manual" IM project (everything bundled into `camel-context.xml`, Java sources under `src/main/java/`) to the modern "provisioned" layout:
+
+| Skill | Slice it owns |
 |---|---|
-| Import | Product master (CSV/SFTP), Customer master, Pricing Parameters (LTV/MLTV2), PA Data Source batch load |
-| Export | Delta sync with timestamp watermark, full extract to SFTP, export-to-REST push |
-| Event-driven | Post-calculation trigger, data-load completion chain, custom event fan-out |
-| Outbound | REST push with OAuth2, SOAP call with JAXB, Kafka publish with Avro |
-| Platform | Multi-tenant fan-out, scheduled wrapper with staggered startup, S3 polling inbound |
-| Testing | WireMock contract test, Spock data-table driven test, integration smoke test |
+| `migrate-manual-to-provisioned-routes` | Extracts `<route>` elements into `repo/routes/` |
+| `migrate-manual-to-provisioned-mappers` | Extracts `<loadMapper>` / `<integrateMapper>` into `repo/mappers/` |
+| `migrate-manual-to-provisioned-filters` | Extracts `<filter>` / `<pfx:filter>` into `repo/filters/` |
+| `migrate-manual-to-provisioned-beans` | Extracts Spring `<bean>` into `repo/beans/` |
+| `migrate-manual-to-provisioned-connections` | Converts `<pfx:connection>` / legacy `pfx.*` properties to JSON connections |
+| `migrate-manual-to-provisioned-camel-syntax` | Camel 3.3.5 → 4.1+ XML/URI/attribute renames |
+| `migrate-manual-to-provisioned-java-code` | Moves Java/Groovy into `repo/classes/`, applies IM 7.x package + API renames |
+| `migrate-manual-to-provisioned-properties` | Modernises `application.properties` to the `integration.*` shape |
+| `migrate-manual-to-provisioned-pom` | Bumps `pom.xml` to Java 17 / Spring Boot 3 / Camel 4 / IM 7.x |
+| `migrate-manual-to-provisioned-groovy-sandbox` | Builds the IM 7.x Groovy-sandbox allow-list from import statements |
 
-### Using patterns in conversations
-
-You can reference patterns by name when asking for generation or review:
-
-```
-Generate an export using the delta-sync-with-watermark pattern
-Review my route and check it against the PA batch load pattern
-```
-
-Skills will apply the matching pattern as their baseline and adapt it to your project's metadata.
+To run the full migration end-to-end, invoke the `migrate-manual-to-provisioned` agent (see Agents Reference).
 
 ---
 
 ## Agents Reference
 
-Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **9 agents**.
+Agents run autonomously and are invoked automatically when Claude detects a matching task, or you can ask for them explicitly. They can also be triggered by describing the task naturally. The plugin ships with **11 agents**.
 
 ### debug-integration
 
@@ -592,11 +625,39 @@ Upgrade this project to IM 7.3
 Apply all safe upgrades and tell me what still needs manual work
 ```
 
+### migrate-manual-to-provisioned
+
+**What it does:** End-to-end lift of a legacy "manual" IM project (everything bundled into `camel-context.xml`, Java sources under `src/main/java/`) to the modern "provisioned" layout (one route/mapper/filter/bean/connection per file under `src/main/resources/repo/`, Groovy classes under `repo/classes/`). Orchestrates the ten `migrate-manual-to-provisioned-*` sub-skills, modernises Camel 3.3.5 → 4.1+ / Spring Boot 2 → 3 / IM 6 → 7 patterns, converts Java to Groovy, and finishes with an anti-pattern and performance scan.
+
+**How to use:**
+
+```
+Migrate this manual IM project to provisioned
+```
+
+```
+I have a legacy camel-context.xml project at /path/to/source, lift it into this provisioned project
+```
+
+### visualize-project
+
+**What it does:** Generates a complete visual documentation package — Mermaid flow diagrams for every route plus a project-level architecture overview and data-flow summary. Output is markdown files under `docs/diagrams/` with embedded Mermaid code blocks. No HTML, no customer names, no secrets.
+
+**How to use:**
+
+```
+Visualize this project
+```
+
+```
+Generate flow diagrams for every route
+```
+
 ---
 
 ## pfx CLI Tool
 
-The bundled `pfx` CLI (`tools/bin/pfx.mjs`) connects directly to your Pricefx partition to fetch metadata. It reads credentials from the `.env` file.
+The bundled `pfx` CLI (`tools/bin/pfx.mjs`) connects directly to your Pricefx partition to fetch metadata. It auto-discovers credentials by first reading the project's `PriceFxConnection` JSON under `src/main/resources/repo/connections/` and pulling the password from `src/main/resources/local-secret.properties` (key: `connections.{id}.password`). If that fails — no project JSON, missing password key — it falls back to `PFX_URL` / `PFX_PARTITION` / `PFX_USERNAME` / `PFX_PASSWORD` from `.env` or the process environment. See [Setup → Connect to your Pricefx partition](#connect-to-your-pricefx-partition) for details.
 
 ### Commands
 
@@ -901,12 +962,14 @@ When inheriting an existing project, run the `onboard-project` agent first. It p
 | Impact of a field or connection rename | `impact-analysis` |
 | Documenting routes for stakeholders | `document-project` |
 | Migrating outdated patterns | `migrate-project` |
+| Lifting a legacy `camel-context.xml` project to provisioned layout | `migrate-manual-to-provisioned` |
 | Creating test data | `generate-test-data` |
 | Understanding an inherited project | `onboard-project` |
 | End-to-end integration from a requirement | `build-integration` |
 | Assessing an existing or partner project | `analyze-project` |
 | Project quality score | `analyze-project` |
 | Full version upgrade with auto-fix | `upgrade-project` |
+| Generating Mermaid flow diagrams for routes | `visualize-project` |
 
 ### Dry-run before deploying unfamiliar routes
 
@@ -947,6 +1010,14 @@ Reference docs loaded into context for all skills via `CLAUDE.md`:
 | `docs/connections.md` | Connection types (PriceFx, OAuth2, SFTP, S3), best practices |
 | `docs/project.md` | IM project structure and conventions |
 
+On-demand (NOT auto-loaded — read when the topic comes up):
+
+| Doc | Content |
+|-----|---------|
+| `docs/faq.md` | Operational FAQs (large-file SFTP streaming, encrypted properties, env separation, scheduling pitfalls) — sourced from [Confluence – Provisioned Integration FAQs](https://pricefx.atlassian.net/wiki/spaces/CUST/pages/4697128997/Provisioned+Integration+FAQs) |
+| `docs/anti-patterns.md` | Canonical catalog of legacy patterns (AP-1..AP-34, plus AP-2b/AP-2c) shared by the `analyze-project`, `migrate-project`, `upgrade-project`, and `migrate-manual-to-provisioned` agents |
+| `docs/smart-auto-mapping.md` | 4-tier CSV → Pricefx field-mapping algorithm shared by `generate-import-integration` and `generate-pa-import-integration` |
+
 Also includes `docs/CLAUDE.md.template` for bootstrapping `CLAUDE.md` in IM projects.
 
 ---
@@ -966,9 +1037,11 @@ pricefx-im-plugin/
 │   ├── document-project.md
 │   ├── generate-test-data.md
 │   ├── impact-analysis.md
+│   ├── migrate-manual-to-provisioned.md
 │   ├── migrate-project.md
 │   ├── onboard-project.md
-│   └── upgrade-project.md
+│   ├── upgrade-project.md
+│   └── visualize-project.md
 ├── skills/
 │   ├── analyze/
 │   ├── compare-environments/
@@ -986,10 +1059,23 @@ pricefx-im-plugin/
 │   ├── generate-inbound-rest-endpoint/
 │   ├── generate-rest-outbound-integration/
 │   ├── generate-s3-integration/
+│   ├── generate-salesforce-api/
 │   ├── generate-scheduling-route/
 │   ├── generate-soap-integration/
+│   ├── generate-sql-integration/
 │   ├── git-workflow/
 │   ├── list-pricefx-tables/
+│   ├── migrate-manual-to-provisioned-beans/
+│   ├── migrate-manual-to-provisioned-camel-syntax/
+│   ├── migrate-manual-to-provisioned-connections/
+│   ├── migrate-manual-to-provisioned-filters/
+│   ├── migrate-manual-to-provisioned-groovy-sandbox/
+│   ├── migrate-manual-to-provisioned-java-code/
+│   ├── migrate-manual-to-provisioned-mappers/
+│   ├── migrate-manual-to-provisioned-pom/
+│   ├── migrate-manual-to-provisioned-properties/
+│   ├── migrate-manual-to-provisioned-routes/
+│   ├── refactor-template-import-route/
 │   ├── run-integration-wizard/
 │   └── simulate-dry-run/
 ├── docs/
@@ -1020,7 +1106,16 @@ pricefx-im-plugin/
 
 1. Create a feature branch from `develop`
 2. Make your changes
-3. Submit a merge request to `develop`
+3. **Re-run the output-quality eval** for any skill whose `SKILL.md` or referenced docs you touched — see [`evals/README.md`](evals/README.md) for the per-change-type checklist. A drop in `with_skill` pass rate vs. the last committed iteration is a regression and blocks merge.
+4. If you changed a `description:` field on any skill or agent, also smoke-test the trigger routing per [`evals/triggers.md`](evals/triggers.md) — description regressions are the #1 silent failure mode in this plugin
+5. Submit a merge request to `develop`
+
+### Evals
+
+Two complementary eval flavours live under `evals/`:
+
+- **Output-quality** ([`evals/README.md`](evals/README.md)) — automated regression net for what each skill actually produces. Run via `/skill-creator:skill-creator eval pricefx-im-plugin:<skill-name>` before committing skill changes.
+- **Trigger routing** ([`evals/triggers.md`](evals/triggers.md)) — manual smoke-test that a given user prompt picks the right skill. Run after any `description:` change.
 
 ## Repository
 
