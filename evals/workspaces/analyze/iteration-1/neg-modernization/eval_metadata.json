@@ -1,0 +1,11 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-modernization",
+  "category": "negative",
+  "prompt": "Modernize this project — fix legacy patterns automatically.",
+  "fixture_description": "No fixture — behaviour test. The skill should defer to the migrate-project agent (apply fixes, not just report).",
+  "assertions": [
+    {"id": "redirects-to-migrate-project", "text": "Subagent recognizes modernization scope and refers to migrate-project agent", "type": "grep", "patterns": ["migrate-project", "modernize", "apply fixes", "migration"], "match": "any", "scope": "narrative"},
+    {"id": "no-single-route-report", "text": "Does NOT produce a single-route lint report", "type": "grep_absent", "patterns": ["QUALITY REPORT\\s*\n=", "Route:\\s*\\S+\\s*Type:", "OK\\s*\\|\\s*N-1"], "scope": "all"}
+  ]
+}

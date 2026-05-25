@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="refresh-prices">
+        <from uri="file://{{integration.sftp.root}}/inbound/prices?delay=10000&amp;{{archive.file}}&amp;{{read.lock}}"/>
+        <log message="Refreshing prices DS" loggingLevel="INFO"/>
+        <split streaming="true">
+            <tokenize token="\n" group="50000"/>
+            <to uri="pfx-csv:unmarshal?skipHeaderRecord=true"/>
+            <to uri="pfx-api:loaddata?objectType=DMDS&amp;dsUniqueName=DMDS.Prices&amp;mapper=refresh-prices.mapper"/>
+        </split>
+        <log message="Refresh complete" loggingLevel="INFO"/>
+    </route>
+</routes>

@@ -1,0 +1,36 @@
+{
+  "eval_id": 1,
+  "eval_name": "pos-compliance-streaming",
+  "category": "positive",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "report-flags-streaming-missing",
+      "text": "Report flags S-1: <split> missing streaming=\"true\"",
+      "passed": true,
+      "evidence": "matched: 'streaming' | 'Streaming on split'"
+    },
+    {
+      "id": "report-uses-check-labels",
+      "text": "Report uses the structured check-label format from SKILL.md",
+      "passed": true,
+      "evidence": "matched: 'OK'"
+    },
+    {
+      "id": "no-project-wide-scan",
+      "text": "Subagent did NOT scan the whole project",
+      "passed": true,
+      "evidence": "none of: 'analyze-project agent' | 'full project scan' | 'all routes scanned' present"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 3
+  },
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}
