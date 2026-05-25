@@ -1,0 +1,11 @@
+{
+  "eval_id": 6,
+  "eval_name": "edge-vague-check",
+  "category": "edge",
+  "prompt": "Check my route.",
+  "fixture_description": "No fixture — behaviour test. Prompt is too vague (no file path). The skill should ask the user which route file to analyze.",
+  "assertions": [
+    {"id": "asks-which-route", "text": "Subagent asks which route file to analyze (or lists routes/ as the dir to look in)", "type": "grep", "patterns": ["which route", "what route", "file path", "which file", "specify.*route", "routes/", "src/main/resources/repo/routes"], "match": "any", "scope": "narrative"},
+    {"id": "no-arbitrary-lint-report", "text": "Does NOT produce a lint report for an arbitrary/made-up route file", "type": "grep_absent", "patterns": ["QUALITY REPORT\\s*\n=", "OK\\s*\\|\\s*N-1"], "scope": "all"}
+  ]
+}

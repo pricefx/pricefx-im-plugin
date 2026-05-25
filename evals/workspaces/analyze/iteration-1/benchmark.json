@@ -1,0 +1,600 @@
+{
+  "metadata": {
+    "skill_name": "analyze",
+    "skill_path": "/Users/mnagas/Documents/pricefx/pricefx-im-plugin/skills/analyze",
+    "executor_model": "claude-opus-4-7",
+    "analyzer_model": "claude-opus-4-7",
+    "timestamp": "2026-05-22T13:48:54.055511+00:00",
+    "evals_run": [
+      "edge-vague-check",
+      "neg-full-project-scope",
+      "neg-modernization",
+      "pos-compliance-streaming",
+      "pos-lint-import-products",
+      "pos-missing-flush-dmds",
+      "pos-px-missing-constant"
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 6,
+      "eval_name": "edge-vague-check",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-which-route",
+          "text": "Subagent asks which route file to analyze (or lists routes/ as the dir to look in)",
+          "passed": true,
+          "evidence": "matched: 'which route' | 'file path' | 'which file'"
+        },
+        {
+          "id": "no-arbitrary-lint-report",
+          "text": "Does NOT produce a lint report for an arbitrary/made-up route file",
+          "passed": true,
+          "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "edge-vague-check",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "asks-which-route",
+          "text": "Subagent asks which route file to analyze (or lists routes/ as the dir to look in)",
+          "passed": true,
+          "evidence": "matched: 'file path' | 'routes/' | 'src/main/resources/repo/routes'"
+        },
+        {
+          "id": "no-arbitrary-lint-report",
+          "text": "Does NOT produce a lint report for an arbitrary/made-up route file",
+          "passed": true,
+          "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+        }
+      ],
+      "notes": [
+        "edge"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "neg-full-project-scope",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-analyze-project",
+          "text": "Subagent recognizes full-project scope and refers to analyze-project agent",
+          "passed": true,
+          "evidence": "matched: 'analyze-project' | 'full project' | 'project assessment'"
+        },
+        {
+          "id": "no-single-route-report",
+          "text": "Does NOT produce a single-route lint report (no QUALITY REPORT block / no Route:/Type:/File: header)",
+          "passed": true,
+          "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'Route:\\\\s*\\\\S+\\\\s*Type:' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "neg-full-project-scope",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-analyze-project",
+          "text": "Subagent recognizes full-project scope and refers to analyze-project agent",
+          "passed": true,
+          "evidence": "matched: 'analyze-project' | 'full project' | 'full-project'"
+        },
+        {
+          "id": "no-single-route-report",
+          "text": "Does NOT produce a single-route lint report (no QUALITY REPORT block / no Route:/Type:/File: header)",
+          "passed": true,
+          "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'Route:\\\\s*\\\\S+\\\\s*Type:' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-modernization",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-migrate-project",
+          "text": "Subagent recognizes modernization scope and refers to migrate-project agent",
+          "passed": true,
+          "evidence": "matched: 'migrate-project' | 'migration'"
+        },
+        {
+          "id": "no-single-route-report",
+          "text": "Does NOT produce a single-route lint report",
+          "passed": true,
+          "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'Route:\\\\s*\\\\S+\\\\s*Type:' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "neg-modernization",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 2,
+        "failed": 0,
+        "total": 2,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "redirects-to-migrate-project",
+          "text": "Subagent recognizes modernization scope and refers to migrate-project agent",
+          "passed": true,
+          "evidence": "matched: 'modernize' | 'apply fixes'"
+        },
+        {
+          "id": "no-single-route-report",
+          "text": "Does NOT produce a single-route lint report",
+          "passed": true,
+          "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'Route:\\\\s*\\\\S+\\\\s*Type:' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+        }
+      ],
+      "notes": [
+        "negative"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "pos-compliance-streaming",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-streaming-missing",
+          "text": "Report flags S-1: <split> missing streaming=\"true\"",
+          "passed": true,
+          "evidence": "matched: 'S-1' | 'streaming' | 'Streaming on split'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format from SKILL.md",
+          "passed": true,
+          "evidence": "matched: 'N-1' | 'S-1' | 'F-1'"
+        },
+        {
+          "id": "no-project-wide-scan",
+          "text": "Subagent did NOT scan the whole project",
+          "passed": true,
+          "evidence": "none of: 'analyze-project agent' | 'full project scan' | 'all routes scanned' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "pos-compliance-streaming",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-streaming-missing",
+          "text": "Report flags S-1: <split> missing streaming=\"true\"",
+          "passed": true,
+          "evidence": "matched: 'streaming' | 'Streaming on split'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format from SKILL.md",
+          "passed": true,
+          "evidence": "matched: 'OK'"
+        },
+        {
+          "id": "no-project-wide-scan",
+          "text": "Subagent did NOT scan the whole project",
+          "passed": true,
+          "evidence": "none of: 'analyze-project agent' | 'full project scan' | 'all routes scanned' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "pos-lint-import-products",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-error-folder-missing",
+          "text": "Report flags the missing error folder (F-2)",
+          "passed": true,
+          "evidence": "matched: 'F-2' | 'Error folder' | 'error\\\\.file'"
+        },
+        {
+          "id": "report-flags-redundant-connection",
+          "text": "Report flags the redundant connection=pricefx (A-1)",
+          "passed": true,
+          "evidence": "matched: 'A-1' | 'redundant.*connection' | 'connection=pricefx.*redundant'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format from SKILL.md (N-1/F-1/A-1/etc. or OK/FAIL/WARN markers)",
+          "passed": true,
+          "evidence": "matched: 'N-1' | 'F-1' | 'A-1'"
+        },
+        {
+          "id": "no-project-wide-scan",
+          "text": "Subagent did NOT scan the whole project \u2014 narrative does not list multiple route files outside the named one",
+          "passed": true,
+          "evidence": "none of: 'scanning project' | 'all routes' | 'full project' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 0,
+      "eval_name": "pos-lint-import-products",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-error-folder-missing",
+          "text": "Report flags the missing error folder (F-2)",
+          "passed": false,
+          "evidence": "missing: 'F-2' | 'Error folder' | 'error\\\\.file'"
+        },
+        {
+          "id": "report-flags-redundant-connection",
+          "text": "Report flags the redundant connection=pricefx (A-1)",
+          "passed": true,
+          "evidence": "matched: 'redundant.*connection' | 'connection=pricefx.*redundant' | 'connection=pricefx'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format from SKILL.md (N-1/F-1/A-1/etc. or OK/FAIL/WARN markers)",
+          "passed": false,
+          "evidence": "missing: 'N-1' | 'F-1' | 'A-1'"
+        },
+        {
+          "id": "no-project-wide-scan",
+          "text": "Subagent did NOT scan the whole project \u2014 narrative does not list multiple route files outside the named one",
+          "passed": true,
+          "evidence": "none of: 'scanning project' | 'all routes' | 'full project' present"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "pos-missing-flush-dmds",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-missing-flush",
+          "text": "Report flags D-1: pfx-api:flush missing on DMDS route",
+          "passed": true,
+          "evidence": "matched: 'D-1' | 'flush' | 'pfx-api:flush'"
+        },
+        {
+          "id": "detects-dmds-route-type",
+          "text": "Report identifies the route as DMDS / DS import type",
+          "passed": true,
+          "evidence": "matched: 'DMDS' | 'DS import' | 'objectType=DMDS'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format",
+          "passed": true,
+          "evidence": "matched: 'D-1' | 'N-1' | 'OK'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "pos-missing-flush-dmds",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-missing-flush",
+          "text": "Report flags D-1: pfx-api:flush missing on DMDS route",
+          "passed": true,
+          "evidence": "matched: 'flush' | 'pfx-api:flush'"
+        },
+        {
+          "id": "detects-dmds-route-type",
+          "text": "Report identifies the route as DMDS / DS import type",
+          "passed": true,
+          "evidence": "matched: 'DMDS' | 'objectType=DMDS'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format",
+          "passed": false,
+          "evidence": "missing: 'D-1' | 'N-1' | 'OK'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "pos-px-missing-constant",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-missing-px-name-constant",
+          "text": "Report flags A-2: PX mapper missing <constant out=\"name\"/>",
+          "passed": true,
+          "evidence": "matched: 'A-2' | 'constant.*name' | 'extension name'"
+        },
+        {
+          "id": "detects-px-route-type",
+          "text": "Report identifies the route as a PX (extension) import",
+          "passed": true,
+          "evidence": "matched: 'PX' | 'extension' | 'Type:.*PX'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format",
+          "passed": true,
+          "evidence": "matched: 'A-2' | 'N-1' | 'F-1'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "pos-px-missing-constant",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6667,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "id": "report-flags-missing-px-name-constant",
+          "text": "Report flags A-2: PX mapper missing <constant out=\"name\"/>",
+          "passed": true,
+          "evidence": "matched: 'constant.*name' | '<constant.*out=\"name\"' | 'missing.*name'"
+        },
+        {
+          "id": "detects-px-route-type",
+          "text": "Report identifies the route as a PX (extension) import",
+          "passed": true,
+          "evidence": "matched: 'PX' | 'extension' | 'Product Extension'"
+        },
+        {
+          "id": "report-uses-check-labels",
+          "text": "Report uses the structured check-label format",
+          "passed": false,
+          "evidence": "missing: 'A-2' | 'N-1' | 'F-1'"
+        }
+      ],
+      "notes": [
+        "positive"
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.8333,
+        "stddev": 0.1992,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.1667",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": [
+    "Output-quality benchmark for the single-route lint skill. Unlike the generators, this skill produces a structured lint report (check-label table: N-1..N-5, X-1, F-1..F-5, A-1..A-4, D-1..D-2, E-1..E-2, S-1, AP-1..AP-3) instead of route/mapper/properties artefacts. Each positive case seeds 1\u20132 known anti-patterns into a small fixture route and asks the subagent to lint it; assertions check that the report flags the seeded labels in narrative scope.",
+    "Positive cases cover four route shapes: P-master (seeded F-2 missing error folder + A-1 redundant connection), customer export (seeded S-1 split missing streaming=\"true\"), DMDS prices refresh (seeded D-1 missing pfx-api:flush), and PX-extension import (seeded A-2 mapper missing <constant out=\"name\"/>).",
+    "Negative cases test that the skill defers \u2014 full-project scope \u2192 analyze-project agent; modernization request \u2192 migrate-project agent.",
+    "Edge case ('Check my route') tests whether the skill asks which file rather than picking arbitrarily.",
+    "Trigger evals NOT measured here \u2014 see evals/benchmarks/config.md. This benchmark is output-quality only.",
+    "Caveat: fixtures intentionally seed anti-patterns that exist in the SKILL.md check catalog. Anti-patterns AP-1..AP-34 from docs/anti-patterns.md are catalog-wide; SKILL.md analyses use a subset (the 'AP-' labels in SKILL.md are AP-1..AP-3 only). Assertions target the SKILL.md label space.",
+    "Delta +21 pts (with_skill 100% / baseline 79%) \u2014 the largest delta among the 5 plugin iter-1 benchmarks so far. Driven by two effects: (1) the skill teaches a specific check-label format (N-1/F-1/A-1/D-1/A-2/S-1) that the baseline does not reproduce \u2014 baseline lints use HIGH/MEDIUM/LOW or H1/H2/L1 instead, so the report-uses-check-labels assertion fails on baseline in 3 of 4 positive cases; (2) on pos-lint-import-products the baseline missed the F-2 (missing {{error.file}}) finding entirely \u2014 it caught the redundant connection but not the absent error folder. The skill's structured checklist forces exhaustive coverage where the baseline triages by severity.",
+    "Iter-2 recommendation: add more fixtures that stress the niche checks (E-1 PX/CX filter name criterion, E-2 filter-mapper field sync, AP-3 CFS trigger inside split, N-5 200-line route). Current iter-1 covers F-2, A-1, S-1, D-1, A-2 \u2014 about half the SKILL.md label space."
+  ]
+}

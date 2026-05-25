@@ -1,0 +1,36 @@
+{
+  "eval_id": 2,
+  "eval_name": "pos-missing-flush-dmds",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "report-flags-missing-flush",
+      "text": "Report flags D-1: pfx-api:flush missing on DMDS route",
+      "passed": true,
+      "evidence": "matched: 'D-1' | 'flush' | 'pfx-api:flush'"
+    },
+    {
+      "id": "detects-dmds-route-type",
+      "text": "Report identifies the route as DMDS / DS import type",
+      "passed": true,
+      "evidence": "matched: 'DMDS' | 'DS import' | 'objectType=DMDS'"
+    },
+    {
+      "id": "report-uses-check-labels",
+      "text": "Report uses the structured check-label format",
+      "passed": true,
+      "evidence": "matched: 'D-1' | 'N-1' | 'OK'"
+    }
+  ],
+  "score": {
+    "passed": 3,
+    "total": 3
+  },
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

@@ -1,0 +1,7 @@
+<mappers>
+    <loadMapper id="import-px-prices.mapper">
+        <body in="sku" out="sku"/>
+        <body in="price" out="attribute1" converterExpression="stringToDecimal"/>
+        <body in="currency" out="attribute2"/>
+    </loadMapper>
+</mappers>

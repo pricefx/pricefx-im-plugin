@@ -1,0 +1,11 @@
+{
+  "eval_id": 4,
+  "eval_name": "neg-full-project-scope",
+  "category": "negative",
+  "prompt": "Run a full project health check on this whole IM project — I want a quality score, route inventory, and the top 3 actions to fix.",
+  "fixture_description": "No fixture — this is a behaviour test. The skill should defer to the analyze-project agent.",
+  "assertions": [
+    {"id": "redirects-to-analyze-project", "text": "Subagent recognizes full-project scope and refers to analyze-project agent", "type": "grep", "patterns": ["analyze-project", "full project", "full-project", "project assessment", "quality score"], "match": "any", "scope": "narrative"},
+    {"id": "no-single-route-report", "text": "Does NOT produce a single-route lint report (no QUALITY REPORT block / no Route:/Type:/File: header)", "type": "grep_absent", "patterns": ["QUALITY REPORT\\s*\n=", "Route:\\s*\\S+\\s*Type:", "OK\\s*\\|\\s*N-1"], "scope": "all"}
+  ]
+}
