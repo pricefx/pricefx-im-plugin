@@ -499,6 +499,29 @@ Preserve any logging steps before/after the import. Remove unused aggregation st
 
 **Fix:** Avoid `body` references inside the split. Move whatever you need into a header or exchange property **before** the `<split>` and reference that instead (e.g. `${header.totalCount}`).
 
+### AP-35 — `<delay>` without explicit `asyncDelayed`
+
+- **Severity:** Important
+- **Applies to:** `version-independent`
+- **Auto-fixable:** Yes — add `asyncDelayed="false"`
+
+**Detect:** A `<delay>` element with no `asyncDelayed=` attribute (the bare `<delay>` opening tag). Shell: `grep -rn '<delay>' src/main/resources/repo/routes/`
+
+**Why it matters:** A bare `<delay>` relies on the Camel `asyncDelayed` default, which schedules the delay on a separate thread pool and releases the current route thread instead of blocking it — so the pause does not reliably serialize with the steps that follow (the route thread continues / the exchange is handed off). The exact default is Camel-version-dependent, so the only safe form is to set it explicitly. Routes that use a delay to let a side effect settle (e.g. a `pfx-sftp` / `file://` write completing before the next step) silently don't get the pause they expect. Note: a fixed-duration delay is itself a weak substitute for a real completion handshake (e.g. SFTP `doneFileName`) — `asyncDelayed="false"` only guarantees the sleep actually happens on the route thread.
+
+**Fix:** Add `asyncDelayed="false"` to force the synchronous (blocking) path:
+```xml
+<!-- Before -->
+<delay>
+    <constant>3000</constant>
+</delay>
+
+<!-- After -->
+<delay asyncDelayed="false">
+    <constant>3000</constant>
+</delay>
+```
+
 ---
 
 ## External I/O & templates
