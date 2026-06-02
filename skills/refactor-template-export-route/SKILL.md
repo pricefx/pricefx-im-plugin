@@ -47,6 +47,20 @@ Collect every value into a key → value map. Many will be empty strings — tho
 
 Then read the mapper file referenced by `pfx:<route-id>.export.pfx.to.csv.mapper` so you can confirm the output column list and the source field names.
 
+**Critical: check cross-route property dependencies before deleting anything.** Template-generated routes routinely reference properties owned by **another route's** prefix. The most common pattern is a sibling "variant" route (e.g. `export-active-price-books-standard-to-sfdc` referencing `pfx:export-active-price-books-to-sfdc.pfx-api.settings`, `.batch.size`, `.pfx-connection`, `.export.pfx.to.csv.mapper`). If you refactor route A and delete its `pfx-api.settings`, sibling route B that references `{{pfx:A.pfx-api.settings}}` will fail to deploy.
+
+**Before Step 9 (Delete properties), grep the entire project** for any other route XML that references the properties you're about to remove:
+
+```
+grep -rn "{{pfx:<route-id>\\." src/main/resources/repo/routes/
+```
+
+If any property is referenced by a sibling route's XML, either:
+- **Refactor the sibling route at the same time** (preferred — both end up self-contained), or
+- **Keep the property** until the sibling is also refactored.
+
+If you discover this during refactor B because earlier refactor A already deleted shared properties, the fix is to inline the same literal values in B that A inlined — the data didn't change, just the indirection. Call this out in the report so the user knows what shared values were duplicated.
+
 ## Step 2: Decide which branches stay and which die
 
 For every `<choice>` / `<script>` / `${headers.X}` substitution in the route, resolve it using the hardwired property value. If the predicate is constant after substitution, **delete the whole `<choice>` and inline only the surviving branch**.
@@ -63,19 +77,34 @@ For every `<choice>` / `<script>` / `${headers.X}` substitution in the route, re
 | `incremental.export` | `true` | Keep `pfx-config:get`, the `whereFilterClause` choice (first-run vs subsequent-run), and the `<onCompletion>` `pfx-config:set`. |
 | `incremental.export` | `false` | Drop all three. Use a static `WHERE` clause (often `WHERE 1=1` or whatever the project-specific predicate is). |
 | `custom.timestamp.column` | `lastUpdateDate` or e.g. `Effective_From` | Use this column name in the WHERE-clause comparison. |
-| `max.lines.per.file` | empty | Drop the `splitPreservedHeaders` Groovy map and the chunking branches entirely. If non-empty, keep that block but hardwire the value. |
+| `max.lines.per.file` | empty | **Whole chunking sub-route is dead.** The template's `maxLinesPerFile` Groovy resolves to `0`, the `headers.maxLinesPerFile > 0` choice always fails, and the entire chunking `<when>` arm (typically 150+ lines: `splitPreservedHeaders`, `loop doWhile`, `currentLines` accumulator, multi-arm SFTP destination choice, etc.) is unreachable. Drop the `<when>` arm, the `setHeader maxLinesPerFile` and `setHeader splitPreservedHeaders` upstream of it, and keep only the simple `<otherwise>` SFTP-destination logic. If non-empty, keep the chunking block but hardwire the value. |
+| `custom.timestamp.column` | empty | **`useCustomTimestampColumn` branch is dead by syntactic broken-ness.** The template embeds the property name directly into Groovy as `entry.{{pfx:...custom.timestamp.column}}`. When the property is empty, this substitutes to `entry.` (with nothing after the dot) — invalid Groovy. Even if the upstream caller sets the `useCustomTimestampColumn` header to `true`, the script would throw a compile error. Drop the whole `<choice><when><groovy>headers.useCustomTimestampColumn</groovy>` branch, the `setHeader updatedIds` that initialises its accumulator, and the trailing massedit guarded by `headers.useCustomTimestampColumn && headers.updatedIds.size() > 0`. |
 | `max.lines.add.suffix` | `true` or `false` | Inline into the chunking logic if it survives. |
 | `done.file.clause` | empty | Drop the trailing `{{pfx:...done.file.clause}}` placeholder. If non-empty, hardwire the resulting `&doneFileName=...` directly into the destination URI. |
-| `pfx-connection` | `pricefx` | Drop `&connection=pricefx` from every URI — `pricefx` is the implicit default (see `docs/connections.md`). |
+| `pfx-connection` | `pricefx` | Drop `&connection=pricefx` (or `&connection={{pfx:...pfx-connection}}`) from **every URI in the route** — `pfx-api:fetch` (outer + inner), `pfx-api:massedit` in `<onException>`, the pre-export massedit, every per-record success/failure massedit inside the split, and every massedit in `<onCompletion>`. `pricefx` is the implicit default (see `docs/connections.md`). |
 | `sftp.connection` | `default-sftp-connection` | If `default-sftp-connection`, replace the `pfx-sftp:parameters?...` URI with `file://{{integration.sftp.root}}/<sftp.directory>?fileName=${headers.exportFileName}` — the local-mounted IM storage. If a real external SFTP, keep `pfx-sftp:` with the connection inline. |
 | `sftp.directory` | `/outbound/...` | Inline. |
-| `sync.cron` | e.g. `0+0+*+*+*+?+*` | Inline into the `quartz://` `cron=` parameter. |
+| `sync.cron` | e.g. `0+0+*+*+*+?+*` | Inline into the `quartz://` `cron=` parameter. **If the active `<from>` is `seda:`/`direct:`/`timer:`, `sync.cron` is dead** — the property was generated by the template but the developer chose a different trigger. Drop the property without inlining. |
 | `batch.size` | `10000` | Inline as `batchSize=<N>`. |
 | `export.pfx.to.csv.mapper` | `pfx:<route-id>.export.pfx.to.csv.mapper` | Inline as `mapper=<value>`. |
 | `export.file.timestamp.format` | `yyyy-MM-dd'T'HHmmss` or similar | Inline into the Groovy that builds the file name. |
 | `export.file.name` | empty or template | Inline into the file-name Groovy. |
 
 Drop the Groovy `<script>` that parses `pfxApiSettings` into headers — every field it sets becomes a literal in the URI.
+
+### objectType-dispatch choices
+
+The template usually emits a chain of `<choice>` blocks that dispatch on `objectType` to set different URI-fragment headers. Once `objectType` is hardwired (Step 2 above), most of these collapse to no-ops. The full set typically seen:
+
+| Template choice | Action when match | Collapses when `objectType` is… |
+|---|---|---|
+| `'DMDS'.equals(headers.objectType)` | `dsUniqueNameHeader = '&dsUniqueName=' + entityName` | Keep inline for DMDS (becomes `&dsUniqueName=<entityName>` literal). |
+| `'DM'.equals(headers.objectType)` | `dsUniqueNameHeader = '&dsUniqueName=DM.' + entityName` | Keep inline for DM (becomes `&dsUniqueName=DM.<entityName>`). |
+| `['LTV','LT','MLTV','MLTV2','MLTV3','MLTV4','MLTV5','MLTV6'].contains(objectType)` | `ppNameHeader = '&pricingParameterName=' + entityName` | Keep inline only for those pricing-parameter types; otherwise drop. |
+| `['LPG','XLPG','PLI'].contains(objectType)` | `typedIdHeader = '&typedId=' + entityName` | Keep inline only for grid items; otherwise drop. |
+| `['LPG','XLPG'].contains(objectType)` (inner choice) | `fetchObjectType = 'PGI'` (otherwise `headers.objectType`) | For LPG/XLPG, swap the URI's `objectType` literal to `PGI` — data is actually fetched as PGI. For everything else, just use `objectType` directly. |
+
+After substitution, exactly one of the first four sets a header (or none, if `objectType` matches none). The `fetchObjectType` choice resolves to a single literal. Drop every `<choice>` and the `setHeader fetchObjectType` that follows them; inline the resulting URI fragment directly into the fetch URIs.
 
 ## Step 3: Rebuild the `from` URI
 
@@ -87,9 +116,11 @@ quartz://export-<route-id>?cron=<cron-literal>&amp;stateful=true&amp;trigger.tim
 
 Cron expressions: spaces are encoded as `+` inside Camel URIs (`0 0 * * * ?` → `0+0+*+*+*+?`).
 
-If the active `<from>` is a `direct:` or `timer:` (the templates often leave both `quartz` and `direct:manualStart...` and a `timer:testTimer...` commented out), keep whichever the user is actually using. Don't change a manually-triggered route into a scheduled one without confirmation.
+If the active `<from>` is `direct:`, `timer:`, or `seda:` (templates often leave both `quartz` and `direct:manualStart...` and a `timer:testTimer...` commented out — and chained export routes commonly use `seda:<route-id>` triggered by an upstream route), keep whichever the user is actually using. Don't change a manually-triggered or chained route into a scheduled one without confirmation. **When the active trigger is `seda:`, the `sync.cron` property is dead — drop it from `application.properties` without inlining anywhere.**
 
-`stateful=true` and `trigger.timeZone=...` are always set; preserve them.
+Commented-out alternate `<from>` URIs (e.g. `<!-- <from uri="timer:testTimer2..."/>-->`) are dev-test commentary, not preserved scaffolding. Drop them.
+
+`stateful=true` and `trigger.timeZone=...` are always set when the active trigger is `quartz:`; preserve them.
 
 ## Step 4: Rebuild the `pfx-api:fetch` URIs
 
@@ -156,14 +187,27 @@ Do not strip:
 - PGP `<marshal>` blocks
 - `<multicast>` to multiple destinations (e.g. main + backup SFTP folder)
 - Pre-export `<massedit>` (mark `Export_Status = Processing`) and post-export `<massedit>` (mark `Exported` / `Failed`)
-- `<onCompletion>` blocks
+- `<onCompletion>` blocks — including any `<delay>` + `<to uri="seda:..."/>` chain that triggers a sibling route (chained-route pattern: route A finishes, waits N ms, hands off to route B via seda). Preserve the delay verbatim — it's timing-dependent business logic, not template scaffolding.
+- `<when>` directly inside `<onCompletion>` (i.e. **not** wrapped in `<choice>`). Camel's onCompletion expects `<onWhen>` as a guard predicate, but templates sometimes emit a bare `<when>` — preserve verbatim and call out as a possible pre-existing bug in the report. Do not "fix" by wrapping in `<choice>` or renaming to `<onWhen>` — that may change which downstream steps execute.
 - `<delay>` steps — but add `asyncDelayed="false"` if the source uses the bare `<delay>` form (see "Notes and gotchas" → delay; AP-35)
 - Logging steps
 - HTTP-related header setups (`Authorization`, `Content-Type`, `X-Correlation-Id`, `CamelHttpMethod`) and the REST `toD` to the external endpoint
+- Pre-export "preview" passes that collect data via `<split aggregationStrategy="<bean-name>">` referencing a project-specific Spring bean (e.g. `productCodesAggregationStrategy`). These extract a list/set of values from a batched fetch into an exchange property like `aggregatedProductCodes`, then a downstream `setHeader` reads the property and the result is cached or fed into the main pass. Custom aggregation-strategy beans are business logic, not template scaffolding.
+- Cache interactions via `bean:<bean-name>?method=...(...)` — e.g. `bean:simpleCache?method=put('K','V')` / `?method=remove('K')` / `?method=getOrDefault('K','default')`. These are project-specific cross-route state; preserve verbatim including all method-string arguments.
 
 Only the template scaffolding goes — `pfxApiSettings` parser, `dsUniqueNameHeader` setter, `fetchObjectType` setter, the empty `${headers.ppNameHeader}${headers.typedIdHeader}${headers.filterClause}` URI suffix slots, and any `<choice>` whose predicate is constant after substitution.
 
 Drop empty header references like `${headers.ppNameHeader}` and `${headers.typedIdHeader}` from the URIs unless the property they correspond to has a non-empty value (they're nearly always empty in real projects).
+
+### Also drop these common template residues
+
+These appear in template-generated routes but become dead or misleading once the scaffolding is removed:
+
+- **Dead duplicate `<setHeader>`** — the template often writes `<setHeader name="whereFilterClause"><groovy>'WHERE 1=1'</groovy></setHeader>` and then **immediately** overwrites it with another `<setHeader name="whereFilterClause">` containing the full WHERE-clause Groovy. The first set is dead code (overwritten before it's used). Drop the dead set.
+- **Diagnostic `<log>` referencing parser-set headers** — `<log message="objectType = ${headers.objectType}, dsUniqueName = ${headers.dsUniqueName}, entityName = ${headers.entityName}, nullValue = ${headers.nullValue}"/>` is a developer-debug log added next to the `pfxApiSettings` Groovy parser. Once the parser is gone, those headers don't exist and the log prints `null`s. Drop this log even though the general rule is "preserve logging" — it refers to state the refactor just removed.
+- **Commented-out alternate `<from>` URIs** — e.g. `<!-- <from uri="timer:testTimer2..."/>-->` left for local testing. These are dev commentary, not scaffolding to preserve. Drop them.
+- **`setHeader filterClause` driven by a global `{{pfx.filter:<default>}}` lookup** — the template often emits a `<setHeader name="filterClause"><groovy>...{{pfx.filter:}}...&filter=... </groovy></setHeader>` block that builds a `&filter=<id>` URI fragment if the global property `pfx.filter` is set. Note the syntax: `{{pfx.filter:}}` is a Camel default-value lookup (key `pfx.filter`, empty default), **not** a route-prefixed property. Check `application.properties` for a `pfx.filter=` line at the project root. If absent (the common case), the resulting URI fragment is empty and the entire `setHeader filterClause` block plus the `${headers.filterClause}` references in the fetch URIs are dead. Drop both.
+- **Orphan `<route-id>.read.lock.clause` / `<route-id>.sftp.directory` properties** — sometimes the template emits properties that the route XML never references (left over from an older template version, or because a sibling route owns the actual URI reference). Cross-check every `pfx\:<route-id>.*` property against the route XML before deleting: a property used only by **this** route can be deleted freely; a property referenced by **another** route under a different prefix (e.g. `pfx\:<route-id>-temp-to-ftp.sftp.directory` referenced by URIs in this route) must be preserved. Properties referenced by neither route are orphans and can be deleted.
 
 **Drop `<doTry>/<doCatch>` blocks** that wrap `pfx-api:fetch` or other template steps. They swallow the exception (typically `net.pricefx.integration.api.NonRecoverableException`) and run `<stop/>` in the catch, which has three bad effects: (a) IM's retry/redelivery is disabled because the exception never reaches its error handler; (b) `<onCompletion onCompleteOnly="true">` still fires because the exchange completed "successfully" from Camel's POV — so the watermark in `pfx-config:set` advances even though the export failed (silent data loss); (c) the route's `onException` block (if any) doesn't fire either. Let the exception propagate. Also drop the `<log>` + `<stop/>` that lived inside the `<doCatch>` — they only exist to suppress the exception.
 
@@ -290,6 +334,8 @@ Tell the user:
 - **Empty URI slot headers.** `${headers.ppNameHeader}${headers.typedIdHeader}${headers.filterClause}` are template placeholders that are almost always empty strings — drop them from the URI. If any are non-empty in the source's actual run, inline the value.
 - **Mapper reference uses `:` not `_`** — same as the import refactor skill: the on-disk filename uses `_` but the IM reference inside the URI uses `pfx:<route-id>.export.pfx.to.csv.mapper`.
 - **`{{integration.name}}` and `{{integration.sftp.root}}`** are IM-provided runtime properties, **not** project properties. Keep them as placeholders in the rewritten route; do not add them to `application.properties`.
+- **Trust the route, not the property.** Properties and behavior can diverge — e.g. a route may have `incremental.export=true` set in `application.properties` but no `pfx-config:get`/`pfx-config:set` calls in the route body (the time window is supplied via an upstream header like `standardInterfaceStartTimestamp` instead, possibly with a fallback Groovy cutoff). Decide what to keep based on what the route actually **does**, not what the property says. The `incremental.export` property is then dead and can be dropped without preserving any pfx-config logic.
+- **SFTP `fileName=/...` leading slash → drop when migrating to `file://`.** The template often writes `pfx-sftp:parameters?directory=/path&fileName=/${headers.exportFileName}` with a leading slash on `fileName`. The SFTP component normalises the doubled slash silently, but the Camel `file://` component treats a leading `/` on `fileName` as an absolute path that overrides the URI's directory. When swapping `pfx-sftp:` to `file://{{integration.sftp.root}}/<dir>?fileName=...`, drop the leading slash from `fileName` so the file lands inside the directory as intended. Call this out in the refactor report — it's a behavior fix, not a regression.
 - **`<delay>` must be `asyncDelayed="false"`.** A bare `<delay>` relies on Camel's `asyncDelayed` default, which schedules the delay on a thread pool and releases the route thread rather than blocking it — so the pause doesn't reliably serialize with the steps after it (e.g. waiting for a `pfx-sftp` / `file://` write to settle). Always write `<delay asyncDelayed="false">` so it takes the synchronous `Thread.sleep()` path. This is AP-35 in `docs/anti-patterns.md`. (A fixed delay is still a weak substitute for a real `doneFileName` completion handshake — flag that to the user when you see delays papering over SFTP write ordering.)
 - **PGP key paths.** PGP `keyFileName="file:/home/im/repository/resources/..."` paths are environment-specific resources, not template scaffolding. Keep them verbatim.
 - Do not introduce `description="deprecated, ..."` unless the user has already marked the route as such. Preserve the existing `description` attribute verbatim.
