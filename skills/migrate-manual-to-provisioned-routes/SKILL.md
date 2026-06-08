@@ -1,11 +1,16 @@
 ---
 name: migrate-manual-to-provisioned-routes
-description: Use when migrating from manual to provisioned and the source project has multiple `<route>` elements bundled into a single shared XML file (e.g. `camel-context.xml`) instead of one-route-per-file under `src/main/resources/repo/routes/`.
+description: Use when migrating from manual to provisioned and the source project has multiple `<route>` elements bundled into shared XML files (e.g. `camel-context.xml`, or topic files under `refs/routes/**/*.xml`) instead of one-route-per-file under `src/main/resources/repo/routes/`.
 ---
 
 # Migrate Manual → Provisioned: Routes
 
-You are extracting routes from a manual Pricefx Integration Manager project (where many routes are bundled inside a single `camel-context.xml`, `routes.xml`, or similar) and splitting them into the provisioned IM layout: one route per file under `src/main/resources/repo/routes/{route-id}.xml`.
+You are extracting routes from a manual Pricefx Integration Manager project and splitting them into the provisioned IM layout: one route per file under `src/main/resources/repo/routes/{route-id}.xml`.
+
+Manual projects bundle multiple routes in two common layouts:
+
+1. **Single file** — all routes in one `camel-context.xml` (or `routes.xml`).
+2. **Topic files** — routes partially organised into `refs/routes/**/*.xml` (e.g. `customersRoutes.xml`, `productsRoutes.xml`), each with a `<routeContext>` wrapper containing multiple `<route>` elements. Both layouts are handled identically by this skill.
 
 ## Inputs
 
@@ -19,8 +24,20 @@ If either is missing, ask the user for the path.
 Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`).
 
 ```bash
-find "$SOURCE_DIR" -name "*.xml" -not -path "*/target/*" -not -path "*/.git/*" -not -path "*/.idea/*" -not -path "*/.gradle/*" -not -path "*/.mvn/*"
+find "$SOURCE_DIR" -name "*.xml" \
+  -not -path "*/target/*" \
+  -not -path "*/.git/*" \
+  -not -path "*/.idea/*" \
+  -not -path "*/.gradle/*" \
+  -not -path "*/.mvn/*" \
+  -not -path "*/.settings/*" \
+  -not -path "*/.vscode/*" \
+  -not -path "*/.github/*"
 ```
+
+This covers both layouts automatically:
+- `src/main/resources/camel-context.xml`
+- `src/main/resources/refs/routes/**/*.xml` (topic files such as `customersRoutes.xml`, `productsRoutes.xml`)
 
 ## Step 2: Extract Each `<route>` Block
 
@@ -77,6 +94,34 @@ Extracted N route(s) from {source}:
 Skipped (already in target): M
 Generated IDs (no id was present in source): K
 ```
+
+## Throttle fix
+
+Manual projects often used `<throttle>` as a wrapper around an entire processing block:
+
+```xml
+<!-- WRONG — manual pattern: steps nested inside <throttle> -->
+<throttle timePeriodMillis="1000">
+  <simple>{{rate}}</simple>
+  <convertBodyTo type="org.w3c.dom.Document"/>
+  <setHeader headerName="foo">...</setHeader>
+  <choice>...</choice>
+</throttle>
+```
+
+In provisioned IM (Camel 3+), `<throttle>` only accepts the rate expression. All processing steps must be siblings **after** the closing `</throttle>` tag:
+
+```xml
+<!-- CORRECT — expression only inside <throttle>, steps follow as siblings -->
+<throttle timePeriodMillis="1000">
+  <simple>{{rate}}</simple>
+</throttle>
+<convertBodyTo type="org.w3c.dom.Document"/>
+<setHeader headerName="foo">...</setHeader>
+<choice>...</choice>
+```
+
+Apply this fix to every `<throttle>` block that contains any child elements beyond the rate expression.
 
 ## Rules
 
