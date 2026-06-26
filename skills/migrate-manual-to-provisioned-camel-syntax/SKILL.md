@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-camel-syntax
-description: Use when migrating from manual to provisioned and the source project uses Apache Camel 3.3.5 patterns that break on Camel 4.1+ — `${pfx:foo}` property placeholders, `<inOnly>` / `<inOut>` / `<routeContext>` elements, `setHeader headerName=` / `setProperty propertyName=` / any `*Ref` attributes, `quartz2:` / `aws-s3:` / `direct-vm:` / `vm:` URI schemes, or `useList=` / `synchronous=` / `startDelayedSeconds=` / `transferException=` / `tracerEnabled=` / `LoggingLevel.OFF` options.
+description: Use when migrating from manual to provisioned and the source project uses Apache Camel 3.3.5 patterns that break on Camel 4.1+ — `${pfx:foo}` property placeholders, `<inOnly>` / `<inOut>` / `<routeContext>` elements, `<description>` child element (now a `description=` attribute), `setHeader headerName=` / `setProperty propertyName=` / any `*Ref` attributes, `<marshal ref="..."/>` / `<unmarshal ref="..."/>` (now inline data-format element), nested processors inside `<wireTap>`, `quartz2:` / `aws-s3:` / `direct-vm:` / `vm:` URI schemes, or `useList=` / `synchronous=` / `startDelayedSeconds=` / `transferException=` / `tracerEnabled=` / `LoggingLevel.OFF` options.
 ---
 
 # Migrate Manual → Provisioned: Camel Syntax (3.3.5 → 4.1+)
@@ -95,6 +95,51 @@ In Camel 4 routes XML, the `<routeContext>` wrapper has been replaced by the fil
 
 After deletion, the `<camelContext>` block in the target's `camel-context.xml` may end up almost empty. That's expected — provisioned IM does not need a `<camelContext>` declaration at all (it's auto-configured), so the file can be removed entirely once empty. Flag this in the report.
 
+### 3f — `<description>` child element → `description` attribute
+
+In Camel 4 the `<description>` child element of `<route>` was replaced by a `description` attribute directly on `<route>`.
+
+Detect (single-line form):
+```
+<route ...>
+    <description>Some text.</description>
+```
+
+Replace with:
+```
+<route ... description="Some text.">
+```
+
+Algorithm:
+1. Find any `<route ...>` line immediately followed by `    <description>text</description>`.
+2. Move the text into a `description="text"` attribute on the `<route>` opening tag.
+3. Delete the `<description>` child element line entirely.
+
+For multi-line `<description>` blocks, collapse whitespace and do the same. If the description content contains a `"` character, escape it as `&quot;` in the attribute value.
+
+Apply to all `*.xml` files under `repo/routes/`, `repo/mappers/`, and `repo/filters/`.
+
+### 3g — `<marshal ref="X"/>` / `<unmarshal ref="X"/>` → inline data-format element
+
+In Camel 3, the `ref=` attribute on `<marshal>` and `<unmarshal>` was removed. The data format must be declared inline as a child element.
+
+Detect:
+```xml
+<marshal ref="myFormat"/>
+<unmarshal ref="myFormat"/>
+```
+
+Replace with (where `myFormat` is the data-format name, e.g. `json`, `jacksonxml`, `csv`, `bindy`, etc.):
+```xml
+<marshal><myFormat/></marshal>
+<unmarshal><myFormat/></unmarshal>
+```
+
+Algorithm:
+1. Scan all `*.xml` files under `repo/routes/`, `repo/mappers/`, `repo/filters/` for `<marshal ref="([^"]+)"\s*/>` and `<unmarshal ref="([^"]+)"\s*/>`.
+2. Replace with `<marshal><$1/></marshal>` / `<unmarshal><$1/></unmarshal>`.
+3. If the referenced name is `xmljson` — flag for manual action (see Step 4: `camel-xmljson` removed). Do not auto-replace with `<xmljson/>` since the dependency is gone.
+
 ### 3e — `<setBody><expression><simple>...</simple></expression></setBody>` (verbose form)
 
 Camel 4 simplified the inline-language form. The verbose `<expression><simple>...</simple></expression>` wrapper is still accepted, but the recommended form is just `<simple>...</simple>` directly inside `<setBody>` / `<setHeader>` / `<filter>` / `<when>`.
@@ -121,6 +166,8 @@ These are anti-patterns or removed features. Do **not** auto-fix — the right r
 | `errorHandlerRef=` attribute on `<camelContext>` / `<route>` | route XMLs | Camel 4 still accepts `errorHandlerRef` for backward compatibility, but the modern attribute name is `errorHandler`. Rename when convenient. |
 | `<dataFormats>` block at the `<camelContext>` level | `camel-context.xml` | In provisioned IM there is no `<camelContext>` to attach `<dataFormats>` to. Move the inline data-format definitions into individual routes (`<marshal><jacksonxml/></marshal>`) or extract to a bean. |
 | `<contextScan/>` element | `camel-context.xml` | Provisioned IM doesn't scan a Spring bean context for routes — it discovers them in `repo/routes/`. Remove the element. |
+| `<marshal ref="xmljson"/>` / `<unmarshal ref="xmljson"/>` | route XMLs | `camel-xmljson` was removed in Camel 3. Step 3g rewrites the `ref=` syntax to inline, but the `<xmljson/>` element itself will fail at startup. Replace with a Groovy inline conversion (`groovy-json` is always available), or with `<marshal><jackson/></marshal>` after binding the XML to a Map. |
+| `<wireTap uri="..."><setHeader .../></wireTap>` (nested processors) | route XMLs | Nesting `<setHeader>`, `<setBody>`, `<setProperty>` inside `<wireTap>` was removed in Camel 3. Two replacement options: (1) move the `<setHeader>` **before** `<wireTap>` if the header is needed on both the main exchange and the tapped copy; (2) add `onPrepare="myProcessorBean"` attribute on `<wireTap>` and implement a `Processor` bean that sets headers only on the tapped copy. Detect with regex: `<wireTap[^>]+>[\s\S]*?<(setHeader|setBody|setProperty)`. |
 
 For each pattern found, list the affected files and the suggestion.
 
@@ -156,6 +203,9 @@ Auto-fixes applied:
     <inOnly uri=...> → <to ... pattern="InOnly"/>      N occurrence(s)
     <inOut uri=...>  → <to ... pattern="InOut"/>       N occurrence(s)
     <routeContext> wrapper stripped                     N occurrence(s)
+    <description> child → description= attribute       N occurrence(s)
+    <marshal ref=...> → <marshal><X/></marshal>        N occurrence(s)
+    <unmarshal ref=...> → <unmarshal><X/></unmarshal>  N occurrence(s)
 
 Manual action required:
   useList=:                            [files]
@@ -168,6 +218,7 @@ Manual action required:
   org.joda imports:                    [files]
   @Autowired annotations:              [files]
   @PropertyInject annotations:         [files]
+  <wireTap> with nested processors:   [files] (move before wireTap or use onPrepare=)
 ```
 
 ## Rules
