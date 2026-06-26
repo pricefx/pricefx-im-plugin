@@ -1,0 +1,30 @@
+{
+  "eval_id": 4,
+  "eval_name": "neg-full-project-scope",
+  "category": "negative",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-analyze-project",
+      "text": "Subagent recognizes full-project scope and refers to analyze-project agent",
+      "passed": true,
+      "evidence": "matched: 'analyze-project' | 'full project' | 'quality score'"
+    },
+    {
+      "id": "no-single-route-report",
+      "text": "Does NOT produce a single-route lint report (no QUALITY REPORT block / no Route:/Type:/File: header)",
+      "passed": true,
+      "evidence": "none of the report-signature patterns present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}
