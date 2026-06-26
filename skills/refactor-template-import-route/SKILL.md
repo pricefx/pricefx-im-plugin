@@ -91,7 +91,7 @@ Do not strip:
 - PGP `<unmarshal>` blocks (route may decrypt SAP files)
 - Project-specific Groovy `<script>` blocks that aren't the `pfxApiSettings` parser — for example, the kits route extracts unique SKUs and pre-deletes existing rows
 - `<doTry>` / `<doCatch>` error-handling wrappers (e.g. `MalformedInputException`)
-- `<delay>` steps — but add `asyncDelayed="false"` if the source uses the bare `<delay>` form (see "Notes and gotchas" → delay; AP-35)
+- `<delay>` steps — but add `asyncDelayed="false"` if the source uses the bare `<delay>` form (see "Notes and gotchas" → delay; AP-36)
 - Logging steps
 
 Only the template scaffolding goes. Business logic stays.
@@ -149,7 +149,7 @@ Tell the user:
 - **`use.configured.business.keys=true`** means you must inline `&businessKeys=<value>` in the `loaddata` URI. Do not forget — load semantics change without it.
 - **Delimiter decoding**: `%3D`→`=`, `%26`→`&`, `%22`→`"`, `%7C`→`|`, `%5C`→`\`. The CSV settings property is doubly URL-encoded so it survives Camel property substitution.
 - **PGP password** stays as `{{pgp-key}}` (it's a secret, not a template parameter).
-- **`<delay>` must be `asyncDelayed="false"`.** A bare `<delay>` processor relies on Camel's `asyncDelayed` default, which schedules the delay on a thread pool and releases the route thread rather than blocking it — so the pause doesn't reliably serialize with the steps after it. Always write `<delay asyncDelayed="false">` so it takes the synchronous `Thread.sleep()` path. This is AP-35 in `docs/anti-patterns.md`. **Do not confuse this with the file-consumer `delay=` URI option** (the polling interval on `from uri="file:...?...&delay=10000"`, see Step 3) — that is unrelated and stays as-is.
+- **`<delay>` must be `asyncDelayed="false"`.** A bare `<delay>` processor relies on Camel's `asyncDelayed` default, which schedules the delay on a thread pool and releases the route thread rather than blocking it — so the pause doesn't reliably serialize with the steps after it. Always write `<delay asyncDelayed="false">` so it takes the synchronous `Thread.sleep()` path. This is AP-36 in `docs/anti-patterns.md`. **Do not confuse this with the file-consumer `delay=` URI option** (the polling interval on `from uri="file:...?...&delay=10000"`, see Step 3) — that is unrelated and stays as-is.
 - **Mapper reference uses `:` not `_`** — the on-disk filename uses `_` (`pfx_<route-id>.import.csv.from.ftp.mapper.xml`) but the IM reference inside the URI uses `pfx:<route-id>.import.csv.from.ftp.mapper`.
 - Do not introduce `description="deprecated, ..."` unless the user has already marked the route as such. Preserve the existing `description` attribute verbatim.
 - The user's IM platform provides `{{integration.sftp.root}}` — do not add this property to `application.properties`.

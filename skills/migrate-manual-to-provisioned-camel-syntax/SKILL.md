@@ -1,6 +1,6 @@
 ---
 name: migrate-manual-to-provisioned-camel-syntax
-description: Use when migrating from manual to provisioned and the source project uses Apache Camel 3.3.5 patterns that break on Camel 4.1+ — `${pfx:foo}` property placeholders, `<inOnly>` / `<inOut>` / `<routeContext>` elements, `setHeader headerName=` / `setProperty propertyName=` / any `*Ref` attributes, `quartz2:` / `aws-s3:` / `direct-vm:` / `vm:` URI schemes, bare bean URIs without `bean:` prefix, Java import package renames, application property key renames, Pricefx API method signature renames, or `useList=` / `synchronous=` / `startDelayedSeconds=` / `transferException=` / `tracerEnabled=` / `LoggingLevel.OFF` options.
+description: Use when migrating from manual to provisioned and the source project uses Apache Camel 3.3.5 patterns that break on Camel 4.1+ — `${pfx:foo}` property placeholders, `<inOnly>` / `<inOut>` / `<routeContext>` elements, `<description>` child element (now a `description=` attribute), `setHeader headerName=` / `setProperty propertyName=` / any `*Ref` attributes, `<marshal ref="..."/>` / `<unmarshal ref="..."/>` (now inline data-format element), nested processors inside `<wireTap>`, `quartz2:` / `aws-s3:` / `direct-vm:` / `vm:` URI schemes, bare bean URIs without `bean:` prefix, Java import package renames, application property key renames, Pricefx API method signature renames, or `useList=` / `synchronous=` / `startDelayedSeconds=` / `transferException=` / `tracerEnabled=` / `LoggingLevel.OFF` options.
 ---
 
 # Migrate Manual → Provisioned: Camel Syntax (3.3.5 → 4.1+)
@@ -23,7 +23,7 @@ If neither is set, run the full rewrite set.
 |---|---|
 | Camel 2.x | Full set + warn that `streaming="true"` was added in 2.18 (so older patterns may need it added by hand) |
 | Camel 3.x (any) | Full set — every Camel-3→4 fix |
-| Camel 4.0+ | Skip Step 1 #1 (`quartz2`) and #6 (`aws-s3`); skip Step 2 (`*Ref` renames); skip Step 4 #4a/#4b (`<inOnly>`/`<inOut>` were already removed in 3.x). Still run the `${pfx:foo}` → `{{pfx:foo}}` rewrite (often missed across migrations). Still run Step 8 reports. |
+| Camel 4.0+ | Skip Step 1 #1 (`quartz2`) and #6 (`aws-s3`); skip Step 2 (`*Ref` renames); skip Step 4 #4b/#4c (`<inOnly>`/`<inOut>` were already removed in 3.x). Still run the `${pfx:foo}` → `{{pfx:foo}}` rewrite (often missed across migrations). Still run Step 8 reports. |
 | Unknown | Run full set; flag in the report that the source Camel version was unknown |
 
 ## Step 1: Simple-Expression and Attribute Renames
@@ -96,7 +96,7 @@ Replacement depends on the ref name:
 | `jaxb` | `<unmarshal><jaxb contextPath="com.example"/></unmarshal>` (contextPath must be set — flag for review) |
 | Any other ref | Flag for manual review — look up the bean definition in the source project to determine the correct inline element |
 
-Same rule applies to `<marshal ref="X"/>`.
+Same rule applies to `<marshal ref="X"/>`. If the `ref` name is `xmljson`, do **not** inline as `<xmljson/>` — `camel-xmljson` was removed in Camel 3 and the element fails at startup. Flag it for manual action instead (see Step 8).
 
 ### 4b — `<inOnly uri="X"/>` → `<to uri="X" pattern="InOnly"/>`
 
@@ -123,7 +123,31 @@ In Camel 4 routes XML, the `<routeContext>` wrapper has been replaced by the fil
 
 After deletion, the `<camelContext>` block in the target's `camel-context.xml` may end up almost empty. That's expected — provisioned IM does not need a `<camelContext>` declaration at all (it's auto-configured), so the file can be removed entirely once empty. Flag this in the report.
 
-### 4f — `<setBody><expression><simple>...</simple></expression></setBody>` (verbose form)
+### 4f — `<description>` child element → `description` attribute
+
+In Camel 4 the `<description>` child element of `<route>` was replaced by a `description` attribute directly on `<route>`.
+
+Detect (single-line form):
+```
+<route ...>
+    <description>Some text.</description>
+```
+
+Replace with:
+```
+<route ... description="Some text.">
+```
+
+Algorithm:
+1. Find any `<route ...>` line immediately followed by `    <description>text</description>`.
+2. Move the text into a `description="text"` attribute on the `<route>` opening tag.
+3. Delete the `<description>` child element line entirely.
+
+For multi-line `<description>` blocks, collapse whitespace and do the same. If the description content contains a `"` character, escape it as `&quot;` in the attribute value.
+
+Apply to all `*.xml` files under `repo/routes/`, `repo/mappers/`, and `repo/filters/`.
+
+### 4g — `<setBody><expression><simple>...</simple></expression></setBody>` (verbose form)
 
 Camel 4 simplified the inline-language form. The verbose `<expression><simple>...</simple></expression>` wrapper is still accepted, but the recommended form is just `<simple>...</simple>` directly inside `<setBody>` / `<setHeader>` / `<filter>` / `<when>`.
 
@@ -226,7 +250,7 @@ These are anti-patterns or removed features. Do **not** auto-fix — the right r
 | `transferException=true` parameter on `http`/`http4` | route XMLs | Removed for security in Camel 3.x. Catch the exception locally instead. |
 | `tracerEnabled=` route attribute | route XMLs | Route-level tracing removed in Camel 3. Configure via `CamelContext` or a route policy. |
 | `<log loggingLevel="OFF"/>` | route XMLs | `OFF` removed from `LoggingLevel` enum. Use `TRACE` (or remove the `<log>`). |
-| Verbose `<setBody><expression><simple>...</simple></expression></setBody>` | route XMLs | Simplify to `<setBody><simple>...</simple></setBody>` (covered in Step 4e). |
+| Verbose `<setBody><expression><simple>...</simple></expression></setBody>` | route XMLs | Simplify to `<setBody><simple>...</simple></setBody>` (covered in Step 4g). |
 | `org.joda` import | Java/Groovy | `joda-time` removed. Use `java.time` or Camel Simple `${date:now-24h}`. |
 | `@Autowired` annotation | Java/Groovy | Discouraged in IM 7.x sandbox. Use constructor injection or `connectionLookup`. |
 | `@PropertyInject` annotation | Java/Groovy | Removed. Use Camel Simple `${properties:my.key}` in routes, or `@Value` in Spring beans. |
@@ -237,6 +261,8 @@ These are anti-patterns or removed features. Do **not** auto-fix — the right r
 | `PartitionConnectionFactory.getPriceFxClient` | Java/Groovy | Change to `ConnectionLookup.lookupPriceFx(...)` with `.getClient()` appended. Import also needs updating (covered in Step 5). |
 | `integration.logging.file` property | `application-*.properties` | Overriding the logging file path can cause problems in IM 7.x. Remove this property. |
 | `com.sun.jersey.api.client.ClientHandlerException` | `application-*.properties` (error handler config) | Invalid class for Camel error handling in this version. Replace with a valid exception class (e.g. `java.lang.Exception`). |
+| `<marshal ref="xmljson"/>` / `<unmarshal ref="xmljson"/>` | route XMLs | `camel-xmljson` was removed in Camel 3. Step 4a rewrites the `ref=` syntax to inline, but the `<xmljson/>` element itself will fail at startup. Replace with a Groovy inline conversion (`groovy-json` is always available), or with `<marshal><jackson/></marshal>` after binding the XML to a Map. |
+| `<wireTap uri="..."><setHeader .../></wireTap>` (nested processors) | route XMLs | Nesting `<setHeader>`, `<setBody>`, `<setProperty>` inside `<wireTap>` was removed in Camel 3. Two replacement options: (1) move the `<setHeader>` **before** `<wireTap>` if the header is needed on both the main exchange and the tapped copy; (2) add `onPrepare="myProcessorBean"` attribute on `<wireTap>` and implement a `Processor` bean that sets headers only on the tapped copy. Detect with regex: `<wireTap[^>]+>[\s\S]*?<(setHeader|setBody|setProperty)`. |
 
 For each pattern found, list the affected files and the suggestion.
 
@@ -301,9 +327,11 @@ Auto-fixes applied:
   Bean URI prefix added (Step 3):            N occurrence(s)
 
   Removed elements rewritten (Step 4):
+    <marshal/unmarshal ref=...> → inline data format   N occurrence(s)
     <inOnly uri=...> → <to ... pattern="InOnly">   N occurrence(s)
     <inOut uri=...>  → <to ... pattern="InOut">    N occurrence(s)
     <routeContext> wrapper stripped                 N occurrence(s)
+    <description> child → description= attribute    N occurrence(s)
 
   Java/Groovy import renames (Step 5):       N file(s)
   javax. → jakarta. (Step 5):               N file(s)
@@ -326,6 +354,8 @@ Manual action required (Step 8):
   org.joda imports:                          [files]
   @Autowired annotations:                    [files]
   @PropertyInject annotations:               [files]
+  <wireTap> with nested processors:          [files] (move before wireTap or use onPrepare=)
+  <marshal/unmarshal ref="xmljson">:         [files]
   PartitionConnectionFactory.getPriceFxClient: [files]
   integration.logging.file property:         [files]
   invalid error handling exception class:    [files]

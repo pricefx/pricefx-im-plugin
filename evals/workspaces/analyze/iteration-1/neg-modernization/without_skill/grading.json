@@ -1,0 +1,30 @@
+{
+  "eval_id": 5,
+  "eval_name": "neg-modernization",
+  "category": "negative",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "id": "redirects-to-migrate-project",
+      "text": "Subagent recognizes modernization scope and refers to migrate-project agent",
+      "passed": true,
+      "evidence": "matched: 'modernize' | 'apply fixes'"
+    },
+    {
+      "id": "no-single-route-report",
+      "text": "Does NOT produce a single-route lint report",
+      "passed": true,
+      "evidence": "none of: 'QUALITY REPORT\\\\s*\\n=' | 'Route:\\\\s*\\\\S+\\\\s*Type:' | 'OK\\\\s*\\\\|\\\\s*N-1' present"
+    }
+  ],
+  "score": {
+    "passed": 2,
+    "total": 2
+  },
+  "summary": {
+    "passed": 2,
+    "failed": 0,
+    "total": 2,
+    "pass_rate": 1.0
+  }
+}

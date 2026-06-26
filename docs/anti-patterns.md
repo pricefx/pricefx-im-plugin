@@ -499,7 +499,7 @@ Preserve any logging steps before/after the import. Remove unused aggregation st
 
 **Fix:** Avoid `body` references inside the split. Move whatever you need into a header or exchange property **before** the `<split>` and reference that instead (e.g. `${header.totalCount}`).
 
-### AP-35 — `<delay>` without explicit `asyncDelayed`
+### AP-36 — `<delay>` without explicit `asyncDelayed`
 
 - **Severity:** Important
 - **Applies to:** `version-independent`
@@ -537,6 +537,20 @@ Preserve any logging steps before/after the import. Remove unused aggregation st
 **Why it matters:** Camel forwards every header to the next endpoint by default. For HTTP/JMS calls this leaks internal headers (route ids, file metadata, exchange properties) to external systems and can override headers the external system uses for routing/auth.
 
 **Fix:** Add `<removeHeaders pattern="*" excludePattern="Authorization|Content-Type|Accept|..."/>` just before the external `<to>`.
+
+### AP-35 — Explicit datafeed truncate after DS_FLUSH event
+
+- **Severity:** Important
+- **Applies to:** `version-independent`
+- **Auto-fixable:** Yes — remove the `pfx-api:truncate` call
+
+**Detect:** Event-driven routes where a `<when>` branch triggered by `${headers.type} == "DS_FLUSH"` (or equivalent) contains `pfx-api:truncate`
+
+**Why it matters:** Pricefx automatically truncates a datafeed when its flush completes. Calling `pfx-api:truncate` again in the `eventPADataLoadCompleted` handler is redundant and can wipe data written by a concurrent load that started between the flush and the explicit truncate.
+
+**Fix:** Remove the `pfx-api:truncate` call (and its log line) from the `DS_FLUSH` branch. Only keep branches that perform a meaningful downstream action (e.g. `pfx-api:refresh`, `pfx-api:calculate`). If the branch had no other action, remove the entire `<when>` block.
+
+---
 
 ### AP-32 — Missing `allowContextMapAll=true` on FreeMarker
 
