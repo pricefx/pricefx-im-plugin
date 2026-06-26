@@ -22,7 +22,7 @@ The skill handles **all three** forms. If the project has overlap, prefer the XM
 
 ## Step 1: Find Source XML Files
 
-Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`).
+Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`, `.settings/`, `.vscode/`, `.github/`).
 
 ## Step 2A: Extract Each `<pfx:connection>` Element (XML form)
 
