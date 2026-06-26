@@ -25,15 +25,15 @@ Walk these locations in `$SOURCE_DIR` (skip `target/`, `.git/`, `.idea/`, `.grad
 - `src/main/resources/repo/classes/**/*.groovy` (already-provisioned-style code)
 - `src/main/resources/repo/beans/**/*.groovy` (rare — Groovy in beans dir)
 
-Capture the package path (e.g. `com.example.processor`) for each source file. The target path is:
+All converted classes land flat at the root of `classes/` — no package subdirectories. The target path is always:
 
 ```
-$TARGET_DIR/src/main/resources/repo/classes/{package-dir}/{ClassName}.groovy
+$TARGET_DIR/src/main/resources/repo/classes/{ClassName}.groovy
 ```
 
-For example: `src/main/java/com/example/processor/PriceFilter.java` → `src/main/resources/repo/classes/com/example/processor/PriceFilter.groovy`.
+For example: `src/main/java/com/example/processor/PriceFilter.java` → `src/main/resources/repo/classes/PriceFilter.groovy`.
 
-If the source file already lives at `src/main/resources/repo/classes/...`, mirror the same relative path inside the target.
+If the source file already lives at `src/main/resources/repo/classes/...`, copy it to the same flat root in the target (strip any subdirectory path).
 
 ### 1a — Skip Spring Boot bootstrap classes
 
@@ -54,11 +54,12 @@ This was surfaced by `dieteren-integration`, where `src/main/java/net/pricefx/in
 
 For each `.java` source file, apply these mechanical conversions (in this order):
 
-### 2a — Drop trailing semicolons on `package` and `import` lines
+### 2a — Drop the `package` declaration; drop trailing semicolons on `import` lines
 
-Groovy accepts both forms, but the convention in IM-provisioned classes is no trailing `;` on these declarations:
+Provisioned IM loads Groovy classes from a flat `classes/` directory. **Remove the `package` declaration line entirely** — do not keep it even without the semicolon, because the class is not in any package subdirectory and a mismatched `package` statement will cause a load error.
 
-- `package com.example.foo;` → `package com.example.foo`
+For `import` lines, strip the trailing `;` (convention only — Groovy accepts both forms):
+
 - `import com.example.Bar;` → `import com.example.Bar`
 - `import static com.example.Util.foo;` → `import static com.example.Util.foo`
 
@@ -86,7 +87,15 @@ These need the developer's eyes. Report them — do NOT rewrite:
 
 ### 2d — File extension and location
 
-Rename `.java` → `.groovy`. Move under `$TARGET_DIR/src/main/resources/repo/classes/{package}/`. Preserve the package directory structure.
+Rename `.java` → `.groovy`. Write to `$TARGET_DIR/src/main/resources/repo/classes/{ClassName}.groovy` — flat, no subdirectory, regardless of the original package path.
+
+## Step 2e: Bean Registration — No XML Needed
+
+Provisioned IM automatically registers every Groovy class found in `repo/classes/` as a Spring bean. The bean id is the simple class name with the first letter lowercased (e.g. `SimpleCache` → `simpleCache`, `LookupTableService` → `lookupTableService`).
+
+**Do NOT create a companion `repo/beans/*.xml` file for any Groovy class.** Creating one is redundant and may cause a duplicate-bean conflict at startup.
+
+Only create `repo/beans/*.xml` files for non-Groovy beans: framework classes (e.g. `org.apache.camel.processor.errorhandler.RedeliveryPolicy`), CXF endpoints, ActiveMQ destination views, or third-party library objects that IM cannot auto-detect.
 
 ## Step 3: Fix Imports
 
@@ -189,8 +198,7 @@ Pricefx API method renames (all flagged REVIEW):
   - ... (one line per renamed method)
 
 Files written to:
-  src/main/resources/repo/classes/com/example/...   N file(s)
-  src/main/resources/repo/classes/com/other/...     N file(s)
+  src/main/resources/repo/classes/   N file(s) (flat, no package subdirs)
 
 Manual action required:
   - PartitionConnectionFactory.getPriceFxClient: [files]
@@ -206,5 +214,6 @@ Manual action required:
 - **Always confirm before writing.** Show the user the target paths first.
 - **API method renames produce code that often does not compile.** Always flag them as **REVIEW**. The developer must check each call site.
 - The Groovy sandbox has reflection allow-listing — types referenced in the converted code feed into the next skill (`migrate-manual-to-provisioned-groovy-sandbox`), which generates the `integration.groovy-sandbox.custom-allowed-types` property.
-- Preserve the package path. A class declared `package com.example.foo` must end up at `classes/com/example/foo/ClassName.groovy`.
+- **Do NOT preserve the package path.** All classes land at `classes/` root with no `package` declaration. A `package` statement that doesn't match the file's directory causes a Groovy load error.
+- **Do NOT create bean XMLs for Groovy classes.** IM auto-registers them; adding an XML bean definition causes a duplicate-bean conflict at startup.
 - Idempotent: running this skill twice on a clean target is a no-op.
