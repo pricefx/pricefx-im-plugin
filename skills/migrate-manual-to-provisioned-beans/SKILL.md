@@ -14,7 +14,7 @@ You are extracting Spring beans from a manual IM project and splitting them into
 
 ## Step 1: Find Source XML Files
 
-Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`).
+Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`, `.settings/`, `.vscode/`, `.github/`).
 
 ## Step 2: Extract Each `<bean>` Block
 

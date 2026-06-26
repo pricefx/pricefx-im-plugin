@@ -14,7 +14,7 @@ You are extracting filter definitions from a manual IM project and splitting the
 
 ## Step 1: Find Source XML Files
 
-Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`).
+Glob every `*.xml` under SOURCE_DIR (skip `target/`, `.git/`, `.idea/`, `.gradle/`, `.mvn/`, `.settings/`, `.vscode/`, `.github/`).
 
 ## Step 2: Extract Each Filter Block
 

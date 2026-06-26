@@ -1,0 +1,42 @@
+{
+  "eval_id": 0,
+  "eval_name": "pos-lint-import-products",
+  "category": "positive",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "id": "report-flags-error-folder-missing",
+      "text": "Report flags the missing error folder (F-2)",
+      "passed": true,
+      "evidence": "matched: 'F-2' | 'Error folder' | 'error\\\\.file' | 'moveFailed'"
+    },
+    {
+      "id": "report-flags-redundant-connection",
+      "text": "Report flags the redundant connection=pricefx (A-1)",
+      "passed": true,
+      "evidence": "matched: 'A-1' | 'redundant.*connection' | 'connection=pricefx.*redundant' | 'connection=pricefx'"
+    },
+    {
+      "id": "report-uses-check-labels",
+      "text": "Report uses the structured check-label format from SKILL.md (N-1/F-1/A-1/etc. or OK/FAIL/WARN markers)",
+      "passed": true,
+      "evidence": "matched: 'N-1' | 'F-1' | 'A-1' | 'OK'"
+    },
+    {
+      "id": "no-project-wide-scan",
+      "text": "Subagent did NOT scan the whole project \u2014 narrative does not list multiple route files outside the named one",
+      "passed": true,
+      "evidence": "none of the report-signature patterns present"
+    }
+  ],
+  "score": {
+    "passed": 4,
+    "total": 4
+  },
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  }
+}

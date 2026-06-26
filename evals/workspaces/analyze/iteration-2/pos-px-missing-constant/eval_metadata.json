@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "pos-px-missing-constant",
+  "category": "positive",
+  "prompt": "Can you analyze <fixture-path>/import-px-prices.xml route and tell me if it has any quality issues, anti-patterns, or hidden bugs before I deploy? The mapper is at <fixture-path>/import-px-prices.mapper.xml.",
+  "fixture_description": "PX extension import via loaddataFile. Seeded anti-pattern: A-2 (PX mapper missing <constant ... out=\"name\"/> — without this the import either fails or writes to the wrong table).",
+  "assertions": [
+    {"id": "report-flags-missing-px-name-constant", "text": "Report flags A-2: PX mapper missing <constant out=\"name\"/>", "type": "grep", "patterns": ["A-2", "constant.*name", "extension name", "<constant.*out=\"name\"", "missing.*name", "name.*missing"], "match": "any", "scope": "narrative"},
+    {"id": "detects-px-route-type", "text": "Report identifies the route as a PX (extension) import", "type": "grep", "patterns": ["PX", "extension", "Type:.*PX", "objectType=PX", "Product Extension"], "match": "any", "scope": "narrative"},
+    {"id": "report-uses-check-labels", "text": "Report uses the structured check-label format", "type": "grep", "patterns": ["A-2", "N-1", "F-1", "OK", "FAIL", "WARN", "QUALITY REPORT"], "match": "any", "scope": "narrative"}
+  ]
+}

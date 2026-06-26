@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "pos-missing-flush-dmds",
+  "category": "positive",
+  "prompt": "Check this route <fixture-path>/refresh-prices.xml against best practice — I think it's missing something but not sure what. Maybe the flush step?",
+  "fixture_description": "DMDS import via pfx-api:loaddata with objectType=DMDS. Seeded anti-pattern: D-1 (no pfx-api:flush — DMDS imports MUST flush).",
+  "assertions": [
+    {"id": "report-flags-missing-flush", "text": "Report flags D-1: pfx-api:flush missing on DMDS route", "type": "grep", "patterns": ["D-1", "flush", "pfx-api:flush", "Flush present"], "match": "any", "scope": "narrative"},
+    {"id": "detects-dmds-route-type", "text": "Report identifies the route as DMDS / DS import type", "type": "grep", "patterns": ["DMDS", "DS import", "objectType=DMDS", "Type:.*DMDS", "DMDS/DS"], "match": "any", "scope": "narrative"},
+    {"id": "report-uses-check-labels", "text": "Report uses the structured check-label format", "type": "grep", "patterns": ["D-1", "N-1", "OK", "FAIL", "WARN", "QUALITY REPORT"], "match": "any", "scope": "narrative"}
+  ]
+}

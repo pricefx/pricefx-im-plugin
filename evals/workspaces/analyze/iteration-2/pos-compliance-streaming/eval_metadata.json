@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "pos-compliance-streaming",
+  "category": "positive",
+  "prompt": "Run a compliance check on <fixture-path>/export-customers-daily.xml against our best practices. Specifically check for streaming on splits and proper error handling.",
+  "fixture_description": "Daily customer export via quartz + pfx-api:fetch + <split>. Seeded anti-pattern: S-1 (split missing streaming=\"true\").",
+  "assertions": [
+    {"id": "report-flags-streaming-missing", "text": "Report flags S-1: <split> missing streaming=\"true\"", "type": "grep", "patterns": ["S-1", "streaming", "Streaming on split"], "match": "any", "scope": "narrative"},
+    {"id": "report-uses-check-labels", "text": "Report uses the structured check-label format from SKILL.md", "type": "grep", "patterns": ["N-1", "S-1", "F-1", "OK", "FAIL", "WARN", "QUALITY REPORT"], "match": "any", "scope": "narrative"},
+    {"id": "no-project-wide-scan", "text": "Subagent did NOT scan the whole project", "type": "grep_absent", "patterns": ["analyze-project agent", "full project scan", "all routes scanned"], "scope": "narrative"}
+  ]
+}

@@ -86,12 +86,13 @@ Ask the user: **Where should the data be exported to?**
 
 ## Step 4b: Sync Mode
 
-Ask the user: **Full export or delta sync (only changed records)?**
+Ask the user: **Full export, delta sync, or marked (consistent) export?**
 
-| Mode | Description |
-|------|-------------|
-| **Full** | Exports all records every time |
-| **Delta** | Only exports records modified since the last run, using a stored timestamp on the partition |
+| Mode | Description | Best for |
+|------|-------------|----------|
+| **Full** | Exports all records every time | Small data sets, full snapshots |
+| **Delta** | Only exports records modified since the last run, using a stored timestamp on the partition | Master data (P/PX/C/CX) with a reliable `lastUpdateDate` |
+| **Marked / Consistent** | Status-flag-based: mark rows `Processing` before export, `Exported` after, `Failed` on error. Requires a status column (e.g. `Exported`) on the data source. | DMDS / DS exports where background flushes or calculations may modify data **during** the export window — guarantees a stable snapshot |
 
 ### Delta sync pattern
 
@@ -143,8 +144,9 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
             <simple>${body}</simple>
             <to uri="pfx-api:fetchIterator"/>
             <toD uri="pfx-model:transform?mapper={route-name}.mapper"/>
-            <toD uri="pfx-csv:marshal"/>
+            <toD uri="pfx-csv:marshal?camelSplitIndexAware=true"/>
             <to uri="{target-uri}"/>
+            <setBody><constant/></setBody>
         </split>
 
         <!-- Save upper bound timestamp to partition for next run -->
@@ -171,6 +173,121 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
 The `${headers.lastExportTimestamp}` is populated by `pfx-config:get` with the stored timestamp. On first run (no stored value), all records are exported.
 
 **Note:** Always use UTC timestamps and set timezone explicitly on Quartz (e.g., `trigger.timeZone=UTC`).
+
+### Marked / consistent export pattern (DMDS/DS)
+
+This pattern uses a row-level status flag instead of a timestamp window. Best for DMDS or DS exports where background flushes, recalculations, or upstream loads may modify rows **during** the export. By marking rows as `Processing` up front, the export operates on a stable snapshot regardless of concurrent writes.
+
+**Prerequisites:**
+- The data source must have a status column (the sample uses `Exported`, but any name works — `IntegrationStatus`, `ExportStatus`, etc.).
+- Optional but recommended companion columns: `ExportedFile` (records which file each row went into) and `ExportedDate` (timestamp).
+
+**How it works:**
+1. Pre-count rows with `countOnly=true`; if 0, stop early.
+2. `massedit` flips matching rows from null/non-Exported to `Processing`.
+3. Fetch rows where status = `Processing` (paginated, batched).
+4. Marshal to CSV, append to file.
+5. `massedit` flips `Processing` → `Exported` and stamps `ExportedFile` + `ExportedDate`.
+6. Write a `.done` marker file.
+7. On any error, `onException` flips the `Processing` rows to `Failed` (preserving file + date for traceability).
+
+**Two filters are needed** (reused by both fetch and massedit):
+
+`src/main/resources/repo/filters/{TableName}-count-filter.xml` — rows eligible to be exported:
+```xml
+<filters>
+    <filter id="{TableName}-count-filter" sortBy="{stable-sort-fields}">
+        <or>
+            <criterion fieldName="Exported" operator="isNull"/>
+            <criterion fieldName="Exported" operator="notEqual" value="Exported"/>
+        </or>
+    </filter>
+</filters>
+```
+
+`src/main/resources/repo/filters/{TableName}-processing-filter.xml` — rows currently marked for this run:
+```xml
+<filters>
+    <filter id="{TableName}-processing-filter" sortBy="{stable-sort-fields}">
+        <and>
+            <criterion fieldName="Exported" operator="equals" value="Processing"/>
+        </and>
+    </filter>
+</filters>
+```
+
+**Naming note:** filters in this pattern are named after the **table** (not the route), because the route references them dynamically as `${header.source}-count-filter` / `${header.source}-processing-filter`. The filter `id` still matches the file name (per the resource-ID rule).
+
+**Marked export route template:**
+```xml
+<routes xmlns="http://camel.apache.org/schema/spring">
+    <route id="{route-name}"
+           autoStartup="{{pfx:{route-name}.auto-startup:false}}"
+           description="Consistent export of {TableName} to CSV.">
+        <from uri="seda:{route-name}?concurrentConsumers=1"/>
+
+        <!-- On failure, mark Processing rows as Failed and propagate -->
+        <onException redeliveryPolicy="defaultRedeliveryPolicyConfig">
+            <exception>java.lang.Exception</exception>
+            <handled><constant>false</constant></handled>
+            <toD uri="pfx-api:massedit?massEditFields=Exported;Failed,ExportedFile;${header.CamelFileNameOnly},ExportedDate;${header.dateExported}&amp;filter=${header.source}-processing-filter&amp;objectType=DMDS&amp;dataSourceName=DMDS.${header.source}"/>
+            <log message="${header.source} marked as Failed." loggingLevel="ERROR"/>
+        </onException>
+
+        <setHeader name="source"><constant>{TableName}</constant></setHeader>
+
+        <!-- Count rows to export -->
+        <toD uri="pfx-api:fetch?objectType=DM&amp;dsUniqueName=DMDS.${header.source}&amp;filter=${header.source}-count-filter&amp;countOnly=true"/>
+        <setProperty name="exportedRows"><simple>${header.totalRows}</simple></setProperty>
+        <log message="Determined ${exchangeProperty.exportedRows} rows to export." loggingLevel="INFO"/>
+        <choice>
+            <when>
+                <simple>${exchangeProperty.exportedRows} == 0</simple>
+                <log message="Nothing to export. Stopping route..."/>
+                <stop/>
+            </when>
+        </choice>
+
+        <setHeader name="CamelFileNameOnly"><simple>{TableName}_${date:now:yyyyMMdd_HHmmss}.csv</simple></setHeader>
+        <setHeader name="CamelFileName"><simple>{{integration.sftp.root}}/{export-folder}/tmp/${header.CamelFileNameOnly}</simple></setHeader>
+        <!-- Update CSVHeader whenever resultFields on the processing-filter changes -->
+        <setHeader name="CSVHeader"><constant>{Col1},{Col2},{Col3}</constant></setHeader>
+        <setHeader name="dateExported"><simple>${date:now:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}</simple></setHeader>
+
+        <!-- Mark rows as Processing → creates the stable snapshot -->
+        <toD uri="pfx-api:massedit?massEditFields=Exported;Processing&amp;filter=${header.source}-count-filter&amp;objectType=DMDS&amp;dataSourceName=DMDS.${header.source}"/>
+
+        <!-- Fetch the marked rows in batches -->
+        <toD uri="pfx-api:fetch?objectType=DM&amp;dsUniqueName=DMDS.${header.source}&amp;filter=${header.source}-processing-filter&amp;batchedMode=true&amp;batchSize={{pfx:{route-name}.batch-size}}"/>
+        <split>
+            <simple>${body}</simple>
+            <log loggingLevel="INFO" message="Exporting batch #${exchangeProperty.CamelSplitIndex} for ${header.CamelFileNameOnly}"/>
+            <toD uri="pfx-api:fetch?objectType=DM&amp;dsUniqueName=DMDS.${header.source}&amp;filter=${header.source}-processing-filter"/>
+            <toD uri="pfx-model:transform?mapper={route-name}.mapper"/>
+            <toD uri="pfx-csv:marshal?header=${header.CSVHeader}&amp;camelSplitIndexAware=true"/>
+            <to uri="file://?fileExist=Append"/>
+            <setBody><constant/></setBody>
+        </split>
+
+        <!-- Mark exported rows as Exported and stamp file + date -->
+        <toD uri="pfx-api:massedit?massEditFields=Exported;Exported,ExportedFile;${header.CamelFileNameOnly},ExportedDate;${header.dateExported}&amp;filter=${header.source}-processing-filter&amp;objectType=DMDS&amp;dataSourceName=DMDS.${header.source}"/>
+
+        <!-- Done file marker for downstream consumers -->
+        <setBody><constant/></setBody>
+        <toD uri="file://{{integration.sftp.root}}/{export-folder}/tmp/?fileName=${header.CamelFileNameOnly}.done"/>
+
+        <log message="${header.source} export done."/>
+    </route>
+</routes>
+```
+
+**Key details:**
+- **`objectType=DM` for fetch, `objectType=DMDS` for massedit.** The data mart fetch and the data source massedit are on different objects — getting this wrong silently no-ops the massedit.
+- **`camelSplitIndexAware=true` on `pfx-csv:marshal`** writes the CSV header only on the first chunk; subsequent chunks are data-only. Required when using `fileExist=Append` with chunked CSV.
+- **`<setBody><constant/></setBody>` after the file write** prevents the body from accumulating across split iterations — important for large exports.
+- **`autoStartup="{{pfx:{route-name}.auto-startup:false}}"`** lets ops enable/disable the route via property without redeploy.
+- **`from seda:`** means the route is triggered asynchronously. Pair it with either a scheduler route, a `direct:` caller, or an event listener (e.g. the `PADATALOAD_COMPLETED` event for DS-flush-driven exports — see [generate-event-driven-route](../generate-event-driven-route/SKILL.md)).
+- **`redeliveryPolicy="defaultRedeliveryPolicyConfig"`** references a shared redelivery bean (Camel 4 attribute — for a Camel 3 / IM ≤ 6.x target use `redeliveryPolicyRef=`). If the project does not have such a bean, omit the attribute or define the bean.
 
 ## Step 4c: Smart Field Selection (for PX/CX with metadata)
 
@@ -274,9 +391,12 @@ Use `<routes>` format (standalone). Route file contains ONLY the route — no ma
             <simple>${body}</simple>
             <to uri="pfx-api:fetchIterator"/>
             <toD uri="pfx-model:transform?mapper={route-name}.mapper"/>
-            <toD uri="pfx-csv:marshal"/>
+            <!-- camelSplitIndexAware=true: write CSV header only on the first chunk (required with fileExist=Append) -->
+            <toD uri="pfx-csv:marshal?camelSplitIndexAware=true"/>
             <!-- Write to target -->
             <to uri="{target-uri}"/>
+            <!-- Free the body so it doesn't accumulate across split iterations -->
+            <setBody><constant/></setBody>
         </split>
 
         <log message="Export completed: {route-name}" loggingLevel="INFO"/>
@@ -392,3 +512,9 @@ Choose `batchSize` based on number of fields:
 - For incremental exports, save the timestamp AFTER successful export, not before
 - Always add `sortBy=lastUpdateDate,id` on fetch to ensure consistent pagination
 - Never use `batchedMode=false` for large exports — it loads everything into memory
+- For DMDS / DS exports where background flushes or calculations may modify data during the export, prefer the **marked / consistent export pattern** (Step 4b) over timestamp delta — it guarantees a stable snapshot.
+- In the marked pattern, **fetch uses `objectType=DM`** but **massedit uses `objectType=DMDS` with `dataSourceName=DMDS.{table}`**. Mismatching these silently no-ops the massedit.
+- When using `fileExist=Append` with chunked CSV exports, always set `camelSplitIndexAware=true` on `pfx-csv:marshal` — otherwise the CSV header is repeated in every batch.
+- Inside a large `<split>`, clear the body after the file write with `<setBody><constant/></setBody>` to prevent per-iteration memory growth.
+- For DMDS exports triggered by `PADATALOAD_COMPLETED` / `DS_FLUSH` events, use `seda:{route-name}?concurrentConsumers=1` so the event listener returns immediately and the export runs asynchronously. See [generate-event-driven-route](../generate-event-driven-route/SKILL.md).
+- Use `countOnly=true` to precheck row count and `<stop/>` early when there is nothing to export — avoids writing empty files and pointless massedits.

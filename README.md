@@ -1117,6 +1117,40 @@ Two complementary eval flavours live under `evals/`:
 - **Output-quality** ([`evals/README.md`](evals/README.md)) — automated regression net for what each skill actually produces. Run via `/skill-creator:skill-creator eval pricefx-im-plugin:<skill-name>` before committing skill changes.
 - **Trigger routing** ([`evals/triggers.md`](evals/triggers.md)) — manual smoke-test that a given user prompt picks the right skill. Run after any `description:` change.
 
+### Releasing
+
+When `develop` is ready to ship, promote it to `main` and push to both remotes using the `/release` slash command (defined in [`.claude/commands/release.md`](.claude/commands/release.md)):
+
+```
+/release minor    # or: major | patch | (no arg — Claude asks)
+```
+
+The command runs an 8-step routine:
+
+1. Pre-flight checks — clean tree, both remotes configured, develop ahead of main, no open MRs
+2. Pick version bump (`major` / `minor` / `patch`) and compute target version from `.claude-plugin/plugin.json`
+3. Show release summary (commit count, file diff, new skills + agents) and ask the user to confirm
+4. `git merge --no-ff origin/develop` onto `main` with a release-summary commit message
+5. Bump `version` in `.claude-plugin/plugin.json` and commit on `main`
+6. Push `main` to **both** `origin` (GitLab) and `github` (public mirror)
+7. Cherry-pick the bump back to `develop` so the version field stays in sync
+8. Report SHAs on `main` (origin + github must match) and `develop`
+
+**Versioning policy:**
+
+| Bump | When |
+|---|---|
+| `patch` | Bug fixes only, no new skills/agents/docs sections |
+| `minor` | New skills, new agents, or new docs sections |
+| `major` | Breaking changes (renamed slash commands, removed skills, doc structure rewrite) |
+
+**Rules enforced by the command:**
+
+- No force-push to `main` or `develop`.
+- No skipping the `github` push — the GitHub mirror is the source of truth for plugin consumers.
+- No direct commits on `main` other than the version-bump commit in Step 5 and the merge commit in Step 4.
+- Tagging is intentionally out of scope — add manually if the team wants it.
+
 ## Repository
 
 - **GitHub**: https://github.com/pricefx/pricefx-im-plugin (public, distribution)

@@ -95,6 +95,8 @@ Check each criterion below. For each one, record the result as **OK**, **WARN**,
 | AP-1 | Inline Groovy under 15 lines | Count lines inside every `<groovy>` or `<script language="groovy">` block | 15 or fewer |
 | AP-2 | No hardcoded hostnames/IPs | Literal hostnames, IP addresses, or URLs in `uri=` attributes (batch sizes and cron expressions in XML are fine) | None found |
 | AP-3 | CFS trigger not inside split | `pfx-api:calculate`, `pfx-api:execute`, or CFS-related URIs inside `<split>` body | Not inside split |
+| AP-4 | No datafeed truncate after DS_FLUSH | `pfx-api:truncate` inside a `<when>` block triggered by a `DS_FLUSH` event — datafeeds are truncated automatically on flush | None found |
+| AP-5 | `<delay>` has explicit `asyncDelayed` | Any `<delay>` element without an `asyncDelayed=` attribute — the default releases the route thread, so the pause doesn't serialize with following steps (catalog AP-36) | `asyncDelayed="false"` set |
 
 ## Step 4: Output the Report
 
