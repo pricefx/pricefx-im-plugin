@@ -172,8 +172,6 @@ Records that change **during** the export have `lastUpdateDate > currentExportTi
 
 The `${headers.lastExportTimestamp}` is populated by `pfx-config:get` with the stored timestamp. On first run (no stored value), all records are exported.
 
-**Reference:** [Incremental Timestamp Export Pattern](../../../integration-manager/docs/patterns/export-incremental-timestamp.md)
-
 **Note:** Always use UTC timestamps and set timezone explicitly on Quartz (e.g., `trigger.timeZone=UTC`).
 
 ### Marked / consistent export pattern (DMDS/DS)
@@ -239,7 +237,7 @@ This pattern uses a row-level status flag instead of a timestamp window. Best fo
         <setHeader name="source"><constant>{TableName}</constant></setHeader>
 
         <!-- Count rows to export -->
-        <toD uri="pfx-api:fetch?objectType=DM&amp;dsUniqueName=${header.source}&amp;filter=${header.source}-count-filter&amp;countOnly=true"/>
+        <toD uri="pfx-api:fetch?objectType=DM&amp;dsUniqueName=DMDS.${header.source}&amp;filter=${header.source}-count-filter&amp;countOnly=true"/>
         <setProperty name="exportedRows"><simple>${header.totalRows}</simple></setProperty>
         <log message="Determined ${exchangeProperty.exportedRows} rows to export." loggingLevel="INFO"/>
         <choice>
@@ -491,8 +489,6 @@ When exporting to both SFTP and S3, or writing multiple file formats:
   <to uri="direct:export-to-s3"/>
 </multicast>
 ```
-
-See [Chained Routes Pattern](../../../integration-manager/docs/patterns/chained-routes-direct.md).
 
 ## Batch Size
 
