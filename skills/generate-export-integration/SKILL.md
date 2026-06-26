@@ -227,7 +227,7 @@ This pattern uses a row-level status flag instead of a timestamp window. Best fo
         <from uri="seda:{route-name}?concurrentConsumers=1"/>
 
         <!-- On failure, mark Processing rows as Failed and propagate -->
-        <onException redeliveryPolicyRef="defaultRedeliveryPolicyConfig">
+        <onException redeliveryPolicy="defaultRedeliveryPolicyConfig">
             <exception>java.lang.Exception</exception>
             <handled><constant>false</constant></handled>
             <toD uri="pfx-api:massedit?massEditFields=Exported;Failed,ExportedFile;${header.CamelFileNameOnly},ExportedDate;${header.dateExported}&amp;filter=${header.source}-processing-filter&amp;objectType=DMDS&amp;dataSourceName=DMDS.${header.source}"/>
@@ -287,7 +287,7 @@ This pattern uses a row-level status flag instead of a timestamp window. Best fo
 - **`<setBody><constant/></setBody>` after the file write** prevents the body from accumulating across split iterations — important for large exports.
 - **`autoStartup="{{pfx:{route-name}.auto-startup:false}}"`** lets ops enable/disable the route via property without redeploy.
 - **`from seda:`** means the route is triggered asynchronously. Pair it with either a scheduler route, a `direct:` caller, or an event listener (e.g. the `PADATALOAD_COMPLETED` event for DS-flush-driven exports — see [generate-event-driven-route](../generate-event-driven-route/SKILL.md)).
-- **`redeliveryPolicyRef="defaultRedeliveryPolicyConfig"`** references a shared redelivery bean. If the project does not have one, omit the attribute or define the bean.
+- **`redeliveryPolicy="defaultRedeliveryPolicyConfig"`** references a shared redelivery bean (Camel 4 attribute — for a Camel 3 / IM ≤ 6.x target use `redeliveryPolicyRef=`). If the project does not have such a bean, omit the attribute or define the bean.
 
 ## Step 4c: Smart Field Selection (for PX/CX with metadata)
 

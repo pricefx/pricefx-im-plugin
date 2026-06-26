@@ -92,7 +92,7 @@ Track: total checks run, total violations found. **Compliance % = (checks passed
 
 Run the **version-independent** subset of `docs/anti-patterns.md` against every route, mapper, and filter file:
 
-- **Structural / runtime safety:** AP-3 (streaming on splits), AP-6 (error handling), AP-7 (archive folder), AP-11 (DMDS flush), AP-19 (`noop=true`), AP-28 (CFS trigger inside split), AP-29 (`direct2ds=true`), AP-30 (`${body}` inside split), AP-35 (explicit datafeed truncate after DS_FLUSH)
+- **Structural / runtime safety:** AP-3 (streaming on splits), AP-6 (error handling), AP-7 (archive folder), AP-11 (DMDS flush), AP-19 (`noop=true`), AP-28 (CFS trigger inside split), AP-29 (`direct2ds=true`), AP-30 (`${body}` inside split), AP-35 (explicit datafeed truncate after DS_FLUSH), AP-36 (`<delay>` without explicit `asyncDelayed`)
 - **Quality / maintainability:** AP-4 (copy-pasted Groovy), AP-8 (inline Groovy >15 lines), AP-9 (inconsistent naming), AP-10 (route >200 lines), AP-13 (`split+tokenize+loaddata` for P/PX/CX/C), AP-15 (redundant `connection=pricefx`), AP-16 (`pfx:` route prefix), AP-18 (`extensionName`), AP-33 (Groovy in mapper), AP-34 (Groovy code style smells)
 - **External I/O & templates:** AP-31 (missing `<removeHeaders>` before HTTP/JMS), AP-32 (missing `allowContextMapAll=true` on FreeMarker)
 - **Properties / connections:** AP-5 (hardcoded hostnames/IPs), AP-14 (`pfx-sftp` with `default-sftp-connection`)
