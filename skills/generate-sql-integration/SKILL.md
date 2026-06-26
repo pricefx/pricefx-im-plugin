@@ -41,7 +41,50 @@ If the user provided some of these in `$ARGUMENTS`, skip asking.
 | `inbound-bulk-snowflake` | `routes/{route-name}-Snowflake-Route.xml` (extract to stage), `routes/{route-name}-CSV-Route.xml` (load gzipped CSV), mapper |
 | `outbound` | `routes/{route-name}.xml`, `mappers/{route-name}-Mapper.xml`, optional `filters/{filter-name}.xml`, properties |
 
-Always ensure the JDBC driver is on the classpath (`pom.xml` dependency). Snowflake → `net.snowflake:snowflake-jdbc` plus `org.apache.camel:camel-jdbc`. SQL Server → `com.microsoft.sqlserver:mssql-jdbc`. Postgres → `org.postgresql:postgresql`.
+Always ensure the JDBC driver and `camel-jdbc` are on the classpath. Add to `pom.xml` `<dependencies>` before generating any files — the route will fail at startup with `ClassNotFoundException` otherwise.
+
+**`camel-jdbc` (required for all database types — version managed by the IM BOM, no `<version>` needed):**
+
+```xml
+<dependency>
+    <groupId>org.apache.camel</groupId>
+    <artifactId>camel-jdbc</artifactId>
+</dependency>
+```
+
+**JDBC driver — pick the block that matches the database type:**
+
+```xml
+<!-- Snowflake -->
+<dependency>
+    <groupId>net.snowflake</groupId>
+    <artifactId>snowflake-jdbc</artifactId>
+    <version>4.3.0</version>
+</dependency>
+
+<!-- SQL Server -->
+<dependency>
+    <groupId>com.microsoft.sqlserver</groupId>
+    <artifactId>mssql-jdbc</artifactId>
+    <version>11.2.1.jre11</version>
+</dependency>
+
+<!-- PostgreSQL -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.3</version>
+</dependency>
+
+<!-- MySQL / MariaDB -->
+<dependency>
+    <groupId>com.mysql</groupId>
+    <artifactId>mysql-connector-j</artifactId>
+    <version>8.3.0</version>
+</dependency>
+```
+
+Driver versions above are the latest stable as of mid-2025. Always check [Maven Central](https://central.sonatype.com) for a newer patch if the project has a security requirement. `camel-jdbc` has no `<version>` tag because its version is managed by the IM parent BOM — adding one would override the BOM and risk a mismatch.
 
 ## Step 3: Generate the JDBC DataSource Bean
 
@@ -56,7 +99,10 @@ Driver-specific datasource is registered as a Spring bean and referenced from ro
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="snowflakeDataSource" class="net.snowflake.client.jdbc.SnowflakeBasicDataSource">
+    <!-- IMPORTANT (v4+): concrete class moved to the internal package.
+         net.snowflake.client.api.datasource.SnowflakeDataSource is an interface —
+         using it throws BeanInstantiationException: Specified class is an interface. -->
+    <bean id="snowflakeDataSource" class="net.snowflake.client.internal.api.implementation.datasource.SnowflakeBasicDataSource">
         <property name="url"          value="#{environment['my.snowflake.url']}"/>
         <property name="user"         value="#{environment['my.snowflake.username']}"/>
         <property name="password"     value="#{environment['my.snowflake.password']}"/>
@@ -69,6 +115,59 @@ Driver-specific datasource is registered as a Spring bean and referenced from ro
 ```
 
 The Snowflake URL must include `?jdbc_query_result_format=json` so result rows come back as `Map`s (which Camel's `pfx-csv`/`pfx-api:loaddata` expect). Without it the rows are arrays and mappers cannot resolve column names.
+
+### Snowflake — key-pair (JWT) auth
+
+Use this when the Snowflake account enforces RSA key-pair authentication instead of passwords. The private key is stored as an encrypted `.p8` file referenced by path. The route pattern is identical to password auth — only the bean changes.
+
+Use Spring's `DriverManagerDataSource` rather than `SnowflakeBasicDataSource` for JWT auth. This passes `private_key_file` and `private_key_file_pwd` through the `connectionProperties` map directly to `DriverManager.getConnection(url, props)`, bypassing Java's URI parser entirely — which is critical because passphrases often contain characters (`#`, `^`, `*`) that break URI parsing and cause "Connection string is invalid".
+
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="snowflakeDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="net.snowflake.client.jdbc.SnowflakeDriver"/>
+        <!-- authenticator=snowflake_jwt in URL; private key credentials go in connectionProperties,
+             NOT in the URL — special chars in the passphrase break Java's URI parser. -->
+        <property name="url" value="jdbc:snowflake://#{environment['my.snowflake.account']}.snowflakecomputing.com/?jdbc_query_result_format=json&amp;authenticator=snowflake_jwt"/>
+        <property name="connectionProperties">
+            <props>
+                <prop key="user">#{environment['my.snowflake.username']}</prop>
+                <prop key="databaseName">#{environment['my.snowflake.database']}</prop>
+                <prop key="schema">#{environment['my.snowflake.schema']}</prop>
+                <prop key="warehouse">#{environment['my.snowflake.warehouse']}</prop>
+                <prop key="role">#{environment['my.snowflake.role']}</prop>
+                <prop key="private_key_file">#{environment['my.snowflake.private_key_file']}</prop>
+                <prop key="private_key_file_pwd">#{environment['my.snowflake.private_key_file_pwd']}</prop>
+            </props>
+        </property>
+    </bean>
+</beans>
+```
+
+Key points:
+- `authenticator=snowflake_jwt` goes in the URL; everything else goes in `connectionProperties`
+- `private_key_file` — absolute path to the `.p8` key file on the IM host
+- `private_key_file_pwd` — passphrase for the encrypted key file; omit the `<prop>` entirely if the key is unencrypted
+- The passphrase value in properties must be the raw passphrase — do **not** wrap it in `RAW(...)` or any IM encryption notation, as that wrapper will be passed verbatim to BouncyCastle and cause "Error finalising cipher"
+
+**Key file format requirement (v4):** The `.p8` file must be encrypted with PBES2/AES-256. The legacy `pbeWithMD5AndDES-CBC` format used by older OpenSSL defaults is not supported by the BouncyCastle version bundled in Snowflake JDBC v4. If you receive `1.2.840.113549.1.5.3 not available: requires PBE parameters`, re-encrypt the key:
+
+```bash
+openssl pkcs8 -in old_key.p8 \
+  -passin 'pass:your-passphrase' \
+  -topk8 -v2 aes-256-cbc \
+  -passout 'pass:your-passphrase' \
+  -out new_key_aes256.p8
+```
+
+Verify the output uses PBES2 before deploying:
+```bash
+openssl asn1parse -in new_key_aes256.p8 | head -3
+# Should show: OBJECT :PBES2
+```
 
 ### SQL Server (HikariCP-wrapped)
 
@@ -90,8 +189,7 @@ File: `src/main/resources/repo/routes/import-{Object}-Route.xml`
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="import-{Object}-Route">
-    <description>Paginated SELECT from {source} into Pricefx {Object}.</description>
+  <route id="import-{Object}-Route" description="Paginated SELECT from {source} into Pricefx {Object}.">
     <from uri="direct:import-{Object}-Route"/>
 
     <setHeader name="source"><simple>${properties:my.snowflake.database}.${properties:my.snowflake.schema}.v_{object}</simple></setHeader>
@@ -242,8 +340,7 @@ For multi-million-row initial loads, paginated SELECT is too slow and creates Sn
 
 ```xml
 <routes xmlns="http://camel.apache.org/schema/spring">
-  <route id="import-{Object}-Snowflake-Route">
-    <description>Stage export to gzipped CSV; downloaded for the CSV route.</description>
+  <route id="import-{Object}-Snowflake-Route" description="Stage export to gzipped CSV; downloaded for the CSV route.">
     <from uri="direct:import-{Object}-Snowflake-Route"/>
 
     <setHeader name="interfaceName"><constant>pfx_{Object}</constant></setHeader>
@@ -378,13 +475,25 @@ In `src/main/resources/application-app_{env}.properties` (per-environment) and l
 
 ```properties
 ###############################################################################
-# {Database} connection
+# Snowflake connection — password auth (choose one block)
 ###############################################################################
 my.snowflake.url=jdbc:snowflake://account.snowflakecomputing.com?jdbc_query_result_format=json
 my.snowflake.username=PFX_USER
 my.snowflake.password={ENC}...
 my.snowflake.database=ANALYTICS
 my.snowflake.schema=PRICING
+
+###############################################################################
+# Snowflake connection — key-pair (JWT) auth (alternative to password block)
+###############################################################################
+# my.snowflake.account=myaccount
+# my.snowflake.username=PFX_USER
+# my.snowflake.database=ANALYTICS
+# my.snowflake.schema=PRICING
+# my.snowflake.warehouse=MY_WH
+# my.snowflake.role=MY_ROLE
+# my.snowflake.private_key_file=/path/to/rsa_key_aes256.p8
+# my.snowflake.private_key_file_pwd=your-passphrase   <- plain value, no RAW() wrapper
 
 ###############################################################################
 # Batch sizes — tune per dataset
@@ -433,7 +542,8 @@ Use Quartz cron when the source is a database (you control the polling cadence) 
 - **One mapper per route file.** File `mappers/import-Product-Mapper.xml` → `id="import-Product-Mapper"`.
 - **`convertEmptyStringToNull="true"`** on all SQL-sourced mappers. Empty-string and NULL behave very differently in Pricefx attribute-type coercion.
 - **`pfx-api:flush`** is required after every DMDS load. Without it the data feed sits in staged-but-not-applied state.
-- **Driver dependency is mandatory.** Add the JDBC driver to `pom.xml` — the route will fail at startup with `ClassNotFoundException` otherwise.
+- **Driver dependency is mandatory.** Add both `camel-jdbc` (no `<version>` — BOM-managed) and the database-specific JDBC driver to `pom.xml` before generating files — the route will fail at startup with `ClassNotFoundException` otherwise. See Step 2 for copy-paste `<dependency>` blocks.
+- **Snowflake bean class (v4+):** for password auth use `net.snowflake.client.internal.api.implementation.datasource.SnowflakeBasicDataSource` (concrete class; `net.snowflake.client.api.datasource.SnowflakeDataSource` is an interface and throws `BeanInstantiationException`). For JWT key-pair auth use `org.springframework.jdbc.datasource.DriverManagerDataSource` with `connectionProperties` — this passes `private_key_file` and `private_key_file_pwd` directly to the driver without URI parsing, which is the only safe way to handle passphrases containing `#`, `^`, or `*`. The `.p8` key file must be PBES2/AES-256 encrypted; re-encrypt with `openssl pkcs8 -topk8 -v2 aes-256-cbc` if the file uses the legacy `pbeWithMD5AndDES-CBC` format. The passphrase property value must be the plain passphrase — never wrapped in `RAW(...)` or any IM notation.
 
 ## References
 
